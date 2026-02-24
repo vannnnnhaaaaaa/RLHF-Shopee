@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlmodel
+pandas
+python-multipart
+requests
+python-dotenv
+duckduckgo-search
+google-generativeai
+openai

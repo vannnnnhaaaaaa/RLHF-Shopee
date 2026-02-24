@@ -1,0 +1,303 @@
+# SHOP YÊU THÍCH VÀ SHOP YÊU THÍCH+
+
+## 1. Shop Yêu Thích
+Shop Yêu Thích là những Shop được Shopee đánh giá có doanh số bán hàng và dịch vụ chăm sóc khách hàng tốt.
+- **Lợi ích:** Khi mua sắm tại đây, bạn được đảm bảo trải nghiệm tốt nhất.
+- **Tiêu chí:** Shop phải duy trì điểm đánh giá cao, tỉ lệ phản hồi Chat nhanh, và tỉ lệ giao hàng trễ thấp.
+- **Nhận diện:** Có gắn nhãn "Yêu Thích" trên logo và sản phẩm.
+
+![Shop Yêu Thích](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/c697af98a41e441097ed75e4bb92a5ce.jpg)
+
+## 2. Shop Yêu Thích+
+Là phiên bản nâng cấp hơn, bao gồm những Shop có chỉ số vận hành **tốt** và dịch vụ CSKH **nổi bật** do Shopee chọn lọc kỹ càng.
+- **Tiêu chí:** Khắt khe hơn Shop Yêu Thích thường (về Điểm đánh giá, Tỉ lệ phản hồi...).
+- **Nhận diện:** Có gắn nhãn "Yêu Thích+" màu cam nổi bật.
+
+![Shop Yêu Thích Cộng](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/ff7cc6c21caa47599a5ee95a8645abda.jpg)
+
+## 3. Cách tìm kiếm
+Bạn có thể dùng **Bộ lọc tìm kiếm** ở trang kết quả để chỉ hiện ra các sản phẩm thuộc Shop Yêu Thích/Yêu Thích+.
+
+![Bộ lọc tìm kiếm](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/ef3ab67bef624019956102c2d5874a63.jpg)
+
+--------------------------------------------------
+
+# HƯỚNG DẪN TÌM KIẾM SẢN PHẨM TRÊN SHOPEE
+
+## 1. Tìm kiếm theo từ khóa
+- **Bước 1:** Nhập từ khóa vào thanh tìm kiếm và nhấn **Tìm**.
+- **Bước 2:** Tại trang kết quả, sử dụng thanh lọc để sắp xếp theo:
+  - Mới nhất / Bán chạy.
+  - Giá tăng/giảm dần.
+  - Freeship Xtra, Hoàn Xu...
+  - Hoặc dùng biểu tượng **Bộ lọc** (hình phễu) để lọc chi tiết hơn.
+
+![Giao diện tìm kiếm](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/206547a4e6cc4256bed4bf1182bfc308.jpg)
+
+## 2. Tìm kiếm bằng hình ảnh
+Shopee cho phép bạn chụp hoặc tải ảnh lên để tìm sản phẩm tương tự.
+- **Cách làm:** Tại thanh tìm kiếm, chọn biểu tượng **Camera** -> Chụp ảnh sản phẩm hoặc Tải ảnh có sẵn lên. Shopee sẽ tự động tìm các món đồ giống hệt hoặc tương tự.
+
+![Tìm bằng Camera](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/2c441800f27644bda4f7b4c353454b1f.jpg)
+
+### ⚠️ Lưu ý:
+Nếu không dùng được Camera, vui lòng kiểm tra xem [Ứng dụng Shopee đã được cấp quyền truy cập Hình ảnh phù hợp](https://help.shopee.vn/portal/4/article/79364) trên điện thoại chưa.
+
+--------------------------------------------------
+
+# HƯỚNG DẪN CHIA SẺ SẢN PHẨM SHOPEE
+
+## 1. Chia sẻ địa chỉ URL của sản phẩm
+Trên Ứng dụng Shopee, bạn có thể chia sẻ link sản phẩm bằng cách vào trang **Thông tin sản phẩm** -> chọn biểu tượng **Chia sẻ** (mũi tên) ở góc phải trên cùng. Sau đó bạn có thể:
+
+- **Chọn nền tảng mạng xã hội:** Chia sẻ trực tiếp lên Facebook, Zalo, Twitter, Instagram...
+- **Sao chép đường dẫn:** Để lấy link sản phẩm gửi cho bạn bè.
+- **Sao chép thông tin:** Lấy cả link và mô tả sản phẩm.
+- **SMS/Email:** Gửi tin nhắn hoặc Email soạn sẵn.
+
+![Hướng dẫn chia sẻ URL](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/933442b853fa40cebcd4b55a8184991a.jpg)
+
+### ⚠️ Lưu ý khi chia sẻ URL:
+- Để chia sẻ lên mạng xã hội, bạn cần cài sẵn ứng dụng đó trên điện thoại.
+- Bạn có thể chọn kèm hình ảnh sản phẩm bằng tính năng **Chia sẻ hình ảnh**.
+
+## 2. Chia sẻ hình ảnh sản phẩm kèm mã QR
+Bạn có thể tạo một bức ảnh "xịn xò" có sẵn mã QR để gửi cho khách.
+**Cách làm:** Vào trang sản phẩm -> Chọn biểu tượng **Chia sẻ** -> Chọn **Lưu ảnh** (biểu tượng mũi tên tải xuống).
+
+Hình ảnh được lưu sẽ bao gồm:
+- Hình sản phẩm.
+- Giá bán hiện tại.
+- Mã QR (Quét mã này là ra sản phẩm).
+
+![Hướng dẫn chia sẻ QR](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/bda542a255d942aab994fc279b81e899.jpg)
+
+### ⚠️ Lưu ý về mã QR:
+- Bạn cần cấp quyền truy cập "Ảnh/Thư viện" cho ứng dụng Shopee để lưu ảnh.
+- Người nhận ảnh chỉ cần dùng tính năng **Quét mã QR** trên app Shopee để mở sản phẩm.
+
+----------------------------------------------------
+
+# HƯỚNG DẪN CẬP NHẬT/BỔ SUNG THÔNG TIN TÀI KHOẢN NGÂN HÀNG
+
+Nếu bạn nhận được thông báo "Thông tin tài khoản chưa chính xác" hoặc cần cập nhật lại, vui lòng làm theo hướng dẫn sau:
+
+## 1. Trên ứng dụng Shopee
+- **Bước 1:** Vào mục **Tôi** -> chọn biểu tượng **Cài đặt** (hình bánh răng ⚙️) ở góc trên -> chọn **Tài khoản / Thẻ ngân hàng**.
+- **Bước 2:** Chọn tài khoản/thẻ cần cập nhật (thường sẽ hiển thị trạng thái "Từ chối") -> chọn **Sửa**.
+- **Bước 3:** Điền chính xác các thông tin được yêu cầu -> bấm **Hoàn thành**.
+
+![Hướng dẫn chia sẻ URL] (https://lh5.googleusercontent.com/W2Z7-P_rV2f_rqYi2HqzSKBKWpODTHpgvbOhINeFaB-B-MwLmm6_E2t0tNq8svcQJWgrn38ziA1rSp86ST4A6fqScNqQdVJTD-4QSJW20g-cAwei0Si_uh0ol-GEw3t1Sq_bSfLR=s0)
+
+### ⚠️ Lưu ý quan trọng:
+Vui lòng [cập nhật phiên bản mới nhất của ứng dụng Shopee](https://help.shopee.vn/portal/4/article/79610-[Thao-t%c3%a1c]-H%c6%b0%e1%bb%9bng-D%e1%ba%abn-C%c3%a0i-%c4%90%e1%ba%b7t-V%c3%a0-C%e1%ba%adp-Nh%e1%ba%adt-Phi%c3%aan-B%e1%ba%a3n-M%e1%bb%9bi-C%e1%bb%a7a-%e1%bb%a8ng-D%e1%bb%a5ng-Shopee?previousPage=other+articles) hoặc thực hiện trên Website để thao tác chính xác nhất.
+
+## 2. Trên trang web Shopee.vn
+- **Bước 1:** Truy cập [Shopee.vn](https://shopee.vn) -> Bấm vào Tên đăng nhập (góc phải) -> **Tài khoản của tôi** -> **Ngân hàng**.
+https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/ff0c5d1add2c4e2090a5f8ff29aa8046.gif
+- **Bước 2:** Tìm tài khoản/thẻ cần cập nhật (thường hiển thị trạng thái "Từ chối") -> chọn nút **Sửa**.
+https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/e7e06d572bc042f79296b0308757a424.gif
+- **Bước 3:** Nhập lại thông tin chính xác -> bấm **Hoàn thành**.
+https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/6534fbb92384449aaa3351514be0246e.gif
+
+--------------------------------------------------------
+
+# TẠI SAO TÔI KHÔNG THỂ CHAT/NHẮN TIN VỚI SHOP?
+
+Nếu bạn bấm vào nút Chat mà không gửi được tin nhắn, dưới đây là lý do và cách khắc phục:
+https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/ab1605e44a5b47b5b94157841d6dbe73.jpg
+## 1. Nguyên nhân
+Tài khoản của bạn **chưa Xác minh số điện thoại**.
+Shopee yêu cầu người dùng phải xác thực số điện thoại chính chủ để ngăn chặn spam và đảm bảo an toàn khi giao tiếp với Người bán.
+
+## 2. Hướng xử lý
+Tiến hành xác minh số điện thoại cho tài khoản theo [hướng dẫn](https://help.shopee.vn/portal/4/article/79184-[Th%c3%a0nh-vi%c3%aan-m%e1%bb%9bi]-H%c6%b0%e1%bb%9bng-d%e1%ba%abn-th%c3%aam%2Fx%c3%a1c-minh-s%e1%bb%91-%c4%91i%e1%bb%87n-tho%e1%ba%a1i-li%c3%aan-k%e1%ba%bft-v%e1%bb%9bi-t%c3%a0i-kho%e1%ba%a3n-Shopee?previousPage=other+articles)
+
+*(Xem thêm: [Hướng dẫn chat với Người Bán](https://help.shopee.vn/portal/4/article/79048-[Chat]-H%c6%b0%e1%bb%9bng-d%e1%ba%abn-Chat%2FNh%e1%ba%afn-tin-tr%c3%aan-Shopee%3F?previousPage=other+articles))*
+-----------------------------------------------------------
+
+# HƯỚNG DẪN THAY ĐỔI MÃ PIN (MẬT KHẨU) SỐ DƯ TÀI KHOẢN SHOPEE
+
+Để thay đổi mã PIN bảo mật cho Số dư TK Shopee, bạn thực hiện 4 bước sau:
+
+1. **Truy cập cài đặt ví:**
+   Vào mục **Tôi** > chọn **Số dư TK Shopee** > chọn biểu tượng **Cài đặt** (hình bánh răng ⚙️ ở góc trên bên phải) để vào giao diện Thiết lập Ví.
+
+2. **Chọn tính năng:**
+   Nhấn chọn dòng **Thay đổi mã PIN**.
+
+3. **Xác minh danh tính:**
+   Hệ thống sẽ gửi một mã xác nhận (OTP) qua tin nhắn SMS đến số điện thoại đăng ký tài khoản. Bạn cần nhập chính xác mã này.
+
+4. **Thiết lập mới:**
+   Nhập mã PIN mới (gồm 6 chữ số) > Nhập lại lần nữa để xác nhận > bấm **Hoàn thành**.
+
+-----------------------------------------------------
+
+# TÍNH NĂNG QUÉT MÃ QR/MÃ VẠCH TRÊN ỨNG DỤNG SHOPEE
+
+## 1. Tác dụng của tính năng
+Bạn có thể dùng tính năng quét mã QR trên App Shopee để làm 2 việc chính:
+- **Đăng nhập nhanh:** Đăng nhập vào tài khoản Shopee trên máy tính (Website) mà không cần nhập mật khẩu.
+- **Thanh toán:** Quét mã để trả tiền tại các cửa hàng bên ngoài (offline) có hỗ trợ thanh toán qua Ví ShopeePay.
+
+## 2. Hướng dẫn sử dụng
+Có 2 cách để mở trình quét mã:
+
+- **Cách 1 (Nhanh nhất):** Chọn biểu tượng **Quét mã QR** (hình ô vuông) ngay trên trang chủ Ứng dụng Shopee.
+- **Cách 2 (Qua Ví):** Vào mục **Tôi** > **Ví ShopeePay** > Nhập Mật khẩu đặt lệnh > Chọn **Quét mã QR**.
+
+Sau khi mở camera, bạn chỉ cần di chuyển điện thoại sao cho mã QR nằm gọn trong khung hình để hệ thống tự nhận diện.
+
+![Hướng dẫn quét mã QR](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/d462c60bb3cf4dc7b183619d396190e5.jpg)
+
+### ⚠️ Lưu ý quan trọng:
+Để dùng tính năng thanh toán (quét mã trả tiền), bạn bắt buộc phải [kích hoạt tài khoản Ví ShopeePay đã đăng ký và thiết lập Mật khẩu đặt lệnh cho tài khoản Ví ShopeePay](https://help.shopee.vn/portal/4/article/79301-[Th%c3%a0nh-vi%c3%aan-m%e1%bb%9bi]-V%c3%ad-ShopeePay-l%c3%a0-g%c3%ac%3F?previousPage=other+articles)
+
+----------------------------------------
+# HÀNG QUỐC TẾ TRÊN SHOPEE
+
+## 1. Định nghĩa
+[Hàng Quốc tế](https://shopee.vn/m/sandealquocte?previousPage=other%20articles) là những sản phẩm được đăng bán bởi Người bán ở **ngoài lãnh thổ Việt Nam**.
+
+## 2. Cách nhận biết
+Bạn có thể nhận diện Hàng Quốc tế qua 2 dấu hiệu sau:
+
+- **Tại trang Thông tin sản phẩm:**
+  Ở mục Vận chuyển sẽ có dòng chữ **"Vận chuyển từ Nước ngoài"**.
+  
+  ![Vận chuyển từ nước ngoài](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/7372adeaa14a4f88852515bce472b4b5.jpg)
+
+- **Tại trang Kết quả tìm kiếm:**
+  Sản phẩm sẽ có nhãn **"Nước ngoài"** hiển thị ngay bên dưới ảnh bìa hoặc tên shop.
+
+  ![Nhãn Nước ngoài](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/d4b07c58ff324830979a57107fd3dba6.jpg)
+
+-----------------------------------------------------
+
+# E-VOUCHER TRÊN SHOPEE (MÃ ƯU ĐÃI ĐIỆN TỬ)
+
+## 1. E-voucher là gì?
+E-voucher là các Mã ưu đãi/giảm giá điện tử mà bạn có thể mua tại mục **Nạp thẻ, Hoá đơn & E-voucher** trên Ứng dụng Shopee.
+Điểm đặc biệt là bạn có thể mua E-voucher với giá **thấp hơn** giá trị sử dụng thực tế.
+
+*Ví dụ: Bạn mua E-voucher trị giá 99k nhưng chỉ phải trả 90k (Tiết kiệm được 9k).*
+
+## 2. Các loại E-voucher phổ biến
+- **Di chuyển:** Mã giảm giá đặt xe, giao đồ ăn, giao hàng...
+- **Du lịch:** Tour, đặt phòng khách sạn, resort...
+- **Sức khoẻ & Làm đẹp:** Spa, chăm sóc da, gym...
+- **Giải trí:** Vé xem phim, vé ca nhạc, hoa tươi...
+- **Giáo dục:** Khoá học online, phần mềm bản quyền...
+
+## 3. Hướng dẫn mua E-voucher
+Để mua E-voucher, bạn thực hiện theo 5 bước sau trên Ứng dụng Shopee:
+
+1.  Truy cập mục **Nạp thẻ, Hoá đơn & E-voucher** > chọn **Mã ưu đãi** (nằm trong mục Nạp điện thoại, Data & Mã ưu đãi).
+2.  Tìm kiếm E-voucher mong muốn (theo từ khóa hoặc thương hiệu).
+3.  Chọn E-voucher > Bấm **Mua ngay** > Điều chỉnh số lượng.
+4.  Điền thông tin liên hệ (Email/SĐT) nếu được yêu cầu.
+5.  Chọn phương thức thanh toán (có thể dùng Shopee Xu) > Bấm **Thanh toán**.
+
+![Quy trình mua E-voucher](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/237b8dc1d4e540aeb0051987f74069d2.jpg)
+
+## 4. Cách sử dụng E-voucher
+Mỗi loại E-voucher sẽ có cách sử dụng khác nhau (Quét mã tại quầy, Nhập mã trên web, hoặc Đưa mã cho nhân viên...).
+
+**⚠️ Lưu ý quan trọng:**
+Bạn cần xem kỹ mục **"Hướng dẫn sử dụng"** tại trang thông tin chi tiết của E-voucher **TRƯỚC KHI MUA** để biết chắc chắn cách dùng.
+
+![Hướng dẫn sử dụng E-voucher](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/8195dd76a98d418ea1f124377f126e6d.jpg) 
+
+-------------------------------------------------
+
+# HƯỚNG DẪN XEM LẠI CÁC SHOP ĐÃ THEO DÕI (FOLLOW)
+
+Để xem lại danh sách các Shop mà bạn đã bấm quan tâm/theo dõi, hãy làm theo hướng dẫn sau:
+
+- **Bước 1:** Vào mục **Tôi** trên Ứng dụng Shopee.
+- **Bước 2:** Chọn mục **Đang theo dõi** (thường nằm ngay bên dưới tên tài khoản hoặc ảnh đại diện của bạn).
+
+Tại đây hệ thống sẽ hiển thị toàn bộ danh sách các Shop bạn đã Follow.
+
+![Danh sách shop đang theo dõi](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/dd38808ad0b943aa83050d42af2f6167.jpg)
+
+---------------------------------------------
+
+# QUY ĐỊNH THANH TOÁN TỐI ĐA 20 PHÂN LOẠI SẢN PHẨM
+
+## 1. Phân loại sản phẩm là gì?
+"Phân loại sản phẩm" (hay Phân loại hàng) là các tùy chọn khác nhau của cùng một sản phẩm, ví dụ như: Màu sắc, Kích thước, Mẫu mã... giúp người mua dễ dàng lựa chọn.
+
+![Minh họa phân loại hàng](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/9043af58e6444d7c97dda3084fa8762a.gif)
+
+## 2. Quy định giới hạn 20 phân loại
+Nhiều người hiểu lầm là chỉ được mua tối đa 20 cái (số lượng). **ĐIỀU NÀY KHÔNG ĐÚNG.**
+
+Quy định chính xác là: Bạn có thể mua số lượng không giới hạn, nhưng chỉ được chọn tối đa **20 loại mẫu mã khác nhau** trong 1 lần thanh toán.
+
+### 📝 Ví dụ cụ thể:
+Giả sử Shop bán **Giấy dán tường** có **22 màu** khác nhau.
+
+- **ĐƯỢC PHÉP:** Bạn mua 100 cuộn màu Xanh + 50 cuộn màu Đỏ.
+  *(Tổng số lượng là 150 cuộn, nhưng chỉ tính là **2 phân loại** -> Hợp lệ).*
+
+- **KHÔNG ĐƯỢC:** Bạn muốn mua mỗi màu 1 cuộn để sưu tầm (tức là chọn mua đủ 22 màu trong cùng 1 đơn hàng).
+  *(Hệ thống sẽ báo lỗi vì vượt quá **20 phân loại**).*
+
+-> **Giải pháp:** Bạn cần chia thành 2 đơn hàng nhỏ để mua hết 22 màu đó.
+
+-------------------------------
+
+# TẠI SAO COMBO KHUYẾN MÃI KHÔNG ÁP DỤNG CHO TOÀN BỘ GIỎ HÀNG?
+
+Nếu bạn thấy ưu đãi Combo không áp dụng cho tất cả sản phẩm trong giỏ, nguyên nhân thường do sản phẩm đó không thỏa mãn điều kiện, cụ thể là 2 trường hợp sau:
+
+## 1. Do số lượng sản phẩm bị lẻ (Không xếp đủ Combo)
+Hệ thống sẽ ưu tiên xếp các sản phẩm thành các bộ Combo hoàn chỉnh trước. Những sản phẩm "thừa ra" (không đủ để tạo thành 1 bộ nữa) sẽ bị tính giá gốc.
+
+* **Ví dụ:** Shop có Combo "Mua 3 sản phẩm giảm giá".
+* Bạn mua **7 sản phẩm**.
+* **Cách tính:** 6 sản phẩm sẽ được gom thành 2 Combo (được giảm giá). Còn **1 sản phẩm lẻ** còn lại sẽ tính giá thường.
+
+## 2. Do vượt quá giới hạn lượt mua
+Một số chương trình Combo giới hạn số lượng Combo được hưởng ưu đãi cho mỗi khách hàng (Ví dụ: Mỗi người chỉ được mua 1 Combo giá sốc).
+
+* **Ví dụ:** Combo "Mua 3 sản phẩm giảm giá" (Giới hạn: 1 Combo/Khách).
+* Bạn mua **6 sản phẩm** (Đủ để xếp thành 2 Combo).
+* **Cách tính:** Chỉ **3 sản phẩm đầu** (1 Combo) được giảm giá. **3 sản phẩm sau** sẽ tính giá gốc (Vì bạn đã dùng hết quyền ưu đãi).
+
+### ⚠️ Cần hỗ trợ?
+Nếu đơn hàng của bạn không thuộc 2 trường hợp trên mà vẫn lỗi, vui lòng **Chat với Người bán** hoặc liên hệ **CSKH Shopee** để kiểm tra.
+
+-------------------------------
+
+# HƯỚNG DẪN THAY ĐỔI PHÂN LOẠI SẢN PHẨM TRONG GIỎ HÀNG
+
+Nếu bạn đã thêm sản phẩm vào giỏ nhưng muốn đổi lại Màu sắc hoặc Kích cỡ khác, hãy làm theo các bước sau:
+
+## 1. Cách thực hiện
+- **Bước 1:** Mở **Giỏ hàng** trên Ứng dụng Shopee.
+- **Bước 2:** Nhấn trực tiếp vào dòng chữ hiển thị **Phân loại hàng** (nằm ngay dưới tên sản phẩm) của món đồ cần điều chỉnh.
+- **Bước 3:** Lựa chọn **Phân loại mới** mà bạn mong muốn từ danh sách hiện ra.
+- **Bước 4:** Nhấn **Đồng ý** để xác nhận thay đổi.
+
+![Minh họa đổi phân loại trong giỏ](https://fileproxycdn.cs.susercontent.com/api/v5/service/download/permanent/helpcenter-fe/8144d87899a549c4ab3e97e58318c66a.gif)
+
+## 2. Quy trình xử lý của hệ thống
+- Phân loại sản phẩm mới sẽ được cập nhật ngay lập tức trong Giỏ hàng của bạn.
+- **Trường hợp đặc biệt:** Nếu phân loại mới mà bạn vừa chọn **đã có sẵn** trong giỏ hàng từ trước, hệ thống Shopee sẽ tự động **cộng dồn số lượng** của sản phẩm cũ vào sản phẩm mới này.
+
+--------------------------------
+
+Dưới đây là bảng so sánh chi tiết quyền lợi và điều kiện của hai loại thẻ tín dụng VPBank Shopee, được định dạng chuẩn để bạn dễ dàng đưa vào file policy.txt:
+
+QUYỀN LỢI THẺ TÍN DỤNG VPBANK SHOPEE (PLATINUM & SUPER PLATINUM)
+Dưới đây là so sánh chi tiết giữa hai hạng thẻ để bạn lựa chọn loại phù hợp với nhu cầu chi tiêu:
+Quyền lợi,Super Shopee Platinum,Shopee Platinum
+Hoàn tiền Shopee & ShopeeFood,"Hoàn 10%, tối đa 400.000 VNĐ/tháng","Hoàn 6%, tối đa 250.000 VNĐ/tháng"
+"Hoàn tiền Ăn uống, Siêu thị, Grab/Be","Hoàn 2%, tối đa 200.000 VNĐ/tháng","Hoàn 1%, tối đa 150.000 VNĐ/tháng"
+Hoàn tiền chi tiêu khác,Hoàn 0.3% (không giới hạn),Hoàn 0.3% (không giới hạn)
+Quà tặng mở thẻ mới,Voucher 400.000 VNĐ (khi tiêu 2 triệu trong 30 ngày),Voucher 200.000 VNĐ (khi tiêu 1 triệu trong 30 ngày)
+Ưu đãi tháng sinh nhật,Hoàn 50% tối đa 100.000 Shopee Xu,Hoàn 50% tối đa 50.000 Shopee Xu
+Miễn phí vận chuyển (Freeship),4 voucher/tháng (tối đa 30k cho đơn từ 300k),2 voucher/tháng (tối đa 30k cho đơn từ 300k)

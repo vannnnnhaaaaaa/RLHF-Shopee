@@ -1,0 +1,358 @@
+/* --- 1. CORE STYLES --- */
+:root {
+    --shopee-orange: #ee4d2d;
+    --shopee-bg: #f5f5f5;
+    --text-black: #333;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--shopee-bg);
+    margin: 0;
+    padding: 0;
+}
+
+/* --- 2. HEADER --- */
+.shopee-header {
+    background: linear-gradient(-180deg,#f53d2d,#f63);
+    color: white;
+    padding: 10px 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    gap: 20px;
+}
+
+.logo {
+    font-size: 24px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.search-bar {
+    flex: 1;
+    background: white;
+    border-radius: 2px;
+    padding: 3px;
+    display: flex;
+}
+
+.search-bar input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 8px 10px;
+}
+
+.search-btn {
+    background: var(--shopee-orange);
+    border: none;
+    width: 60px;
+    cursor: pointer;
+    color: white;
+    border-radius: 2px;
+}
+
+/* --- 3. PRODUCT GRID --- */
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+.banner {
+    width: 100%;
+    height: 300px;
+    background-color: #ddd;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    background-image: url('https://cf.shopee.vn/file/vn-50009109-c7a2e1ae720f9704f92f72c9ef1a494a_xxhdpi');
+    background-size: cover;
+    background-position: center;
+}
+
+.section-title {
+    background: white;
+    padding: 15px 20px;
+    color: var(--shopee-orange);
+    font-weight: 700;
+    text-transform: uppercase;
+    border-bottom: 4px solid var(--shopee-orange);
+    margin-bottom: 10px;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 10px;
+}
+
+.shopee-card {
+    background: white;
+    border: 1px solid transparent;
+    transition: transform 0.1s, border 0.1s;
+    cursor: pointer;
+}
+
+.shopee-card:hover {
+    transform: translateY(-1px);
+    border: 1px solid var(--shopee-orange);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.card-img {
+    width: 100%;
+    padding-top: 100%;
+    position: relative;
+    background: #f1f1f1;
+}
+
+.card-img img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+}
+
+.card-body { padding: 10px; }
+
+.card-title {
+    font-size: 12px;
+    line-height: 14px;
+    height: 28px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.card-price {
+    color: var(--shopee-orange);
+    font-size: 16px;
+    display: flex;
+    align-items: baseline;
+}
+.card-price span { font-size: 10px; margin-right: 2px; }
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #888;
+    margin-top: 10px;
+}
+
+/* --- 4. CHAT WIDGET --- */
+.chat-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.chat-toggle-btn {
+    width: 60px;
+    height: 60px;
+    background: var(--shopee-orange);
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(238, 77, 45, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    border: 2px solid white;
+}
+.chat-toggle-btn:hover { transform: scale(1.1); }
+
+.chat-window {
+    width: 380px;
+    height: 500px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+    transform-origin: bottom right;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+}
+
+.chat-window.active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: all;
+}
+
+.chat-header-inner {
+    background: linear-gradient(to right, #ee4d2d, #ff7337);
+    color: white;
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 500;
+}
+.close-chat { cursor: pointer; font-size: 18px; }
+
+.chat-body-inner {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background: #f8f8f8;
+    font-size: 13px;
+}
+
+.msg {
+    max-width: 80%;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    border-radius: 15px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+.msg.bot {
+    background: white;
+    border: 1px solid #eee;
+    color: #333;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+.msg.user {
+    background: #d0f0c0;
+    color: #333;
+    align-self: flex-end;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+}
+
+.chat-footer {
+    padding: 10px;
+    background: white;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 8px;
+}
+.chat-footer input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    outline: none;
+}
+.chat-footer button {
+    background: white;
+    border: none;
+    color: var(--shopee-orange);
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.typing { font-size: 12px; color: #888; margin-left: 10px; display: none; }
+
+/* --- Nút Like/Dislike trong tin nhắn --- */
+.rating-bar {
+    margin-top: 5px;
+    display: flex;
+    gap: 10px;
+}
+.rating-bar button {
+    background: #f1f1f1;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.2s;
+}
+.rating-bar button:hover { background: #e0e0e0; }
+
+/* --- Modal Đánh giá 5 sao --- */
+.rating-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); /* Màu nền tối che chat */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+.rating-box {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    width: 80%;
+}
+.stars { font-size: 30px; color: #ccc; cursor: pointer; margin-bottom: 10px; }
+.stars span.active { color: #ffd700; } /* Màu vàng cho sao đã chọn */
+.rating-box textarea { width: 100%; height: 50px; margin-bottom: 10px; }
+.rating-actions button {
+    padding: 8px 15px; border: none; border-radius: 5px;
+    background: #ee4d2d; color: white; cursor: pointer;
+}
+
+/* --- CSS CHO FEEDBACK TAGS (MỚI) --- */
+
+/* Container chứa các tags */
+.feedback-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 10px 0 15px 0;
+    min-height: 30px; /* Giữ khung không bị nhảy */
+}
+
+/* Style cho từng Tag */
+.feedback-tag {
+    font-size: 12px;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    background: #f9f9f9;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+/* Hiệu ứng khi di chuột */
+.feedback-tag:hover {
+    background: #eee;
+    border-color: #ccc;
+}
+
+/* Trạng thái ĐANG CHỌN (Active) */
+.feedback-tag.selected {
+    background: #fff0eb; /* Màu nền cam nhạt Shopee */
+    color: #ee4d2d;      /* Màu chữ cam Shopee */
+    border-color: #ee4d2d;
+    font-weight: 500;
+}

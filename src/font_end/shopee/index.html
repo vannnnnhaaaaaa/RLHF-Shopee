@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopee Lite - Chatbot AI</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="shopee-header">
+        <div class="header-container">
+            <div class="logo">
+                <i class="fa-solid fa-bag-shopping"></i> Shopee Lite
+            </div>
+            <div class="search-bar">
+                <input type="text" placeholder="Tìm sản phẩm, thương hiệu...">
+                <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+            <div style="font-size: 20px; cursor: pointer;"><i class="fa-solid fa-cart-shopping"></i></div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="banner"></div> 
+        <div class="section-title">GỢI Ý HÔM NAY</div>
+        <div class="product-grid" id="productGrid">
+            </div>
+    </div>
+
+    <div class="chat-widget">
+        
+        <div class="chat-toggle-btn" onclick="toggleChat()">
+            <i class="fa-solid fa-comment-dots"></i>
+            <span class="notification-badge">1</span>
+        </div>
+
+        <div class="chat-window" id="chatWindow">
+            
+            <div class="chat-header-inner">
+                <div class="header-title">
+                    <i class="fa-solid fa-robot"></i> Trợ lý AI
+                    <span class="status-dot"></span>
+                </div>
+                <span class="close-chat" onclick="handleCloseChat()">
+                    <i class="fa-solid fa-times"></i>
+                </span>
+            </div>
+            
+            <div class="chat-body-inner" id="chatBody">
+                <div class="msg bot">
+                    <div class="content">
+                        Dạ chào bạn! 👋<br>
+                        Mình là AI hỗ trợ tìm đồ. Bạn cần tìm giày, áo hay đồ công nghệ cứ bảo mình nha!
+                    </div>
+                </div>
+            </div>
+
+            <div class="typing" id="typing" style="display:none;">
+                Bot đang tìm kiếm...
+            </div>
+
+            <div class="chat-footer">
+                <input type="text" id="chatInput" placeholder="Nhập tin nhắn..." autocomplete="off">
+                <button onclick="sendChat()" class="send-btn">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+
+            <div id="ratingOverlay" class="rating-overlay" style="display: none;">
+                <div class="rating-box">
+                    <h3>Trải nghiệm của bạn thế nào?</h3>
+                    <p style="font-size: 13px; color: #666;">Giúp AI thông minh hơn nhé!</p>
+                    
+                    <div class="stars" id="starContainer">
+                        <span data-value="1">★</span>
+                        <span data-value="2">★</span>
+                        <span data-value="3">★</span>
+                        <span data-value="4">★</span>
+                        <span data-value="5">★</span>
+                    </div>
+
+                    <div id="feedbackTags" class="feedback-tags"></div>
+
+                    <textarea id="ratingComment" placeholder="Bạn muốn góp ý thêm gì không? (Tùy chọn)"></textarea>
+
+                    <div class="rating-actions">
+                        <button class="btn-submit" onclick="submitSessionRating()">Gửi đánh giá</button>
+                        <button class="btn-skip" onclick="closeFinalChat()">Bỏ qua</button>
+                    </div>
+                </div>
+            </div>
+
+        </div> 
+    </div> 
+
+    <script src="script.js"></script>
+</body>
+</html>
