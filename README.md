@@ -39,16 +39,5 @@ Hệ thống được thiết kế để giải quyết bài toán kiểm soát 
 
 ---
 
-## ⚙️ Cài đặt & Khởi chạy (Installation)
 
-### Yêu cầu hệ thống:
-* Python 3.9+
-* Trình duyệt web hiện đại
-
-### Các bước cài đặt:
-
-1. **Clone repository:**
-   ```bash
-   git clone <your-repo-url>
-   cd <your-repo-folder>
 
