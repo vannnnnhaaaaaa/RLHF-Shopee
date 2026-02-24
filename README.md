@@ -23,7 +23,7 @@ Hệ thống được thiết kế để giải quyết bài toán kiểm soát 
 
 * **Backend:** Python, FastAPI
 * **Database:** SQLite / PostgreSQL (quản lý qua SQLModel / SQLAlchemy)
-* **Frontend:** HTML5, CSS3, Vanilla JavaScript (Không phụ thuộc framework nặng)
+* **Frontend:** HTML5, CSS3, Vanilla JavaScript 
 * **Data Visualization:** Chart.js (Dashboard thống kê hiệu suất)
 * **Authentication:** JWT Bearer tokens (Phân quyền Admin / Member)
 
@@ -51,3 +51,4 @@ Hệ thống được thiết kế để giải quyết bài toán kiểm soát 
    ```bash
    git clone <your-repo-url>
    cd <your-repo-folder>
+
