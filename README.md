@@ -29,6 +29,10 @@ Sau khi AI sinh ra câu trả lời, Task sẽ được tự động đẩy vào
 * **Phán quyết cuối cùng (Gold Standard):** Admin có một Dashboard riêng để nhìn thấy bối cảnh gốc, luồng suy nghĩ của AI, và đối chiếu 3 bản nháp của Member. Admin có quyền sửa trực tiếp vào văn bản (Inline Editing) và chốt ra bộ dữ liệu sạch 100%.
 * **Chấm điểm uy tín (Auto-Scoring):** Hệ thống tự động so sánh bài làm của Member với kết quả chốt của Admin để tính điểm độ tin cậy (Accuracy Rate) cho từng người.
 
+<img width="1252" height="189" alt="image" src="https://github.com/user-attachments/assets/ba1e294a-fb47-4fb5-9ff6-4485f5d1572d" />
+
+<img width="642" height="142" alt="image" src="https://github.com/user-attachments/assets/569841df-841e-4335-b80f-d7b30e87ce22" />
+
 ---
 
 ## 🛠️ Công nghệ sử dụng (Tech Stack)
@@ -41,4 +45,5 @@ Sau khi AI sinh ra câu trả lời, Task sẽ được tự động đẩy vào
 * **Security:** Phân quyền Admin / Member bằng JWT Bearer Tokens.
 
 ---
+
 
