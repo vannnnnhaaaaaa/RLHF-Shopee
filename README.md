@@ -17,17 +17,44 @@ Trước khi đưa cho con người gán nhãn, hệ thống sử dụng LangGra
 > **💡 Lưu ý:** Toàn bộ "vết suy nghĩ" của AI (số lần thử, điểm số tài liệu, bối cảnh) sẽ được lưu lại làm dữ liệu đầu vào cho con người đánh giá ở Giai đoạn 2.
 <img width="1894" height="441" alt="image" src="https://github.com/user-attachments/assets/24339713-87e3-4c4f-a605-de5d266b3257" />
 
+
+<img width="1894" height="918" alt="image" src="https://github.com/user-attachments/assets/3eea7237-5e40-4cd6-9301-cb2ee8a11345" />
+
+---
+## ⚖️ GIAI ĐOẠN 2: Quy trình Kiểm duyệt & RLHF (Human-in-the-loop)
+
+> **Mục tiêu cốt lõi:** Tránh việc tạo Task rác từ mọi đánh giá của User. Hệ thống đi qua một quy trình QA (Quality Assurance) nhiều lớp để đảm bảo dữ liệu đưa vào gán nhãn phải là "vàng ròng".
+
+
+
+### 🤖 1. AI Re-Evaluation (Bộ lọc tiền xử lý)
+* **Phân tích Feedback:** AI tự động bóc tách cảm xúc từ `Comment` và `Rating (1-5⭐)` của người dùng.
+* **Tự kiểm lỗi (Self-Correction):** AI tự đối chiếu lại câu trả lời của mình với Feedback. Hệ thống **chỉ khởi tạo Task** khi AI xác nhận bản thân "có sai sót" (thường ở mức 1-3 sao).
+
+### 👨‍💻 2. Quản trị & Phân phối Task (Admin Oversight)
+* **Pre-check:** Admin duyệt nhanh danh sách Task do AI báo cáo để loại trừ các trường hợp User troll/spam.
+* **Triple-Blind Review:** Task hợp lệ được hệ thống tự động phân phối ngẫu nhiên cho **03 Member** độc lập để đảm bảo tính khách quan tuyệt đối.
+<img width="1788" height="906" alt="image" src="https://github.com/user-attachments/assets/a41bc2d5-764d-4516-aa11-5d056b3df602" />
+### 🎯 3. Đánh giá đa tiêu chí (Multi-criteria Annotation)
+Các Member sẽ mổ xẻ "vết suy nghĩ" của AI và chấm điểm chéo dựa trên 4 ma trận:
+* **`[ Following ]`** Mức độ tuân thủ các chỉ dẫn/ràng buộc trong Prompt.
+* **`[ Grounded ]`** Độ xác thực dựa trên Context được cung cấp (Kiểm soát Ảo giác - Hallucination).
+* **`[ Useful ]`** Tính thiết thực và giá trị giải quyết vấn đề cho User.
+* **`[ Harmful ]`** Màng lọc an toàn, chặn các vi phạm chính sách hoặc ngôn từ độc hại.
+<img width="1797" height="876" alt="image" src="https://github.com/user-attachments/assets/9635b31d-aaf3-44d6-8e24-8b82097ab525" />
+
+### ⚔️ 4. Kiểm soát Đồng thuận & Xung đột (Consensus vs. Conflict)
+* ✅ **Đồng thuận 100%:** 3 Member có chung kết quả ➔ Task tự động đóng, dữ liệu được đưa vào tập `Gold Standard`.
+* ⚠️ **Xung đột (Conflict):** Có bất kỳ sự sai lệch nào ➔ Task bị khóa. Admin sẽ trực tiếp nhảy vào Review, chỉnh sửa bằng `Inline Editing` và chốt kết quả Final.
+<img width="1393" height="895" alt="image" src="https://github.com/user-attachments/assets/e507d6fa-c754-4da0-8d6f-22bbbea7d345" />
+
+### ⚖️ 5. Hệ thống Điểm uy tín (Penalty & Reliability)
+* **Auto-Scoring:** Tự động đối chiếu bài làm của từng Member với đáp án Final (của Admin hoặc từ sự đồng thuận).
+* **Penalty:** Tự động **trừ điểm uy tín** đối với Labeler đánh giá sai, hời hợt hoặc làm cho có. Giúp thanh lọc và duy trì đội ngũ QA chất lượng cao.
+
 ---
 
-## ⚖️ GIAI ĐOẠN 2: Kiểm duyệt & Gán nhãn (Human-in-the-loop / RLHF)
-
-Sau khi AI sinh ra câu trả lời, Task sẽ được tự động đẩy vào Nền tảng Gán nhãn (RLHF Platform) để con người kiểm duyệt chất lượng dữ liệu thông qua các cơ chế:
-
-* **Phân phối Task & Chấm chéo (Consensus Mechanism):** 3 Member (Annotators) độc lập sẽ nhận cùng một câu trả lời của AI và đánh giá theo 4 tiêu chí: Following (Bám sát), Grounded (Có cơ sở), Useful (Hữu ích), Harmful (Độc hại).
-* **Theo dõi & Chống gian lận (Quality Control):** Hệ thống tích hợp Time Tracking để đo lường thời gian thực làm (Active Time), ngăn chặn việc Member click bừa để lấy số lượng.
-* **Tự động xử lý Xung đột (Conflict Resolution):** Nếu kết quả chấm của 3 Member không giống nhau, hệ thống tự động khóa Task và đẩy vào luồng "Conflict" chờ Admin can thiệp.
-* **Phán quyết cuối cùng (Gold Standard):** Admin có một Dashboard riêng để nhìn thấy bối cảnh gốc, luồng suy nghĩ của AI, và đối chiếu 3 bản nháp của Member. Admin có quyền sửa trực tiếp vào văn bản (Inline Editing) và chốt ra bộ dữ liệu sạch 100%.
-* **Chấm điểm uy tín (Auto-Scoring):** Hệ thống tự động so sánh bài làm của Member với kết quả chốt của Admin để tính điểm độ tin cậy (Accuracy Rate) cho từng người.
+> 💡 **Core Value:** Quy trình này đảm bảo đầu ra là bộ dữ liệu ưu tiên (Preference Data) siêu sạch, phục vụ trực tiếp cho việc Fine-tuning mô hình theo phương pháp **DPO (Direct Preference Optimization)**. AI của bạn sẽ "tiến hóa" chính xác theo ý muốn của con người sau mỗi chu kỳ.
 
 <img width="1252" height="189" alt="image" src="https://github.com/user-attachments/assets/ba1e294a-fb47-4fb5-9ff6-4485f5d1572d" />
 
@@ -45,5 +72,6 @@ Sau khi AI sinh ra câu trả lời, Task sẽ được tự động đẩy vào
 * **Security:** Phân quyền Admin / Member bằng JWT Bearer Tokens.
 
 ---
+
 
 
