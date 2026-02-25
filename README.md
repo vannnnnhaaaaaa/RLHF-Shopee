@@ -51,6 +51,7 @@ Các Member sẽ mổ xẻ "vết suy nghĩ" của AI và chấm điểm chéo d
 ### ⚖️ 5. Hệ thống Điểm uy tín (Penalty & Reliability)
 * **Auto-Scoring:** Tự động đối chiếu bài làm của từng Member với đáp án Final (của Admin hoặc từ sự đồng thuận).
 * **Penalty:** Tự động **trừ điểm uy tín** đối với Labeler đánh giá sai, hời hợt hoặc làm cho có. Giúp thanh lọc và duy trì đội ngũ QA chất lượng cao.
+<img width="1455" height="662" alt="image" src="https://github.com/user-attachments/assets/3e694052-db99-4856-81fb-3b1dcee95f3c" />
 
 ---
 
@@ -72,6 +73,7 @@ Các Member sẽ mổ xẻ "vết suy nghĩ" của AI và chấm điểm chéo d
 * **Security:** Phân quyền Admin / Member bằng JWT Bearer Tokens.
 
 ---
+
 
 
 
