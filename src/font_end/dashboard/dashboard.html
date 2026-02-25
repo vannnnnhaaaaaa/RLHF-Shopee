@@ -2,11 +2,11 @@
 <html>
 <head>
     <title>Hệ thống Quản lý Task - Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --primary: #ff4500; --bg: #f4f7f6; --white: #ffffff; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #333; }
         
-        /* Layout Grid chia cột */
         .dashboard-grid { 
             display: flex; 
             gap: 20px; 
@@ -15,154 +15,94 @@
             align-items: flex-start;
         }
 
-        /* Cột trái (Tạo & Danh sách Task) */
         .left-column { flex: 1.2; display: flex; flex-direction: column; gap: 20px; }
-        
-        /* Cột phải (Duyệt yêu cầu) */
         .right-column { flex:2; position: sticky; top: 20px; }
 
         .section { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
         h2 { color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 0; font-size: 1.2rem; }
 
-        /* Form & Items */
-        .form-group { display: flex; flex-direction: column; gap: 10px; }
-        input, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 6px; }
+        .form-group { display: flex; flex-direction: row; align-items: center; gap: 10px; margin-bottom: 10px; }
+        input, select, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 6px; }
         button { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
         
         .item-card { 
-            background: #fff; padding: 12px; border-radius: 8px; 
-            margin-bottom: 10px; border: 1px solid #eee; text-align: left;
+            background: #fff; padding: 15px; border-radius: 8px; 
+            margin-bottom: 15px; border: 1px solid #eee; text-align: left;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
-        .status-badge { font-size: 11px; padding: 3px 6px; border-radius: 4px; font-weight: bold; float: right; }
+        .status-badge { font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: bold; float: right; }
         .available { background: #e3fcef; color: #00875a; }
         
         .btn-approve { background: #2ecc71; width: 100%; margin-top: 10px; padding: 8px; font-size: 13px; }
-        .btn-logout { background: #666; margin-bottom: 20px; float: right; }
+        .btn-logout { background: #666; float: right; }
 
-        /* Responsive cho mobile */
         @media (max-width: 850px) {
             .dashboard-grid { flex-direction: column; }
             .right-column { position: static; width: 100%; }
         }
-        /* Container chứa các tin nhắn */
-        .chat-container {
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-            max-height: 500px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-        }
 
-        /* Định dạng chung từng tin nhắn */
-        .chat-message {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 8px;
-            max-width: 90%;
-        }
+        .chat-container { background: #f9f9f9; padding: 15px; border-radius: 8px; max-height: 500px; overflow-y: auto; border: 1px solid #ddd; }
+        .chat-message { margin-bottom: 15px; padding: 10px; border-radius: 8px; max-width: 90%; }
+        .msg-human { background-color: #e3f2fd; margin-right: auto; border-left: 4px solid #2196f3; }
+        .msg-ai { background-color: #f1f1f1; margin-left: auto; border-right: 4px solid #4caf50; }
+        .msg-header { font-size: 0.85em; margin-bottom: 5px; color: #666; }
+        .msg-body { line-height: 1.5; word-wrap: break-word; }
 
-        /* Tin nhắn của Người dùng - lệch phải */
-        .msg-human {
-            background-color: #e3f2fd;
-            margin-right: auto;
-            border-left: 4px solid #2196f3;
-        }
+        .error-box { background: #fff5f5; border: 1px dashed #ff4d4f; padding: 10px; margin: 10px 0; border-radius: 5px; color: #d32f2f; }
+        .badge { background: #ff9800; color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
+        .detail-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-reject { background: #e74c3c; flex: 1; } 
+        .btn-approve { background: #2ecc71; flex: 1; } 
 
-        /* Tin nhắn của AI - lệch trái */
-        .msg-ai {
-            background-color: #f1f1f1;
-            margin-left: auto;
-            border-right: 4px solid #4caf50;
-        }
-
-        .msg-header {
-            font-size: 0.85em;
-            margin-bottom: 5px;
-            color: #666;
-        }
-
-        .msg-body {
-            line-height: 1.5;
-            word-wrap: break-word;
-        }
-
-        /* Hộp hiển thị nguyên nhân lỗi */
-        .error-box {
-            background: #fff5f5;
-            border: 1px dashed #ff4d4f;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            color: #d32f2f;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: row; /* Ép nằm ngang */
-            align-items: center; /* Căn giữa theo chiều dọc để label và input thẳng hàng */
-            gap: 10px;           /* Tạo khoảng cách giữa label và input */
-        }
-        .badge {
-            background: #ff9800;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-        }
-        .detail-actions {
-        display: flex;
-        gap: 10px;
-        margin-top: 20px;
-        }
-        .btn-reject { background: #e74c3c; flex: 1; } /* Màu đỏ */
-        .btn-approve { background: #2ecc71; flex: 1; } /* Màu xanh */
-
-        /* 3. Style cho dòng thời gian cập nhật */
-        .time-info {
-            font-size: 0.85rem;
-            color: #666;
-            margin-top: 5px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .time-info i { color: var(--primary); }
-        .tab-btn {
-            background: #ddd; color: #333; border: none; padding: 10px 20px; 
-            border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold;
-        }
+        .time-info { font-size: 0.85rem; color: #666; margin-top: 5px; display: flex; align-items: center; gap: 5px; }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background: #ddd; color: #333; border: none; padding: 12px 24px; border-radius: 8px 8px 0 0; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .tab-btn:hover { background: #ccc; }
         .tab-btn.active { background: var(--primary); color: white; }
         .tab-content { border-top: 3px solid var(--primary); padding-top: 20px; }
 
-        /* Table style */
-        #user-stats-table th, #user-stats-table td {
-            padding: 12px; border: 1px solid #eee; text-align: left;
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
+        .conflict-card { border: 2px solid #ff9800; margin-bottom: 20px; padding: 15px; border-radius: 8px; }
+
+        /* Card thống kê tổng quan */
+        .stat-summary-box {
+            display: flex; justify-content: space-between; 
+            background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 20px;
+            border: 1px solid #e9ecef; text-align: center;
         }
-        .conflict-card {
-            border: 2px solid #ff9800; margin-bottom: 20px; padding: 15px; border-radius: 8px;
-        }
+        .stat-item h3 { margin: 0; color: var(--primary); font-size: 24px; }
+        .stat-item p { margin: 5px 0 0 0; color: #666; font-size: 14px; font-weight: bold; }
     </style>
 </head>
 <body>
 <div class="main-container" style="max-width: 1400px; margin: auto;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h1 style="color: var(--primary);">🛡️ Admin Control Panel</h1>
+        <h1 style="color: var(--primary); margin: 0;">🛡️ Admin Control Panel</h1>
         <button class="btn-logout" onclick="logout()">Đăng xuất</button>
     </div>
 
-    <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
+    <div class="tabs">
         <button onclick="showTab('approval')" class="tab-btn active">Duyệt Task đầu vào</button>
-        <button onclick="showTab('conflict')" class="tab-btn">Xử lý Conflict (So sánh Member)</button>
+        <button onclick="showTab('conflict')" class="tab-btn">Xử lý Conflict</button>
         <button onclick="showTab('stats')" class="tab-btn">Dashboard Hiệu suất</button>
     </div>
 
     <div id="tab-approval" class="tab-content">
         <div class="dashboard-grid">
             <div class="left-column">
+                
                 <div class="section">
                     <h2>📋 Task Chờ duyệt</h2>
                     <div id="pending-list">Đang tải...</div>
                 </div>
+
+                <div class="section" style="margin-top: 20px;">
+                    <h2>✅ Task Đã Duyệt (Public)</h2>
+                    <div id="active-list">Đang tải...</div>
+                </div>
+
             </div>
             <div class="right-column">
                 <div class="section">
@@ -172,7 +112,6 @@
             </div>
         </div>
     </div>
-
     <div id="tab-conflict" class="tab-content" style="display:none;">
         <div class="section">
             <h2>⚖️ So sánh kết quả giữa các Member (Consensus)</h2>
@@ -184,30 +123,56 @@
 
     <div id="tab-stats" class="tab-content" style="display:none;">
         <div class="dashboard-grid">
+            
             <div class="section" style="flex:1">
-                <h2>📊 Top Member Hiệu Quả</h2>
-                <table id="user-stats-table" style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="background: #eee;">
+                <h2>🏆 Top Member Hiệu Quả</h2>
+                <table class="table">
+                    <thead style="background-color: #f1f1f1;">
+                        <tr>
                             <th>Member</th>
                             <th>Task Hoàn thành</th>
+                            <th>Điểm Uy Tín</th>
                             <th>Tỉ lệ Tập trung</th>
                         </tr>
                     </thead>
-                    <tbody id="user-stats-body"></tbody>
+                    <tbody id="user-stats-body">
+                        </tbody>
                 </table>
             </div>
+
             <div class="section" style="flex:1">
-                <h2>📈 Tỉ lệ Active vs Idle (Toàn hệ thống)</h2>
-                <div id="chart-container" style="text-align: center; padding: 50px;">
-                    <p>Biểu đồ thời gian thực...</p>
+                <h2>📈 Tổng quan Hệ thống (Hôm nay vs Tháng này)</h2>
+                
+                <div style="height: 300px; width: 100%;">
+                    <canvas id="globalStatsChart"></canvas>
                 </div>
+
+                <div class="stat-summary-box">
+                    <div class="stat-item">
+                        <h3 id="stat-today-tasks">0</h3>
+                        <p>Task Hôm nay</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 id="stat-month-tasks">0</h3>
+                        <p>Task Tháng này</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 id="stat-today-time">0h</h3>
+                        <p>Active Hôm nay</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3 id="stat-month-time">0h</h3>
+                        <p>Active Tháng này</p>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+let globalChartInstance = null;
     // Hàm chuyển đổi Tab
 function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
@@ -216,32 +181,137 @@ function showTab(tabName) {
     document.getElementById('tab-' + tabName).style.display = 'block';
     event.currentTarget.classList.add('active');
 
-    if(tabName === 'stats') loadUserStats();
+    if(tabName === 'stats') {
+        loadUserStats();
+        loadGlobalSystemStats();
+    }
     if(tabName === 'conflict') loadConflictTasks();
 }
 
 // 1. Lấy thống kê hiệu suất User
 async function loadUserStats() {
+        try {
+            const res = await fetch(`${API_URL}/admin/user-performance`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            
+            if (!res.ok) throw new Error("Lỗi mạng hoặc chưa xác thực");
+            const data = await res.json();
+            const tbody = document.getElementById('user-stats-body');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 20px;">Chưa có dữ liệu</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map(u => {
+                const score = u.trust_score || 100;
+                const focus = u.focus_rate || 0;
+                const scoreColor = score >= 80 ? 'green' : (score >= 50 ? 'orange' : 'red');
+                const focusColor = focus >= 80 ? 'green' : 'orange';
+
+                // Đã xóa thuộc tính onclick và hiệu ứng hover đổi màu nền
+                return `
+                    <tr>
+                        <td style="padding: 12px; vertical-align: middle;"><strong>${u.user_name}</strong></td>
+                        <td style="padding: 12px; vertical-align: middle;">${u.completed_tasks} tasks</td>
+                        <td style="padding: 12px; vertical-align: middle; font-weight: bold; color: ${scoreColor}; font-size: 15px;">
+                            ${score}
+                        </td>
+                        <td style="padding: 12px; vertical-align: middle; color: ${focusColor}; font-weight: 500;">
+                            ${focus}%
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) { 
+            console.error(e); 
+            document.getElementById('user-stats-body').innerHTML = `<tr><td colspan="4" style="color:red; text-align:center;">Lỗi tải dữ liệu.</td></tr>`;
+        }
+    }
+
+
+async function loadGlobalSystemStats() {
     try {
-        const res = await fetch(`${API_URL}/admin/user-performance`, {
+        const res = await fetch(`${API_URL}/admin/system-stats`, {
             headers: { "Authorization": `Bearer ${token}` }
         });
-        const data = await res.json();
         
-        document.getElementById('user-stats-body').innerHTML = data.map(u => `
-            <tr>
-                <td><strong>${u.user_name}</strong></td>
-                <td>${u.completed_tasks} tasks</td>
-                <td style="color: ${u.focus_rate > 80 ? 'green' : 'orange'}">
-                    ${u.focus_rate}% (Tập trung)
-                </td>
-            </tr>
-        `).join('');
-    } catch (e) { console.error("Lỗi lấy stats"); }
+        if (!res.ok) throw new Error("Không thể lấy dữ liệu thống kê hệ thống");
+        const apiData = await res.json();
+        
+        // KIỂM TRA LOG: In ra để xem backend có thực sự trả về số giây không
+        console.log("Dữ liệu API trả về:", apiData);
+
+        // ĐỔI TỪ GIÂY SANG PHÚT (Chia cho 60 thay vì 3600)
+        const data = {
+            today: { 
+                tasks: apiData.today.tasks, 
+                active_mins: (apiData.today.active_time / 60).toFixed(1) // Đổi thành phút
+            },
+            month: { 
+                tasks: apiData.month.tasks, 
+                active_mins: (apiData.month.active_time / 60).toFixed(1) // Đổi thành phút
+            }
+        };
+
+        // Cập nhật thẻ text bên dưới biểu đồ
+        document.getElementById('stat-today-tasks').innerText = data.today.tasks;
+        document.getElementById('stat-month-tasks').innerText = data.month.tasks;
+        document.getElementById('stat-today-time').innerText = data.today.active_mins + ' phút';
+        document.getElementById('stat-month-time').innerText = data.month.active_mins + ' phút';
+
+        // Vẽ biểu đồ
+        const ctx = document.getElementById('globalStatsChart').getContext('2d');
+        if (globalChartInstance) globalChartInstance.destroy();
+
+        globalChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Hôm nay', 'Tháng này'],
+                datasets: [
+                    {
+                        label: 'Số Task Hoàn thành',
+                        data: [data.today.tasks, data.month.tasks],
+                        backgroundColor: '#2196F3',
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Thời gian làm (Phút)', // Đổi nhãn thành Phút
+                        data: [data.today.active_mins, data.month.active_mins],
+                        backgroundColor: '#ff9800',
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Số lượng Task' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'Số Phút thực làm' }, // Đổi trục thành Phút
+                        grid: { drawOnChartArea: false }
+                    }
+                },
+                plugins: { legend: { position: 'top' } }
+            }
+        });
+
+    } catch (error) {
+        console.error("Lỗi vẽ biểu đồ tổng:", error);
+    }
 }
 
-// 2. Lấy các Task có Conflict (Nhiều người làm nhưng kết quả khác nhau)
-// Biến lưu trữ dữ liệu để chuyển tab không cần gọi lại API
 let globalConflictData = [];
 async function finalDecide(taskId, taskIndex) {
     if (!confirm("Bạn có chắc chắn chốt dữ liệu này làm Gold Standard không?")) return;

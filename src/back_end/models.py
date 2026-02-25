@@ -45,7 +45,7 @@ class User(SQLModel, table=True):
         back_populates="admin_user",
         sa_relationship_kwargs={"foreign_keys": "Task.admin_id"} 
     )
-  
+    trust_score : int = Field(default=100)
     submitted_results: List["TaskResult"] = Relationship(back_populates="member_user")
 
 class Task(SQLModel, table=True):

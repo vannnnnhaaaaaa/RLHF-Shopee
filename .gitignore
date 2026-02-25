@@ -1,44 +1,26 @@
-# =========================
-# Môi trường ảo Python (Virtual Environment)
-# (Thư mục này rất nặng và mỗi máy cài một kiểu, tuyệt đối không push)
-# =========================
+
 venv/
 .venv/
 env/
 ENV/
 
-# =========================
-# Biến môi trường & Bảo mật
-# (Chứa secret key, API token, mật khẩu DB...)
-# =========================
 .env
 .env.*
 *.secret
 
-# =========================
-# Python Cache
-# (Các file rác tự sinh ra khi chạy code Python)
-# =========================
 __pycache__/
 *.py[cod]
 *$py.class
 
-# =========================
-# Database cục bộ
-# (Tránh push dữ liệu test chứa thông tin linh tinh lên Git)
-# =========================
+
 *.db
 *.sqlite
 *.sqlite3
 
-# =========================
-# Log files (File ghi chú lỗi hệ thống)
-# =========================
+
 *.log
 
-# =========================
-# Cấu hình IDE / Hệ điều hành (VSCode, Mac, Windows)
-# =========================
+
 .vscode/
 .idea/
 .DS_Store
