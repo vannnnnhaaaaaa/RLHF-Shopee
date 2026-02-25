@@ -15,6 +15,7 @@ Trước khi đưa cho con người gán nhãn, hệ thống sử dụng LangGra
 5. **Tổng hợp & Trả lời (Selector & Generate Node):** Chọn lọc những thông tin tốt nhất sau các vòng lặp và sinh ra câu trả lời cuối cùng.
 
 > **💡 Lưu ý:** Toàn bộ "vết suy nghĩ" của AI (số lần thử, điểm số tài liệu, bối cảnh) sẽ được lưu lại làm dữ liệu đầu vào cho con người đánh giá ở Giai đoạn 2.
+<img width="1894" height="441" alt="image" src="https://github.com/user-attachments/assets/24339713-87e3-4c4f-a605-de5d266b3257" />
 
 ---
 
@@ -40,3 +41,4 @@ Sau khi AI sinh ra câu trả lời, Task sẽ được tự động đẩy vào
 * **Security:** Phân quyền Admin / Member bằng JWT Bearer Tokens.
 
 ---
+
