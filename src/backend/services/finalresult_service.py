@@ -2,8 +2,8 @@ from datetime import datetime , time
 from fastapi import HTTPException
 from sqlmodel import Session , select , func , outerjoin
 
-from src.back_end.models import Task , FinalResult , User , TaskResult
-from src.back_end.schemas import CreateFinalResult
+from src.backend.models import Task , FinalResult , User , TaskResult
+from src.backend.schemas import CreateFinalResult
 
 async def resolve_task_conflict_data(
     taskId: int, 

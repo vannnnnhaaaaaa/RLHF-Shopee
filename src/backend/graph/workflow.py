@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, END
-from src.back_end.graph.state import AgentState
-from src.back_end.graph.node import (
+from src.backend.graph.state import AgentState
+from src.backend.graph.node import (
     classify_chat,
     retriever_node,
     rewrite_question,

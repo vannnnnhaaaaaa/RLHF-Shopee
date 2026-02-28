@@ -1,4 +1,4 @@
-from src.back_end.config import GROQ_API_KEY
+from src.backend.config import GROQ_API_KEY
 from langchain_groq import ChatGroq
 from sentence_transformers import SentenceTransformer
 from functools import lru_cache

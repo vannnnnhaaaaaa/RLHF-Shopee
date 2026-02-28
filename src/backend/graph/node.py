@@ -7,12 +7,12 @@ from langchain_core.output_parsers import JsonOutputParser
 import re
 from langchain_core.output_parsers import StrOutputParser
 
-from src.back_end.models import Product
-from src.back_end.connect_database import engine
-from src.back_end.services.ai_engine import get_model_embedding , get_llm
+from src.backend.models import Product
+from src.backend.connect_database import engine
+from src.backend.services.ai_engine import get_model_embedding , get_llm
 
 
-# src/back_end/graph/node.py
+
 
 
 # hàm lấy ra đc keyword của sản phẩm

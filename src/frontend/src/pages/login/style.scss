@@ -1,0 +1,93 @@
+// Tái sử dụng các mã màu chủ đạo của dự án
+$primary-color: #ee4d2d; 
+$primary-hover: #d73211;
+$bg-color: #f5f5f5;
+$text-main: #333;
+$border-color: #dbdbdb;
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: $bg-color;
+
+  .login-card {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 400px;
+
+    h2 {
+      color: $text-main;
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        color: #555;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid $border-color;
+        border-radius: 2px;
+        box-sizing: border-box;
+
+        &:focus {
+          border-color: #888;
+          outline: none;
+        }
+      }
+    }
+
+    .options-link {
+        text-align: right;
+        margin-bottom: 20px;
+        font-size: 14px;
+        color: #0055aa;
+        cursor: pointer;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: $primary-color;
+      color: white;
+      border: none;
+      border-radius: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      font-weight: 500;
+
+      &:hover {
+        background-color: $primary-hover;
+      }
+    }
+
+    .footer-links {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 14px;
+      color: #ccc;
+
+      span {
+        color: $primary-color;
+        cursor: pointer;
+        font-weight: 500;
+      }
+    }
+  }
+}

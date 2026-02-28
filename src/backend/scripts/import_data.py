@@ -5,10 +5,10 @@ import sys
 from sqlmodel import Session, select
 
 # --- IMPORT CÁC MODULE ---
-from src.back_end.config import  RAW_DATA
-from src.back_end.connect_database import init, engine
-from src.back_end.models import Product
-from src.back_end.services.ai_engine import  get_model_embedding
+from src.backend.config import  RAW_DATA
+from src.backend.connect_database import init, engine
+from src.backend.models import Product
+from src.backend.services.ai_engine import  get_model_embedding
 
 model = get_model_embedding()
 

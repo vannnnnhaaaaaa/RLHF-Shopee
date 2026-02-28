@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session 
 
-from src.back_end.models import Task , FinalResult , User
-from src.back_end.auth import get_current_user , get_session
-from src.back_end.schemas import CreateFinalResult
-from src.back_end.services.finalresult_service import resolve_task_conflict_data , get_dashboard_stats , get_member_dashboard_stats , get_all_users_performance,get_global_system_stats
+from src.backend.models import Task , FinalResult , User
+from src.backend.auth import get_current_user , get_session
+from src.backend.schemas import CreateFinalResult
+from src.backend.services.finalresult_service import resolve_task_conflict_data , get_dashboard_stats , get_member_dashboard_stats , get_all_users_performance,get_global_system_stats
 
 finalresult_router = APIRouter()
 

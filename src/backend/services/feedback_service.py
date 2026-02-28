@@ -1,6 +1,6 @@
-from src.back_end.schemas import CreateFeedback 
-from src.back_end.models import Feedback , Task
-from src.back_end.services.ai_engine import get_llm 
+from src.backend.schemas import CreateFeedback 
+from src.backend.models import Feedback , Task
+from src.backend.services.ai_engine import get_llm 
 
 from datetime import datetime 
 from langchain_core.prompts import ChatPromptTemplate 

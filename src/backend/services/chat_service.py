@@ -1,7 +1,7 @@
-from src.back_end.graph.workflow import app as graph
-from src.back_end.schemas import ChatRequest
-from src.back_end.connect_database import get_session
-from src.back_end.models import ChatMessage
+from src.backend.graph.workflow import app as graph
+from src.backend.schemas import ChatRequest
+from src.backend.connect_database import get_session
+from src.backend.models import ChatMessage
 
 from sqlmodel import Session
 

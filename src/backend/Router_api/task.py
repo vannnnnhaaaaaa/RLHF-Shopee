@@ -1,11 +1,11 @@
 from fastapi import Depends ,APIRouter , HTTPException
 
 from sqlmodel import Session ,select  , or_
-from src.back_end.models import Task , User  , TaskResult
-from src.back_end.schemas import   TaskCreate , TaskReadDetail    , TaskApprove , TaskRead
-from src.back_end.auth import get_current_user
-from src.back_end.connect_database import get_session
-from src.back_end.services.task_service import approveTask , review_detail_message , getAllTask
+from src.backend.models import Task , User  , TaskResult
+from src.backend.schemas import   TaskCreate , TaskReadDetail    , TaskApprove , TaskRead
+from src.backend.auth import get_current_user
+from src.backend.connect_database import get_session
+from src.backend.services.task_service import approveTask , review_detail_message , getAllTask
 task_router = APIRouter()
 
 @task_router.get("/tasks" , response_model=list[TaskRead])

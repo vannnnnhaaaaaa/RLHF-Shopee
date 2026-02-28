@@ -1,10 +1,10 @@
 from sqlmodel import Session
 from fastapi import Depends , HTTPException , APIRouter
 
-from src.back_end.connect_database import get_session
-from src.back_end.schemas import CreateFeedback  ,FeedbackResponse
-from src.back_end.models import Feedback
-from src.back_end.services.feedback_service import FeedbackService 
+from src.backend.connect_database import get_session
+from src.backend.schemas import CreateFeedback  ,FeedbackResponse
+from src.backend.models import Feedback
+from src.backend.services.feedback_service import FeedbackService 
 
 router_feedback = APIRouter(prefix="/feedback")
 

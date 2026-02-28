@@ -2,10 +2,10 @@ from fastapi import Depends  , HTTPException , APIRouter
 from sqlmodel import select, Session 
 from fastapi.security import OAuth2PasswordRequestForm
 
-from src.back_end.models import User
-from src.back_end.schemas import UserCreate , UserRead
-from src.back_end.connect_database import get_session
-from src.back_end.auth import hash_password , verify_password , create_access_token
+from src.backend.models import User
+from src.backend.schemas import UserCreate , UserRead
+from src.backend.connect_database import get_session
+from src.backend.auth import hash_password , verify_password , create_access_token
 user_router = APIRouter()
 
 

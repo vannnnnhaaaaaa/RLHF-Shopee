@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from typing import List
 
-from src.back_end.connect_database import engine , get_session
-from src.back_end.schemas import ProductRead
-from src.back_end.models import Product
+from src.backend.connect_database import engine , get_session
+from src.backend.schemas import ProductRead
+from src.backend.models import Product
 router_product = APIRouter(
     prefix="/products",
 )

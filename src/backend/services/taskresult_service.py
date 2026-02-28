@@ -1,10 +1,10 @@
 from fastapi import  HTTPException
 from sqlmodel  import select ,Session
 
-from src.back_end.schemas  import TaskResultUpdate , TaskResultResponse
+from src.backend.schemas  import TaskResultUpdate , TaskResultResponse
 
-from src.back_end.models import User , Task , TaskResult
-from src.back_end.services.task_service import review_detail_message
+from src.backend.models import User , Task , TaskResult
+from src.backend.services.task_service import review_detail_message
 
 
 async def updateTaskResult( taskId: int,  data: TaskResultUpdate, current_user: User  ,session: Session):

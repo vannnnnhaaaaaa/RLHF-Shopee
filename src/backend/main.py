@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.back_end.Router_api.product import router_product
-from src.back_end.Router_api.chat import router_chat
-from src.back_end.Router_api.feedback import router_feedback
-from src.back_end.Router_api.task import task_router
-from src.back_end.Router_api.user import user_router
-from src.back_end.Router_api.taskresult import taskResult_router
-from src.back_end.Router_api.finalresult import finalresult_router
+from src.backend.Router_api.product import router_product
+from src.backend.Router_api.chat import router_chat
+from src.backend.Router_api.feedback import router_feedback
+from src.backend.Router_api.task import task_router
+from src.backend.Router_api.user import user_router
+from src.backend.Router_api.taskresult import taskResult_router
+from src.backend.Router_api.finalresult import finalresult_router
 
 app = FastAPI(
     title="Shopee AI Backend",

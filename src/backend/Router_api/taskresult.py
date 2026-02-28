@@ -1,10 +1,10 @@
 from fastapi import Depends ,APIRouter , HTTPException
 from sqlmodel  import select ,Session
 
-from src.back_end.schemas  import TaskResultUpdate , TaskResultResponse
-from src.back_end.auth import get_current_user , get_session
-from src.back_end.models import User , Task , TaskResult
-from src.back_end.services.taskresult_service import updateTaskResult , get_conflict_tasks
+from src.backend.schemas  import TaskResultUpdate , TaskResultResponse
+from src.backend.auth import get_current_user , get_session
+from src.backend.models import User , Task , TaskResult
+from src.backend.services.taskresult_service import updateTaskResult , get_conflict_tasks
 taskResult_router = APIRouter()
 @taskResult_router.patch('/updateTask/{taskId}', response_model=TaskResultResponse)
 async def updateTask(

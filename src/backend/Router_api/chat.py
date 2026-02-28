@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException  , Depends
 from sqlmodel import  Session
 
-from src.back_end.connect_database import   get_session
-from src.back_end.schemas import ChatRequest , ChatResponse
-from src.back_end.services.chat_service import Chatservice
+from src.backend.connect_database import   get_session
+from src.backend.schemas import ChatRequest , ChatResponse
+from src.backend.services.chat_service import Chatservice
 router_chat = APIRouter(
     prefix="/chat",
 )

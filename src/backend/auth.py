@@ -4,8 +4,8 @@ from jose import jwt , JWTError
 from fastapi.security import OAuth2PasswordBearer 
 from fastapi import Depends  , HTTPException , status
 from sqlmodel import Session 
-from src.back_end.models import User
-from src.back_end.connect_database import get_session
+from src.backend.models import User
+from src.backend.connect_database import get_session
 pwd_context = CryptContext(schemes=["bcrypt"] , deprecated = "auto") 
 
 SECRET_KEY = 'TOI_YEU_LAP_TRINH_FULLSTACK_AI'
