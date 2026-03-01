@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"
+
+import {loginApi} from '../../services/login'
 import './style.scss';
 
 function LoginPage() {
@@ -13,11 +16,25 @@ function LoginPage() {
             ...formData,
             [name]: value
         });
-    };
 
-    const handleSubmit = (e) => {
+        
+    };
+    const navigate = useNavigate()
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Logic gọi API đăng nhập sang Backend Python (FastAPI) sẽ đặt ở đây
+        try {
+            const response =  await loginApi(formData.email , formData.password)
+            const accessToken = response.access_token;
+            const userRole = response.auth;
+
+            localStorage.setItem('access_token', accessToken);
+            localStorage.setItem('auth' ,userRole )
+            navigate('/home')
+        } catch (error) {
+            console.error("Lỗi đăng nhập:", error);
+        }
+        
+
         console.log("Đang đăng nhập với:", formData);
     };
 
@@ -29,7 +46,7 @@ function LoginPage() {
                     <div className="form-group">
                         <label>Email / Tên đăng nhập</label>
                         <input
-                            type="email"
+                            type="text"
                             name="email"
                             required
                             value={formData.email}

@@ -132,6 +132,11 @@ class Customer(SQLModel, table=True):
     # Quan hệ
     bills: List["Bill"] = Relationship(back_populates="customer")
     cart_items: Optional[List["CartItem"]] = Relationship(back_populates="customer")
+
+
+class CustomerFavorite(SQLModel, table=True):
+    user_id: int = Field(foreign_key="user.id", primary_key=True)
+    product_id: int = Field(foreign_key="product.id", primary_key=True)
 # ==========================================
 # NHÓM 2: SẢN PHẨM & VOUCHER (Phụ thuộc Nhóm 1)
 # ==========================================
