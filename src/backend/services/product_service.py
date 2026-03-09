@@ -1,99 +1,115 @@
 import os
-import shutil
 import uuid
+from typing import List, Optional
+from dotenv import load_dotenv
+from supabase import create_client, Client
 from fastapi import HTTPException, UploadFile, status
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-# Import Model của bạn (Điều chỉnh lại đường dẫn)
-from src.backend.models import Product, ProductImage
+# Import các Models của bạn
+from src.backend.models import Product, Product_image
 
-# --- HÀM HỖ TRỢ LƯU FILE ---
-def save_upload_file(upload_file: UploadFile, folder_name: str) -> str:
+# Load biến môi trường
+load_dotenv()
+
+# Khởi tạo Supabase Client
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+BUCKET_NAME = os.getenv("BUCKET_NAME")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError("Chưa cấu hình SUPABASE_URL hoặc SUPABASE_KEY trong file .env")
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# --- HÀM HỖ TRỢ UPLOAD LÊN SUPABASE ---
+def upload_to_supabase(upload_file: UploadFile, folder: str) -> str:
     """
-    Lưu file vào thư mục local 'static/...' và trả về đường dẫn tương đối.
-    Sử dụng UUID để đổi tên file tránh trùng lặp.
+    Đẩy file lên Supabase Storage và trả về link Public URL.
     """
     try:
-        # Tạo thư mục gốc nếu chưa tồn tại
-        base_dir = f"static/uploads/{folder_name}"
-        os.makedirs(base_dir, exist_ok=True)
+        # 1. Đọc dữ liệu file
+        file_content = upload_file.file.read()
         
-        # Đổi tên file để đảm bảo không bị trùng lặp (ví dụ: a1b2c3d4.jpg)
-        file_extension = os.path.splitext(upload_file.filename)[1]
-        unique_filename = f"{uuid.uuid4().hex}{file_extension}"
+        # 2. Tạo đường dẫn duy nhất: folder/uuid.extension
+        file_ext = os.path.splitext(upload_file.filename)[1]
+        file_path = f"{folder}/{uuid.uuid4().hex}{file_ext}"
         
-        file_path = os.path.join(base_dir, unique_filename)
-        
-        # Ghi file vào ổ cứng
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(upload_file.file, buffer)
-            
-        return f"/{file_path}"
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail=f"Không thể lưu file {upload_file.filename}: {str(e)}"
+        # 3. Thực hiện upload (sử dụng service_role key nên sẽ bypass được RLS)
+        supabase.storage.from_(BUCKET_NAME).upload(
+            path=file_path,
+            file=file_content,
+            file_options={"content-type": upload_file.content_type}
         )
+        
+        # 4. Lấy link công khai
+        return supabase.storage.from_(BUCKET_NAME).get_public_url(file_path)
+    
+    except Exception as e:
+        print(f"Cloud Storage Error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi khi upload file {upload_file.filename} lên Cloud."
+        )
+    finally:
+        upload_file.file.close()
 
-
-# --- HÀM XỬ LÝ CHÍNH ---
+# --- HÀM LOGIC CHÍNH: TẠO SẢN PHẨM ---
 def create_new_product(
-    db: Session,
-    seller_id: int,
-    product_data: dict,
-    images: list[UploadFile],
-    video: UploadFile | None = None
+    db: Session, 
+    seller_id: int, 
+    product_data: dict, 
+    images: List[UploadFile], 
+    video: Optional[UploadFile] = None
 ):
+    """
+    Quy trình: Upload Media -> Lưu Product -> Lưu danh sách ProductImage.
+    """
     try:
-        # 1. Tạo đối tượng Product bằng cách bung dict (**)
+        # Bước 1: Upload toàn bộ ảnh lên Supabase
+        image_urls = []
+        for img in images:
+            url = upload_to_supabase(img, "product_images")
+            image_urls.append(url)
+            
+        primary_image_url = image_urls[0] if image_urls else None
+
+        # Bước 2: Upload Video (nếu có)
+        video_url = None
+        if video and video.filename:
+            video_url = upload_to_supabase(video, "product_videos")
+
+        # Bước 3: Tạo bản ghi Product trong DB
         new_product = Product(
+            **product_data,
             seller_id=seller_id,
-            **product_data
+            image_link=primary_image_url,
+            video_link=video_url
         )
         db.add(new_product)
-        db.flush() # flush() để lấy được new_product.id mà chưa commit hẳn vào DB
+        db.flush() # Để lấy được new_product.id
 
-        # 2. Xử lý Video (nếu có)
-        if video and video.filename:
-            video_url = save_upload_file(video, "videos")
-            new_product.video_link = video_url
-
-        # 3. Xử lý Ảnh và lưu vào bảng ProductImage
-        primary_image_url = None
-        
-        for index, image_file in enumerate(images):
-            # Lưu file ảnh vật lý
-            img_url = save_upload_file(image_file, "images")
-            
-            is_primary = (index == 0) # Ảnh đầu tiên làm ảnh bìa
-            if is_primary:
-                primary_image_url = img_url
-            
-            # Tạo record trong bảng product_image
-            new_product_image = ProductImage(
+        # Bước 4: Lưu thông tin chi tiết vào bảng ProductImage (để load slide)
+        for index, url in enumerate(image_urls):
+            img_entry = Product_image(
                 product_id=new_product.id,
-                image_url=img_url,
-                is_primary=is_primary,
+                image_url=url,
+                is_primary=(index == 0),
                 display_order=index
             )
-            db.add(new_product_image)
+            db.add(img_entry)
 
-        # 4. Gắn ảnh chính vào cột image_link của bảng Product để tăng tốc độ load trang chủ
-        if primary_image_url:
-            new_product.image_link = primary_image_url
-
-        # 5. Hoàn tất giao dịch Database
+        # Bước 5: Commit toàn bộ giao dịch
         db.commit()
         db.refresh(new_product)
-        
         return new_product
 
-    except SQLAlchemyError as db_error:
-        db.rollback() # Hoàn tác DB nếu có lỗi
-        raise Exception(f"Lỗi cơ sở dữ liệu: {str(db_error)}")
-        
+    except SQLAlchemyError as e:
+        db.rollback()
+        print(f"Database Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Lỗi lưu dữ liệu vào Database.")
     except Exception as e:
         db.rollback()
-        raise Exception(f"Lỗi xử lý hệ thống: {str(e)}")
+        print(f"General Error: {str(e)}")
+        raise e

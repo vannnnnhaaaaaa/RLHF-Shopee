@@ -1,14 +1,20 @@
-from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
-from sqlalchemy.exc import IntegrityError
 
+from fastapi import HTTPException, status 
+from sqlmodel import select , Session
+from sqlalchemy.exc import IntegrityError
+import os
+from dotenv import load_dotenv
+from supabase import create_client, Client
 
 from src.backend.models import Customer
 from src.backend.auth import hash_password, verify_password
 
+
+
+
 def create_customer_account(db: Session, user_name: str, password: str):
     # 1. Kiểm tra xem user_name đã tồn tại chưa
-    existing_user = db.query(Customer).filter(Customer.user_name == user_name).first()
+    existing_user = db.exec(select(Customer).where(Customer.user_name == user_name)).first()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -40,16 +46,22 @@ def create_customer_account(db: Session, user_name: str, password: str):
         )
 
 def authenticate_customer(db: Session, user_name: str, password: str):
-    # 1. Tìm user (Lúc này SQLAlchemy sẽ truy vấn đúng cột hashed_password)
-    customer = db.query(Customer).filter(Customer.user_name == user_name).first()
-    
+    # Trim khoảng trắng thừa
+    clean_user_name = user_name.strip()
+    print('b2.1')
+    # Tìm kiếm
+    customer = db.exec(
+        select(Customer).where(Customer.user_name == clean_user_name)
+    ).first()
+    print('b2.2')
     if not customer:
+        # Log để dev biết nhưng trả về lỗi chung cho user bảo mật
+        print(f"DEBUG: Không tìm thấy user '{clean_user_name}' trong DB")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Tên đăng nhập hoặc mật khẩu không chính xác",
         )
 
-    # 2. Kiểm tra mật khẩu với thuộc tính đã được viết đúng chính tả
     if not verify_password(password, customer.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

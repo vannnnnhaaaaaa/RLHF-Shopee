@@ -9,3 +9,4 @@ duckduckgo-search
 google-generativeai
 openai
 geodesic
+supabase

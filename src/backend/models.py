@@ -168,14 +168,18 @@ class Product(SQLModel, table=True):
     image_link: str
     video_link: str
     has_variants : bool
-    stock : int 
+    stock : int = Field(default=0)
     category: Optional[str] = None 
     embedding: Optional[List[float]] = Field(sa_column=Column(Vector(384)))
+    discount_percent : Optional[int]  
+    shop_badge: Optional[str] 
+    tag : Optional[str] 
     weight: float 
-    create_at : 
+    length: float 
+    width : float
+    height : float
+    create_at : datetime = Field(default_factory=datetime.now)
     status: str = Field(default="pending_inbound")
-    declared_stock: int = Field(default=0)
-    actual_stock: int = Field(default=0)
     
     # Điểm do AI tự động tính để xếp hạng
     ai_ranking_score: float = Field(default=0.0, index=True)
@@ -184,7 +188,10 @@ class Product(SQLModel, table=True):
     seller: Seller = Relationship(back_populates='products')
     
     reviews: List["Review"] = Relationship(back_populates="product")
-
+    images: List["Product_image"] = Relationship(
+        back_populates="product", 
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
 
 class Product_Variants (SQLModel) :
     id : Optional[int] = Field(default=None , primary_key=True )
@@ -196,7 +203,14 @@ class Product_Variants (SQLModel) :
     price : float
     stock : int
 
-    
+class Product_image(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    product_id: int = Field(foreign_key="product.id", ondelete="CASCADE")
+    image_url: str
+    is_primary: bool = Field(default=False)
+    display_order: int = Field(default=0)
+    # --- Mối quan hệ trỏ ngược lại Product ---
+    product: Optional[Product] = Relationship(back_populates="images")  
 class Voucher(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     code: str = Field(unique=True, index=True) 
@@ -274,16 +288,3 @@ class BillDetail(SQLModel, table=True):
     
     product_id: int = Field(foreign_key="product.id")
     product: Product = Relationship()
-class ProductImage(SQLModel, table=True):
-
-    id: Optional[int] = Field(default=None, primary_key=True)
-
-    product_id: int = Field(foreign_key="product.id", ondelete="CASCADE")
-    
-    image_url: str
-    is_primary: bool = Field(default=False)
-    display_order: int = Field(default=0)
- 
-
-    # --- Mối quan hệ trỏ ngược lại Product ---
-    product: Optional[Product] = Relationship(back_populates="images")

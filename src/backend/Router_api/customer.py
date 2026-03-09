@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Form , status
-from sqlalchemy.orm import Session
+from sqlmodel import Session
 
 # Import từ project của bạn
 from src.backend.services.customer_service import create_customer_account, authenticate_customer
@@ -69,14 +69,16 @@ def login(
     API Đăng nhập cho Khách hàng. 
     Trả về Token chứa role='customer' và cờ has_shop (True/False).
     """
+   
     try:
+        print('b1')
         # 1. Xác thực tài khoản (Service)
         customer = authenticate_customer(
             db=session,
             user_name=user_name, 
             password=password
         )
-        
+        print('b3')
         # 2. Tạo Token và gắn Role
         token_data = {
             "user_id": customer.id,

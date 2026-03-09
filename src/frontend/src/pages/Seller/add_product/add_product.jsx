@@ -226,8 +226,7 @@ const AddProduct = () => {
         
         alert("Thêm sản phẩm thành công!");
         console.log("Kết quả từ server:", data);
-        // Có thể navigate về trang quản lý sản phẩm ở đây
-        // navigate('/seller-dashboard/products');
+       
 
     } catch (error) {
         console.error("Lỗi:", error);

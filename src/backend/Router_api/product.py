@@ -9,7 +9,7 @@ from src.backend.services.product_service import create_new_product
 
 router_product = APIRouter(
     prefix="/product",
-    tags=["Product"]
+   
 )
 
 @router_product.post("/add")
@@ -58,7 +58,7 @@ def add_product(
         "width": width,
         "height": height
     }
-
+    print(product_data_dict)
     try:
         # Đẩy dữ liệu xuống Service xử lý DB và File
         new_product = create_new_product(
@@ -67,10 +67,7 @@ def add_product(
             product_data=product_data_dict,
             images=images,
             video=video ,
-            weight= weight,
-            length= length,
-            width =width,
-            height=height,
+           
         )
         
     except HTTPException:
