@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { loginApi } from '../../services/login';
+import { loginCustomer } from "../../services/customer";
 import './style.scss';
 import Footer from "../../components/Footer";
 
@@ -38,22 +38,22 @@ function LoginPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await loginApi(formData.email, formData.password);
+            const response = await loginCustomer(formData.email, formData.password);
             const accessToken = response.access_token;
+            console.log(response);
             
             // Backend trả về auth ('member' hoặc 'admin') và has_shop (true/false)
             const userRole = response.auth; 
             const hasShop = response.has_shop; 
             
             localStorage.setItem('access_token', accessToken);
-            localStorage.setItem('auth', userRole);
-
+          
             // Logic điều hướng dựa trên URL hiện tại
             if (isSellerLogin) {
-                if (userRole === 'member') {
+                if (userRole === 'customer') {
                     if (hasShop) {
                         // Đã có id trong bảng Seller -> Chuyển thẳng vào trang quản lý bán hàng
-                        navigate('/seller/dashboard');
+                        navigate('/seller-dashboard');
                     } else {
                         // Chưa có trong bảng Seller -> Chuyển sang trang đăng ký trở thành nhà bán hàng
                         navigate('/become-seller');
@@ -72,7 +72,9 @@ function LoginPage() {
             setErrorMsg("Email hoặc mật khẩu không chính xác!");
         }
     };
-
+    const handleSignup = ()=>{
+        navigate('/customer/signup');
+    }
     return (
         <>
             <div className="login-container">
@@ -115,7 +117,7 @@ function LoginPage() {
                         <button type="submit">{isSellerLogin ? "Vào Cửa Hàng" : "Đăng nhập"}</button>
                         
                         <div className="footer-links">
-                            <p>Mới biết đến ứng dụng? <span> Đăng ký</span></p>
+                            <p>Mới biết đến ứng dụng? <span onClick={handleSignup}> Đăng ký</span></p>
                         </div>
                     </form>
                 </div>

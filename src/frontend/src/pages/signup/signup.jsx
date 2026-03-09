@@ -1,90 +1,69 @@
-import React, { useState } from "react";
-import './style.scss';
+import React, { useState, useRef } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { registerCustomer } from '../../services/customer'; // Import API 
+import './style.scss'; // (File CSS bạn dùng lại của bước trước nhé)
 
-function Signup() {
-    const [formData, setFormData] = useState({
-        email: '',
-        password: '',
-        confirmPassword: ''
-    });
-    const [error, setError] = useState('');
+const Signup = () => {
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({ username: '', password: '', reEnterPassword: '' });
+    const [isLoading, setIsLoading] = useState(false);
+    const reEnterPasswordRef = useRef(null);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({
-            ...formData,
-            [name]: value
-        });
-        // Xóa thông báo lỗi khi người dùng bắt đầu nhập lại
-        if (error) setError('');
+        setFormData({ ...formData, [e.target.id]: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Kiểm tra khớp mật khẩu
-        if (formData.password !== formData.confirmPassword) {
-            setError("Mật khẩu xác nhận không khớp!");
+        if (formData.password !== formData.reEnterPassword) {
+            alert("Xác nhận mật khẩu không đúng!");
+            reEnterPasswordRef.current.focus();
             return;
         }
 
-        console.log("Dữ liệu gửi lên Backend (để gửi OTP):", formData);
-        // Ở đây bạn sẽ gọi API FastAPI để gửi mail xác thực
-        alert("Mã xác thực đã được gửi đến email của bạn!");
+        setIsLoading(true);
+
+        try {
+            // GỌI API TỪ FILE SERVICE
+            await registerCustomer(formData.username, formData.password);
+            
+            alert("Tạo tài khoản thành công! Vui lòng đăng nhập.");
+            navigate('/customer/login'); // Chuyển sang trang đăng nhập
+
+        } catch (error) {
+            console.error("Lỗi đăng ký:", error);
+            alert(error.message); // Hiển thị lỗi do Service ném ra
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
-        <div className="login-container">
-            <div className="login-card">
-                <h2>ĐĂNG KÝ</h2>
+        <div className="signup-page">
+            <div className="container">
+                <h2>Đăng ký tài khoản</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label>Email xác thực</label>
-                        <input
-                            type="email"
-                            name="email"
-                            required
-                            value={formData.email}
-                            onChange={handleChange}
-                            placeholder="email@example.com"
-                        />
+                        <label htmlFor="username">Tên đăng nhập</label>
+                        <input type="text" id="username" placeholder="Nhập tên đăng nhập" value={formData.username} onChange={handleChange} required />
                     </div>
-
                     <div className="form-group">
-                        <label>Mật khẩu</label>
-                        <input
-                            type="password"
-                            name="password"
-                            required
-                            value={formData.password}
-                            onChange={handleChange}
-                            placeholder="Nhập mật khẩu..."
-                        />
+                        <label htmlFor="password">Mật khẩu</label>
+                        <input type="password" id="password" placeholder="Nhập mật khẩu" value={formData.password} onChange={handleChange} required />
                     </div>
-
                     <div className="form-group">
-                        <label>Xác nhận mật khẩu</label>
-                        <input
-                            type="password"
-                            name="confirmPassword"
-                            required
-                            value={formData.confirmPassword}
-                            onChange={handleChange}
-                            placeholder="Nhập lại mật khẩu..."
-                        />
+                        <label htmlFor="reEnterPassword">Nhập lại mật khẩu</label>
+                        <input type="password" id="reEnterPassword" placeholder="Nhập lại mật khẩu" value={formData.reEnterPassword} onChange={handleChange} ref={reEnterPasswordRef} required />
                     </div>
-
-                    {error && <p className="error-message">{error}</p>}
-
-                    <button type="submit">Gửi mã xác nhận</button>
-                    
-                    <div className="footer-links">
-                        <span>Đã có tài khoản?   Đăng nhập</span>
-                    </div>
+                    <button type="submit" disabled={isLoading}>
+                        {isLoading ? "Đang xử lý..." : "Đăng ký"}
+                    </button>
                 </form>
+                <p className="message">Đã có tài khoản? <Link to="/customer/login">Đăng nhập ngay</Link></p>
             </div>
         </div>
     );
-}
+};
 
 export default Signup;

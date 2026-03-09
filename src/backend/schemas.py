@@ -125,3 +125,18 @@ class CreateFinalResult(SQLModel) :
     harmful : str 
     solution : str
 
+class SellerCreateRequest(SQLModel):
+    shop_name: str
+    phone_number: str
+    email: str
+    city: str
+    detailed_address: str
+    cccd_number: str
+    bank_name: str
+    bank_account: str
+    bank_holder: str
+
+
+class CustomerAuthRequest(SQLModel):
+    user_name: str
+    password: str

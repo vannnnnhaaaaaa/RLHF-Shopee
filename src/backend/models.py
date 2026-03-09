@@ -5,7 +5,6 @@ from datetime import datetime
 
 
 
-
 class ChatMessage (SQLModel , table= True) :
     id: Optional[int] = Field(primary_key=True , default=None)
     thread_id: str = Field(index=True)
@@ -109,21 +108,36 @@ class Shipping(SQLModel, table=True):
     base_fee: float = Field(default=10000)
 
 class Seller(SQLModel, table=True):
+    # Khóa chính và Khóa ngoại
     id: Optional[int] = Field(default=None, primary_key=True)  
-    name: str 
-    cccd_front: str 
-    cccd_back: str
-    cccd_number: Optional[str] = None 
-    status: str = Field(default='pending')
-    customer_id : Optional[int] = Field (foreign_key='customer.id')
-    # Quan hệ
+    customer_id: Optional[int] = Field(foreign_key='customer.id')
+    
+    # 1. Thông tin gian hàng
+    shop_name: str = Field(index=True) # Đổi name thành shop_name cho rõ nghĩa
+    phone_number: str
+    email: str
+    # 2. Địa chỉ kho lấy hàng
+    city: str
+    detailed_address: str
+    # 3. Thông tin định danh (CCCD)
+    cccd_number: str 
+    cccd_front: Optional[str] = None # Cho phép None nếu bước đăng ký đầu tiên chưa bắt upload ảnh
+    cccd_back: Optional[str] = None 
+    # 4. Thông tin tài chính (Nhận tiền)
+    bank_name: str
+    bank_account: str
+    bank_holder: str
+    # 5. Trạng thái và Thời gian
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
     products: List["Product"] = Relationship(back_populates='seller')
     vouchers: List["Voucher"] = Relationship(back_populates="seller")
 
 class Customer(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True) 
     user_name: str = Field(index=True, unique=True)
-    hased_password : str 
+    hashed_password : str 
     name: str 
     map_id: Optional[int] = Field(foreign_key='map.id')  
     number: Optional[str] = None
@@ -152,11 +166,13 @@ class Product(SQLModel, table=True):
     sold_count: int = Field(default=0)
     description: str 
     image_link: str
-    product_link: str
+    video_link: str
+    has_variants : bool
+    stock : int 
     category: Optional[str] = None 
     embedding: Optional[List[float]] = Field(sa_column=Column(Vector(384)))
     weight: float 
-    
+    create_at : 
     status: str = Field(default="pending_inbound")
     declared_stock: int = Field(default=0)
     actual_stock: int = Field(default=0)
@@ -258,3 +274,16 @@ class BillDetail(SQLModel, table=True):
     
     product_id: int = Field(foreign_key="product.id")
     product: Product = Relationship()
+class ProductImage(SQLModel, table=True):
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    product_id: int = Field(foreign_key="product.id", ondelete="CASCADE")
+    
+    image_url: str
+    is_primary: bool = Field(default=False)
+    display_order: int = Field(default=0)
+ 
+
+    # --- Mối quan hệ trỏ ngược lại Product ---
+    product: Optional[Product] = Relationship(back_populates="images")

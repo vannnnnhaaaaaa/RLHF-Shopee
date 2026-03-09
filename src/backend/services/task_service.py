@@ -3,7 +3,7 @@ from datetime import datetime , timedelta
 from sqlmodel import Session ,select  , or_ , func
 from src.backend.models import Task , User , ChatMessage , Feedback , TaskResult
 from src.backend.schemas import   TaskCreate , TaskRead   , TaskApprove
-from src.backend.auth import get_current_user
+from src.backend.auth import get_current_member
 from src.backend.connect_database import get_session
 from sqlalchemy.orm import joinedload
 

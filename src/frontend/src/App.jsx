@@ -19,9 +19,9 @@ function App() {
     <>
       <BrowserRouter>
         <Routes>
-          <Route path='/signup' element={<Signup />} />
-          <Route path='/login' element={<LoginPage />} />
-          <Route path='/home' element={<Shopee />} />
+          <Route path='/customer/signup' element={<Signup />} />
+          <Route path='/customer/login' element={<LoginPage />} />
+          <Route path='/customer/home' element={<Shopee />} />
           <Route path='/seller-login' element={<LoginPage />} />
           <Route path='/become-seller' element={<BecomeSeller />} />
           <Route path='/adminDashboard_RLHF' element={<AdminDashboard />} />

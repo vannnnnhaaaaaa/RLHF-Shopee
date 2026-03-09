@@ -28,37 +28,37 @@ const HomeDashboard = () => {
         
         <div className="todo-grid">
           {/* Box 1: Chờ xác nhận */}
-          <div className="todo-card" onClick={() => navigate('/seller/orders/manage')}>
+          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/manage')}>
             <h4 className="text-blue">12</h4>
             <p>Chờ xác nhận</p>
           </div>
           
           {/* Box 2: Chờ lấy hàng */}
-          <div className="todo-card" onClick={() => navigate('/seller/orders/manage')}>
+          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/manage')}>
             <h4 className="text-orange">5</h4>
             <p>Chờ lấy hàng</p>
           </div>
           
           {/* Box 3: Yêu cầu hủy */}
-          <div className="todo-card" onClick={() => navigate('/seller/orders/cancellations')}>
+          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/cancellations')}>
             <h4 className="text-red">1</h4>
             <p>Yêu cầu hủy đơn</p>
           </div>
           
           {/* Box 4: Trả hàng / Hoàn tiền */}
-          <div className="todo-card" onClick={() => navigate('/seller/orders/returns')}>
+          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/managereturn')}>
             <h4 className="text-teal">0</h4>
             <p>Trả hàng/Hoàn tiền</p>
           </div>
 
           {/* Box 5: Sản phẩm hết hàng */}
-          <div className="todo-card" onClick={() => navigate('/seller/products/manage')}>
+          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/manage')}>
             <h4 className="text-gray">3</h4>
             <p>Sản phẩm hết hàng</p>
           </div>
           
           {/* Box 6: Sản phẩm bị khóa */}
-          <div className="todo-card" onClick={() => navigate('/seller/products/manage')}>
+          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/manage')}>
             <h4 className="text-gray">0</h4>
             <p>Sản phẩm bị khóa</p>
           </div>

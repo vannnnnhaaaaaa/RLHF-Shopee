@@ -17,7 +17,7 @@ const SellerDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('auth');
-    navigate('/login');
+    navigate('/seller-login');
   };
 
   return (

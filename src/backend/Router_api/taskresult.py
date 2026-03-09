@@ -2,7 +2,7 @@ from fastapi import Depends ,APIRouter , HTTPException
 from sqlmodel  import select ,Session
 
 from src.backend.schemas  import TaskResultUpdate , TaskResultResponse
-from src.backend.auth import get_current_user , get_session
+from src.backend.auth import get_current_admin , get_session
 from src.backend.models import User , Task , TaskResult
 from src.backend.services.taskresult_service import updateTaskResult , get_conflict_tasks
 taskResult_router = APIRouter()
@@ -10,15 +10,14 @@ taskResult_router = APIRouter()
 async def updateTask(
     taskId: int, 
     data: TaskResultUpdate, 
-    current_user: User = Depends(get_current_user), 
+    current_user: User = Depends(get_current_admin), 
     session: Session = Depends(get_session)
 ):
     result =await  updateTaskResult(taskId , data , current_user , session)
     return result
 
 @taskResult_router.get('/admin/conflicts')
-async def getTaskConflict(session: Session = Depends(get_session) , current_user : User = Depends(get_current_user)) :
-    if current_user.auth != 'admin' :
-        raise HTTPException(status_code=403 , detail='Ban khong co quyen xem')
+async def getTaskConflict(session: Session = Depends(get_session) , current_user : User = Depends(get_current_admin)) :
+    
     result = await get_conflict_tasks(session)
     return result

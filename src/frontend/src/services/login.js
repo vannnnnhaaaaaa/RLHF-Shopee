@@ -9,7 +9,7 @@ export const loginApi = async (email, password) => {
     formData.append('password', password);
 
     // 2. Gửi đi với Header tương ứng
-    const response = await axios.post('http://127.0.0.1:8000/login', formData, {
+    const response = await axios.post('http://127.0.0.1:8000/customer/login', formData, {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
