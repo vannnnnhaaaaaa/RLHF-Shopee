@@ -5,10 +5,13 @@ class ProductRead(SQLModel) :
     id : int 
     name : str = Field(index=True)
     price : float 
-    stock : int
+    sold_count : int
     description : str 
     image_link : str
     product_link : str
+    discount_percent : Optional[int] 
+    shop_badge : str 
+    tag : str
     category : Optional[str] = None 
 
 #-- --- -- ChatMessage -- --- --

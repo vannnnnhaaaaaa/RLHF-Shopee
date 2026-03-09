@@ -1,0 +1,145 @@
+.become-seller-wrapper {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.become-seller-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0 20px;
+  flex: 1;
+  width: 100%;
+
+  .registration-header {
+    text-align: center;
+    margin-bottom: 30px;
+
+    h2 {
+      font-size: 28px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #666;
+      font-size: 16px;
+    }
+  }
+
+  .registration-card {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        label {
+          font-weight: 500;
+          color: #333;
+          font-size: 14px;
+
+          span {
+            color: #ee4d2d; /* Màu đỏ cam nhấn mạnh yêu cầu bắt buộc */
+          }
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        textarea {
+          width: 100%;
+          padding: 12px 15px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-size: 14px;
+          transition: border-color 0.3s ease;
+          font-family: inherit;
+
+          &:focus {
+            outline: none;
+            border-color: #ee4d2d;
+            box-shadow: 0 0 0 2px rgba(238, 77, 45, 0.1);
+          }
+
+          &::placeholder {
+            color: #aaa;
+          }
+        }
+
+        textarea {
+          resize: vertical;
+        }
+      }
+
+      .terms-checkbox {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 10px;
+
+        input[type="checkbox"] {
+          margin-top: 3px;
+          accent-color: #ee4d2d;
+        }
+
+        label {
+          font-size: 14px;
+          color: #555;
+          line-height: 1.5;
+
+          a {
+            color: #ee4d2d;
+            text-decoration: none;
+
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+        }
+      }
+
+      .submit-btn {
+        margin-top: 20px;
+        background-color: #ee4d2d;
+        color: white;
+        padding: 14px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+
+        &:hover {
+          background-color: #d73a1c;
+        }
+
+        &:disabled {
+          background-color: #fca08d;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+}
+
+/* Responsive nhỏ cho Mobile */
+@media (max-width: 600px) {
+  .become-seller-container {
+    margin: 20px auto;
+    
+    .registration-card {
+      padding: 20px;
+    }
+  }
+}

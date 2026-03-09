@@ -1,0 +1,168 @@
+/* --- HOME DASHBOARD PAGE --- */
+.home-dashboard-page {
+  padding: 20px 30px;
+  background-color: #f6f6f6;
+  min-height: 100vh;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #333;
+
+  /* Lời chào & Banner */
+  .welcome-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+    padding: 20px 30px;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+    border-left: 5px solid #00bfa5;
+
+    .welcome-text {
+      h2 { margin: 0 0 5px; font-size: 22px; color: #2c3e50; }
+      p { margin: 0; color: #666; font-size: 14px; }
+    }
+
+    .system-alert {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      padding: 10px 15px;
+      border-radius: 6px;
+      border: 1px solid #e0f2f1;
+      
+      .icon { font-size: 18px; }
+      p { margin: 0; font-size: 13px; color: #555; }
+    }
+  }
+
+  /* Khung Section Chung */
+  .dashboard-section {
+    background: #fff;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+
+      h3 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+      .subtitle { font-size: 13px; color: #888; margin-left: 10px; font-weight: normal; }
+      
+      .date-filter {
+        padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; outline: none; cursor: pointer;
+      }
+    }
+  }
+
+  /* Lưới Việc Cần Làm (To-do Grid) */
+  .todo-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 15px;
+
+    .todo-card {
+      background: #fafafa;
+      border: 1px solid #eee;
+      border-radius: 6px;
+      padding: 20px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border-color: #00bfa5;
+        transform: translateY(-2px);
+      }
+
+      h4 { margin: 0 0 10px; font-size: 28px; font-weight: 600; }
+      p { margin: 0; font-size: 13px; color: #555; }
+
+      /* Màu nhấn cho các con số */
+      .text-blue { color: #1e88e5; }
+      .text-orange { color: #f4511e; }
+      .text-red { color: #e53935; }
+      .text-teal { color: #00bfa5; }
+      .text-gray { color: #757575; }
+    }
+  }
+
+  /* Lưới Thống Kê (Stats Grid) */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+
+    .stat-card {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 20px;
+      background: #fafafa;
+      border-radius: 8px;
+      border: 1px solid #eee;
+
+      .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: white;
+
+        &.bg-green { background-color: #4caf50; }
+        &.bg-blue { background-color: #2196f3; }
+        &.bg-orange { background-color: #ff9800; }
+        &.bg-purple { background-color: #9c27b0; }
+      }
+
+      .stat-info {
+        p { margin: 0 0 5px; font-size: 13px; color: #666; }
+        h3 { margin: 0 0 5px; font-size: 20px; color: #333; }
+        
+        .trend {
+          font-size: 12px; font-weight: 500;
+          &.up { color: #4caf50; }
+          &.down { color: #e53935; }
+        }
+      }
+    }
+  }
+
+  /* Section Kênh Marketing */
+  .marketing-section {
+    .marketing-banner {
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      border-radius: 8px;
+      padding: 30px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+
+      /* Tạo hoa văn chìm */
+      &::after {
+        content: '⚡'; position: absolute; right: 20px; top: -10px; font-size: 120px; opacity: 0.1;
+      }
+
+      .banner-content {
+        position: relative; z-index: 2;
+        h3 { margin: 0 0 10px; font-size: 20px; }
+        p { margin: 0 0 20px; font-size: 14px; opacity: 0.9; max-width: 500px; }
+        
+        .btn-join {
+          background: #ffc107; color: #333; border: none; padding: 10px 24px; border-radius: 4px; font-weight: 600; cursor: pointer; transition: background 0.2s;
+          &:hover { background: #ffb300; }
+        }
+      }
+    }
+  }
+}

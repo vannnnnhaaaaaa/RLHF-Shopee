@@ -1,0 +1,197 @@
+.seller-dashboard {
+  display: flex;
+  height: 100vh; /* Chiếm toàn bộ chiều cao màn hình */
+  background-color: #f6f6f6;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: #333;
+
+  /* --- Sidebar Styles --- */
+  .dashboard-sidebar {
+    width: 250px;
+    background-color: #ffffff;
+    border-right: 1px solid #e5e5e5;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Cho phép cuộn nếu menu quá dài */
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid #e5e5e5;
+      
+      h2 {
+        margin: 0;
+        font-size: 18px;
+        color: #ee4d2d; /* Màu chủ đạo Shopee/Seller */
+        font-weight: 600;
+        text-align: center;
+      }
+    }
+
+    .sidebar-nav {
+      padding: 15px 0;
+
+      .menu-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        .icon {
+          margin-right: 10px;
+          font-size: 16px;
+        }
+
+        /* Menu đơn cấp (Trang chủ) */
+        .menu-item {
+          .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+
+            &:hover {
+              background-color: #f5f5f5;
+            }
+
+            &.active {
+              color: #ee4d2d;
+              background-color: #fff4f4;
+              border-right: 3px solid #ee4d2d;
+            }
+          }
+        }
+
+        /* Menu đa cấp (Đơn hàng, Sản phẩm) */
+        .menu-group {
+          margin-top: 5px;
+
+          .menu-group-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            transition: background-color 0.2s;
+
+            &:hover {
+              background-color: #f5f5f5;
+            }
+
+            .title-left {
+              display: flex;
+              align-items: center;
+            }
+
+            .toggle-icon {
+              font-size: 10px;
+              color: #888;
+            }
+          }
+
+          .sub-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            background-color: #fafafa;
+
+            li {
+              a {
+                display: block;
+                padding: 10px 20px 10px 46px; /* Thụt lề vào trong */
+                text-decoration: none;
+                color: #555;
+                font-size: 13px;
+                transition: color 0.2s;
+
+                &:hover {
+                  color: #ee4d2d;
+                }
+
+                &.active {
+                  color: #ee4d2d;
+                  font-weight: 500;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* --- Main Content Styles --- */
+  .dashboard-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Tránh vỡ layout, cuộn sẽ nằm ở content */
+
+    .dashboard-header {
+      height: 60px;
+      background-color: #ffffff;
+      border-bottom: 1px solid #e5e5e5;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+
+        .shop-profile {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+
+          .avatar {
+            width: 32px;
+            height: 32px;
+            background-color: #ee4d2d;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+          }
+
+          .shop-name {
+            font-size: 14px;
+            font-weight: 500;
+          }
+        }
+
+        .logout-btn {
+          background: none;
+          border: 1px solid #ddd;
+          padding: 6px 12px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 13px;
+          transition: all 0.2s;
+
+          &:hover {
+            border-color: #ee4d2d;
+            color: #ee4d2d;
+          }
+        }
+      }
+    }
+
+    .dashboard-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto; /* Khu vực này tự động có thanh cuộn nếu nội dung dài */
+      background-color: #f6f6f6;
+    }
+  }
+}

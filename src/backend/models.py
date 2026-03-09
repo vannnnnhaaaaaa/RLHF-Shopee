@@ -115,7 +115,7 @@ class Seller(SQLModel, table=True):
     cccd_back: str
     cccd_number: Optional[str] = None 
     status: str = Field(default='pending')
-    
+    customer_id : Optional[int] = Field (foreign_key='customer.id')
     # Quan hệ
     products: List["Product"] = Relationship(back_populates='seller')
     vouchers: List["Voucher"] = Relationship(back_populates="seller")
@@ -169,6 +169,18 @@ class Product(SQLModel, table=True):
     
     reviews: List["Review"] = Relationship(back_populates="product")
 
+
+class Product_Variants (SQLModel) :
+    id : Optional[int] = Field(default=None , primary_key=True )
+    product_id : int = Field (foreign_key='product.id')
+    tier_1_name : Optional[str]
+    tier_1_value : Optional[str]
+    tier_2_name : Optional[str]
+    tier_2_value : Optional[str]
+    price : float
+    stock : int
+
+    
 class Voucher(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     code: str = Field(unique=True, index=True) 

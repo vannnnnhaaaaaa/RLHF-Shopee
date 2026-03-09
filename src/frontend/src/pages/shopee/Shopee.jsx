@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
 
-import { getProduct } from '../../services/product'
+// import { getProduct } from '../../services/product'
 
 import Navbar from '../../components/Navbar/Navbar'
 import ProductCard from '../../components/ProductCart/ProductCart'
 
-async function Shopee() {
+function Shopee() {
 
-    const products = await getProduct()
+    // const products = await getProduct()
     
     return (
         <div className="home-container">
