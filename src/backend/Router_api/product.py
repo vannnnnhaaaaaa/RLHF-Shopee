@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, Form, File, UploadFile, HTTPException, status
+from fastapi import APIRouter, Depends, Form, File, UploadFile, HTTPException, status ,Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
 # Import từ project của bạn (Hãy điều chỉnh lại đường dẫn nếu cần)
 from src.backend.connect_database import get_session
 from src.backend.auth import get_current_seller 
-from src.backend.services.product_service import create_new_product
-
+from src.backend.services.product_service import get_product_by_id, create_new_product , get_products_by_seller , get_random_active_products
+from src.backend.schemas import ProductListResponse
 router_product = APIRouter(
     prefix="/product",
    
@@ -88,3 +88,102 @@ def add_product(
             "image_link": new_product.image_link
         }
     }
+
+
+
+@router_product.get("/list")
+def get_my_products(
+    # --- Query Parameters (Thông số truyền trên URL) ---
+    status: Optional[str] = Query(None, description="Trạng thái: pending_inbound, rejected, removed... Để trống là lấy TẤT CẢ"),
+    skip: int = Query(0, description="Bỏ qua bao nhiêu bản ghi (Dùng cho Trang 1, Trang 2...)"),
+    limit: int = Query(50, description="Số lượng lấy tối đa mỗi lần gọi"),
+    
+    # --- Dependencies ---
+    session: Session = Depends(get_session),
+    current_seller = Depends(get_current_seller)
+):
+    """
+    API Lấy danh sách sản phẩm cho người bán (Quản lý kho)
+    """
+    try:
+        # Gọi xuống tầng Service
+        products = get_products_by_seller(
+            db=session,
+            seller_id=current_seller.id,
+            status=status,
+            skip=skip,
+            limit=limit
+        )
+        
+        return {
+            "status": "success",
+            "message": "Lấy danh sách sản phẩm thành công",
+            "metadata": {
+                "filter_status": status if status else "all",
+                "count_returned": len(products)
+            },
+            "data": products
+        }
+        
+    except Exception as e:
+        print(f"Lỗi khi lấy danh sách sản phẩm: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Lỗi hệ thống khi tải danh sách sản phẩm"
+        )
+@router_product.get(
+    "/public/random", 
+    response_model=ProductListResponse # <--- "PHÉP THUẬT" NẰM Ở ĐÂY
+)
+def get_random_homepage_products(
+    limit: int = Query(24, description="Số lượng sản phẩm"),
+    session: Session = Depends(get_session)
+):
+    try:
+        raw_products = get_random_active_products(session, limit=limit)
+        
+        return {
+            "status": "success",
+            "data": raw_products
+        }
+    except Exception as e:
+        print(f"Lỗi lấy sản phẩm random: {str(e)}")
+        # FastAPI sẽ tự xử lý nếu trả về lỗi, nhưng để đúng chuẩn với React của bạn:
+        return {"status": "error", "data": []}
+    
+
+@router_product.get("/public/{product_id}")
+def get_detail_product(
+    product_id: int, 
+    session: Session = Depends(get_session)
+):
+    """
+    API Công khai: Lấy chi tiết 1 sản phẩm dựa vào ID
+    """
+    try:
+        # 1. Gọi xuống DB để tìm sản phẩm
+        product = get_product_by_id(session, product_id)
+        
+        # 2. Xử lý trường hợp có người nhập bậy ID lên thanh URL (VD: /product/99999)
+        if not product:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Sản phẩm không tồn tại hoặc đã bị gỡ."
+            )
+            
+        # 3. Ép kiểu an toàn loại bỏ embedding (hoặc dùng response_model như lúc nãy bạn đã tạo)
+        product_dict = product.model_dump(exclude={"embedding"})
+
+        return {
+            "status": "success",
+            "data": product_dict
+        }
+        
+    except HTTPException:
+        raise # Quăng lại lỗi 404 ra ngoài cho Frontend biết
+    except Exception as e:
+        print(f"Lỗi khi lấy chi tiết sản phẩm ID {product_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Lỗi hệ thống khi tải chi tiết sản phẩm"
+        )

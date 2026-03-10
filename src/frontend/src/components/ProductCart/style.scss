@@ -1,148 +1,118 @@
-$shopee-orange: #ee4d2d;
-
-.product-card {
-  background: #fff;
+.shopee-product-card {
+  background: white;
   border-radius: 2px;
-  box-shadow: 0 1px 2px 0 rgba(0,0,0,.1);
-  transition: transform 0.1s cubic-bezier(0.4, 0, 0.6, 1), box-shadow 0.1s;
-  cursor: pointer;
+  text-decoration: none;
+  color: rgba(0,0,0,.87);
+  
+  /* THÊM 2 DÒNG NÀY ĐỂ KHÓA KÍCH THƯỚC */
+  width: 100%; 
+  overflow: hidden; 
+
   display: flex;
   flex-direction: column;
-  position: relative;
-  overflow: hidden;
-  height: 100%;
-  .shop-badge-label {
-    color: white;
-    padding: 1px 4px;
-    border-radius: 2px;
-    font-size: 10px;
-    margin-right: 5px;
-    font-weight: 500;
-    display: inline-block; 
-    vertical-align: middle;
-    margin-top: -2px;
-  }
+  height: 100%; 
+  border: 1px solid transparent;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
 
-  .badge-yt { background-color: #f25220; }
-  .badge-mall { background-color: #d0011b; }
-  .badge-xl { 
-    background-color: #ee4d2d;
-    border-radius: 2px 0 0 2px; 
-  }
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 1px 20px 0 rgba(0,0,0,.05);
-    border: 1px solid $shopee-orange; // Hiệu ứng viền cam khi hover
-    margin: -1px; // Bù trừ kích thước viền để không bị giật layout
+    border: 1px solid #ee4d2d;
+    z-index: 1;
   }
 
-  .product-image-wrapper {
-    position: relative;
+  .card-image-wrapper {
     width: 100%;
-    padding-top: 100%; // Tỉ lệ 1:1 vuông vức cho ảnh sản phẩm
+    /* Khung hình vuông tuyệt đối */
+    aspect-ratio: 1 / 1; 
+    position: relative;
+    overflow: hidden;
 
-    .main-image {
+    img {
       position: absolute;
-      top: 0;
+      top: 0; 
       left: 0;
-      width: 100%;
+      width: 100%; 
       height: 100%;
-      object-fit: cover;
+      /* Cắt phần ảnh thừa, không làm méo hình */
+      object-fit: cover; 
+      object-position: center; 
     }
 
-    .discount-badge {
+    /* Cờ giảm giá màu vàng (giữ nguyên của bạn) */
+    .badge-discount {
       position: absolute;
-      top: 0;
-      right: 0;
-      background-color: rgba(255,212,36,.9);
+      top: 0; right: 0;
       width: 36px;
-      height: 32px;
+      height: 42px;
+      background-color: rgba(255, 212, 36, 0.9);
       display: flex;
-      justify-content: center;
-      align-items: center;
       flex-direction: column;
-
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      
       &::after {
         content: "";
-        width: 0;
-        height: 0;
-        left: 0;
-        bottom: -4px;
         position: absolute;
-        border-color: transparent rgba(255,212,36,.9);
-        border-style: solid;
+        bottom: -4px; left: 0;
         border-width: 0 18px 4px;
+        border-style: solid;
+        border-color: transparent rgba(255, 212, 36, 0.9) transparent rgba(255, 212, 36, 0.9);
       }
 
-      .percent {
-        color: $shopee-orange;
-        font-weight: 400;
-        font-size: 12px;
-      }
-    }
-
-    .sale-banner {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 20px;
-      object-fit: cover;
+      .percent { color: #ee4d2d; font-weight: bold; font-size: 12px; line-height: 1; }
+      .label { color: white; font-weight: 500; font-size: 10px; line-height: 1; margin-top: 2px;}
     }
   }
 
-  .product-info {
+  .card-info {
     padding: 8px;
     display: flex;
     flex-direction: column;
-    flex: 1;
+    /* 4. Cho phép khu vực thông tin chiếm hết khoảng trống còn lại */
+    flex-grow: 1; 
 
-    .product-title {
+    /* Tên SP cắt đúng 2 dòng có dấu ... */
+    .product-name {
       font-size: 12px;
       line-height: 14px;
-      height: 28px; // Giới hạn 2 dòng
+      height: 28px; /* Ép cứng chiều cao 2 dòng: 14 x 2 = 28px */
+      word-wrap: break-word;
       overflow: hidden;
       display: -webkit-box;
       -webkit-box-orient: vertical;
-      -webkit-line-clamp: 2;
-      color: rgba(0,0,0,.87);
+      -webkit-line-clamp: 2; /* Đúng 2 dòng là tự động cắt */
       margin-bottom: 4px;
-
-      .favorite-label {
-        background-color: $shopee-orange;
-        color: white;
-        padding: 0 4px;
-        border-radius: 2px;
-        font-size: 10px;
-        margin-right: 5px;
-        font-weight: 500;
-      }
     }
 
-    .product-tags {
-      min-height: 18px;
+    .tag-wrapper {
+      min-height: 16px;
       margin-bottom: 8px;
-      
-      .shop-tag {
-        color: $shopee-orange;
-        border: 1px solid $shopee-orange;
-        padding: 1px 4px;
+      .product-tag {
+        border: 1px solid #ee4d2d;
+        color: #ee4d2d;
         font-size: 10px;
+        padding: 1px 4px;
+        border-radius: 1px;
       }
     }
 
-    .product-footer {
+    .card-footer {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: auto; // Đẩy giá và số lượng bán xuống dưới cùng
+      /* 5. ĐẨY GIÁ VÀ LƯỢT BÁN XUỐNG SÁT ĐÁY THẺ */
+      margin-top: auto; 
 
-      .product-price {
-        color: $shopee-orange;
+      .price {
+        color: #ee4d2d;
         font-size: 16px;
+        font-weight: 500;
+        .currency { font-size: 12px; margin-right: 1px; }
       }
 
-      .product-sold {
+      .sold-count {
         color: rgba(0,0,0,.54);
         font-size: 12px;
       }

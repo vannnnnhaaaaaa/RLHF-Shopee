@@ -1,47 +1,56 @@
 import React from 'react';
 import './style.scss';
-
+import { Link } from 'react-router-dom';
 function ProductCard({ product }) {
+  // Hàm format lượt bán (VD: 12500 -> 12.5k)
+  const formatSoldCount = (count) => {
+    if (!count) return 0;
+    if (count >= 1000) return (count / 1000).toFixed(1) + 'k';
+    return count;
+  };
+
   return (
-    <div className="product-card">
-      {/* Phần 1: Hình ảnh và các nhãn dán đè lên ảnh */}
-      <div className="product-image-wrapper">
-        <img src={product.image_link} alt={product.title} className="main-image" />
+    <Link to={`/product/public/${product.id}`} className="shopee-product-card">
+    <div className="shopee-product-card">
+      
+      <div className="card-image-wrapper">
+        <img src={product.image_link} alt={product.name} />
         
-        {/* Badge giảm giá góc trên phải */}
-        {product.discount && (
-          <div className="discount-badge">
-            <span className="percent">-{product.discount}%</span>
+        {/* Nhãn Shopee Mall hoặc Yêu thích */}
+        {product.shop_badge && (
+          <div className={`badge-shop ${product.shop_badge === 'Shopee Mall' ? 'mall' : 'favorite'}`}>
+            {product.shop_badge}
           </div>
         )}
 
-        {/* Banner sale (Ví dụ: 3.3 VOUCHER XTRA) nằm dưới cùng của ảnh */}
-        {product.hasSaleBanner && (
-           <img 
-             src="https://down-vn.img.susercontent.com/file/vn-50009109-8a38eccebb7bb8bc19dce6178df94e63" // Ảnh banner 3.3 giả định
-             className="sale-banner" 
-             alt="sale" 
-           />
+        {/* Nhãn giảm giá màu vàng góc phải */}
+        {product.discount_percent > 0 && (
+          <div className="badge-discount">
+            <span className="percent">{product.discount_percent}%</span>
+            <span className="label">GIẢM</span>
+          </div>
         )}
       </div>
 
-      {/* Phần 2: Thông tin sản phẩm */}
-      <div className="product-info">
-        <div className="product-title">
-          {product.isFavorite && <span className="favorite-label">Yêu thích</span>}
-          {product.title}
+      <div className="card-info">
+        {/* Tên sản phẩm giới hạn 2 dòng */}
+        <div className="product-name">{product.name}</div>
+        
+        {/* Tag nổi bật (Khung đỏ) */}
+        <div className="tag-wrapper">
+          {product.tag && <span className="product-tag">{product.tag}</span>}
         </div>
 
-        <div className="product-tags">
-          {product.tag && <span className="shop-tag">{product.tag}</span>}
-        </div>
-
-        <div className="product-footer">
-          <div className="product-price">{product.price}₫</div>
-          <div className="product-sold">{product.sold_count} đã bán</div>
+        <div className="card-footer">
+          <div className="price">
+            <span className="currency">₫</span>
+            {product.price.toLocaleString('vi-VN')}
+          </div>
+          <div className="sold-count">Đã bán {formatSoldCount(product.sold_count)}</div>
         </div>
       </div>
     </div>
+      </Link>
   );
 }
 

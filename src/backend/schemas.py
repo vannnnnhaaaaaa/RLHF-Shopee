@@ -140,3 +140,40 @@ class SellerCreateRequest(SQLModel):
 class CustomerAuthRequest(SQLModel):
     user_name: str
     password: str
+
+
+class ProductCreateSchema(SQLModel):
+    name: str
+    category: str
+    description: str
+    price: float
+    stock: int
+    has_variants: bool
+
+class ProductPublic(SQLModel):
+    id: int
+    name: str
+    category: str
+    price: float
+    stock: int
+    image_link: Optional[str] = None
+    status: Optional[str] = None
+    shop_badge : Optional[str]
+    tag : Optional[str]
+    # Bạn có thể thêm các trường bạn MUỐN hiển thị ở Frontend
+    description: Optional[str] = None
+    sold_count: Optional[int] = 0
+    discount_percent: Optional[int] = 0
+
+    # Cấu hình để Pydantic có thể đọc thẳng từ đối tượng SQLModel/SQLAlchemy
+    class Config:
+        from_attributes = True 
+
+# 2. Khuôn mẫu cho toàn bộ Response trả về (Có status và data)
+class ProductListResponse(SQLModel):
+    status: str
+    data: list[ProductPublic]
+
+class AddToCartRequest(SQLModel):
+    product_id: int
+    quantity: int = 1 

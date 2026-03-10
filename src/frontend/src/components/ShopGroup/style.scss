@@ -1,0 +1,35 @@
+$primary-color: #ee4d2d;
+$border-color: #f1f1f1;
+
+.shop-group-box {
+  background: white;
+  border-radius: 3px;
+  margin-bottom: 15px;
+  box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+
+  .shop-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid $border-color;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .shop-badge {
+      color: white; padding: 2px 5px; font-size: 12px; border-radius: 2px;
+      &.mall { background: #d0011b; }
+      &.favorite { background: #f25220; }
+    }
+    .shop-name { font-weight: 500; color: rgba(0,0,0,.87); }
+    .chat-icon { color: $primary-color; cursor: pointer; }
+  }
+
+  .shop-footer {
+    padding: 15px 20px;
+    font-size: 14px;
+    .voucher-line { color: #0055aa; cursor: pointer; margin-bottom: 15px;}
+    .freeship-line { 
+      color: rgba(0,0,0,.8); 
+      a { color: #0055aa; text-decoration: none; } 
+    }
+  }
+}

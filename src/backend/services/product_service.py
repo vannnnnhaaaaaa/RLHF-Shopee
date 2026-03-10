@@ -4,9 +4,9 @@ from typing import List, Optional
 from dotenv import load_dotenv
 from supabase import create_client, Client
 from fastapi import HTTPException, UploadFile, status
-from sqlmodel import Session
+from sqlmodel import Session , select , func
 from sqlalchemy.exc import SQLAlchemyError
-
+from sqlalchemy.orm import defer
 # Import các Models của bạn
 from src.backend.models import Product, Product_image
 
@@ -113,3 +113,64 @@ def create_new_product(
         db.rollback()
         print(f"General Error: {str(e)}")
         raise e
+
+def get_products_by_seller(
+    db: Session, 
+    seller_id: int, 
+    status: Optional[str] = None, 
+    skip: int = 0, 
+    limit: int = 50
+):
+    """
+    Lấy danh sách sản phẩm của người bán.
+    - Hỗ trợ lọc theo status (nếu có).
+    - Hỗ trợ phân trang để tối ưu hiệu năng.
+    """
+    # Bước 1: Khởi tạo câu truy vấn gốc (chỉ lấy của người bán này)
+    statement = select(Product).where(Product.seller_id == seller_id)
+    
+    # Bước 2: Nếu Frontend có truyền status lên, ta thêm điều kiện WHERE
+    if status:
+        statement = statement.where(Product.status == status)
+        
+    # Bước 3: Sắp xếp sản phẩm mới nhất lên đầu và áp dụng phân trang
+    statement = statement.order_by(Product.id.desc()).offset(skip).limit(limit)
+    
+    # Bước 4: Thực thi truy vấn
+    results = db.exec(statement).all()
+    
+    return results
+
+def get_random_active_products(db: Session, limit: int = 20):
+    """
+    Lấy ngẫu nhiên các sản phẩm đang hoạt động (Tránh lấy 1 cục cùng danh mục)
+    Dùng cho trang chủ Shopee.
+    """
+    # Chỉ lấy sản phẩm trạng thái 'active' (Trên kệ)
+    # Sắp xếp ngẫu nhiên bằng func.random()
+    statement = (
+        select(Product)
+        .where(Product.status == 'active') 
+        .options(defer(Product.embedding))
+        .order_by(func.random()) 
+        .limit(limit)
+    )
+    
+    results = db.exec(statement).all()
+    return results
+
+def get_product_by_id(db: Session, product_id: int):
+    """
+    Lấy thông tin chi tiết của 1 sản phẩm theo ID.
+    Bỏ qua cột embedding để tối ưu tốc độ.
+    """
+    statement = (
+        select(Product)
+        .where(Product.id == product_id)
+        .where(Product.status == 'active') # Khách chỉ xem được hàng đang bán
+        .options(defer(Product.embedding)) # Khóa chặt embedding lại
+    )
+    
+    # Dùng .first() vì ID là duy nhất, lấy ra dòng đầu tiên tìm thấy
+    result = db.exec(statement).first() 
+    return result

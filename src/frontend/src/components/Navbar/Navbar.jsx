@@ -1,12 +1,52 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom'; // Dùng Link và useNavigate để chuyển trang
+import axios from 'axios';
 import './style.scss';
-// Import các icon từ thư viện
 import { FaFacebook, FaInstagram, FaRegUserCircle } from 'react-icons/fa';
 import { IoMdNotificationsOutline } from 'react-icons/io';
 import { FiHelpCircle, FiSearch, FiShoppingCart } from 'react-icons/fi';
 import { TbWorld } from 'react-icons/tb';
 
 function Navbar() {
+  const navigate = useNavigate();
+  const [cartCount, setCartCount] = useState(0);
+
+  // 1. Hàm lấy số lượng sản phẩm trong giỏ hàng
+  const fetchCartCount = async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      setCartCount(0);
+      return;
+    }
+
+    try {
+      const response = await axios.get('http://localhost:8000/cart/my-cart', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.status === 'success') {
+        // Tính tổng số lượng (quantity) của tất cả sản phẩm trong các shop
+        const totalItems = response.data.data.reduce((total, shop) => {
+          return total + shop.items.reduce((sum, item) => sum + item.quantity, 0);
+        }, 0);
+        
+        setCartCount(totalItems);
+      }
+    } catch (error) {
+      console.error("Lỗi lấy số lượng giỏ hàng tại Navbar:", error);
+      setCartCount(0);
+    }
+  };
+
+  // Gọi hàm lấy số lượng khi component load
+  useEffect(() => {
+    fetchCartCount();
+    
+    // Lắng nghe sự kiện 'cartUpdated' để cập nhật badge ngay lập tức khi thêm hàng ở trang Detail
+    window.addEventListener('cartUpdated', fetchCartCount);
+    return () => window.removeEventListener('cartUpdated', fetchCartCount);
+  }, []);
+
   return (
     <header className="navbar-container">
       <div className="navbar-content">
@@ -14,7 +54,8 @@ function Navbar() {
         {/* === PHẦN TRÊN CÙNG (TOP NAV) === */}
         <nav className="navbar-top">
           <div className="top-left">
-            <a href="#">Kênh Người Bán</a>
+            {/* Chuyển tới kênh người bán */}
+            <span className="nav-link" onClick={() => navigate('/seller-login')}>Kênh Người Bán</span>
             <span className="divider">|</span>
             <a href="#">Tải ứng dụng</a>
             <span className="divider">|</span>
@@ -43,9 +84,9 @@ function Navbar() {
 
         {/* === PHẦN CHÍNH (MAIN NAV) === */}
         <div className="navbar-main">
-          {/* Logo */}
-          <div className="logo-section">
-            <div className="logo-icon-fake">S</div> {/* Chỗ này sau thay bằng thẻ img logo thật */}
+          {/* Logo - Nhấn về trang chủ */}
+          <div className="logo-section" onClick={() => navigate('/customer/home')} style={{cursor: 'pointer'}}>
+            <div className="logo-icon-fake">S</div>
             <span className="logo-text">Shopee</span>
           </div>
 
@@ -57,22 +98,19 @@ function Navbar() {
                 <FiSearch />
               </button>
             </div>
-            {/* Gợi ý từ khóa */}
             <div className="search-suggestions">
               <a href="#">Ip16 Thường</a>
               <a href="#">Bánh Oreo</a>
               <a href="#">IP 15 Thường</a>
-              <a href="#">IP 16 Thường 256gb</a>
-              <a href="#">Đồ Ren Nữ</a>
-              <a href="#">Bàn Gaming Ngồi Bệt</a>
             </div>
           </div>
 
-          {/* Giỏ hàng */}
-          <div className="cart-section">
+          {/* Giỏ hàng - Nhấn để vào trang Cart */}
+          <div className="cart-section" onClick={() => navigate('/cartitem')} style={{cursor: 'pointer'}}>
             <div className="cart-icon-wrapper">
               <FiShoppingCart className="cart-icon" />
-              <span className="cart-badge">1</span>
+              {/* Chỉ hiện badge nếu có sản phẩm */}
+              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
             </div>
           </div>
         </div>

@@ -64,7 +64,7 @@ function LoginPage() {
                 }
             } else {
                 // Đăng nhập luồng buyer bình thường qua /login
-                navigate('/home');
+                navigate('/customer/home');
             }
 
         } catch (error) {

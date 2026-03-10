@@ -11,6 +11,7 @@ from src.backend.Router_api.finalresult import finalresult_router
 from src.backend.Router_api.seller import router_seller
 from src.backend.Router_api.customer import router_customer
 from src.backend.Router_api.product import router_product
+from src.backend.Router_api.cart import router_cart
 app = FastAPI(
     title="Shopee AI Backend",
     description="API Server với kiến trúc Router",
@@ -33,4 +34,5 @@ app.include_router(finalresult_router ,tags=['FinalResult'] )
 app.include_router(router_seller ,tags=['Seller'] )
 app.include_router(router_customer ,tags=['Customer'] )
 app.include_router(router_product ,tags=['Product'] )
+app.include_router(router_cart ,tags=['Cart'] )
 

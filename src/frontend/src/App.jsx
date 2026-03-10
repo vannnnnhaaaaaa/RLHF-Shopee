@@ -2,7 +2,7 @@ import { Route, BrowserRouter, Routes } from 'react-router-dom'
 
 import Signup from './pages/signup'
 import LoginPage from './pages/login'
-import Shopee from './pages/shopee'
+import Shopee from './pages/shopee/HomePage'
 import BecomeSeller from './pages/Seller/become_seller'
 import SellerDashboard from './pages/Seller/dashboard_seller'
 import AddProduct from './pages/Seller/add_product'
@@ -12,6 +12,8 @@ import CancelOrderManage from './pages/Seller/cacel_order_manage/CancelOrderMana
 import ReturnManage from './pages/Seller/manage_return'
 import HomeDashboard from './pages/Seller/home_page'
 import AdminDashboard from './pages/admin/RLHF/adminrRLHF'
+import DetailProduct from './pages/shopee/DetailProduct'
+import Cart from './pages/shopee/Cart'
 function App() {
 
 
@@ -22,10 +24,14 @@ function App() {
           <Route path='/customer/signup' element={<Signup />} />
           <Route path='/customer/login' element={<LoginPage />} />
           <Route path='/customer/home' element={<Shopee />} />
+          <Route path="/product/public/:id" element={<DetailProduct />} />
+
+          <Route path='/cartitem' element={<Cart />} />
+
           <Route path='/seller-login' element={<LoginPage />} />
           <Route path='/become-seller' element={<BecomeSeller />} />
           <Route path='/adminDashboard_RLHF' element={<AdminDashboard />} />
-     
+          
           <Route path="/seller-dashboard" element={<SellerDashboard />}>
             <Route index element={<HomeDashboard />} />
             <Route path="orders/cancellations" element={<CancelOrderManage />} />

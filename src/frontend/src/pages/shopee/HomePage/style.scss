@@ -1,0 +1,23 @@
+.daily-discover {
+  .product-grid {
+    display: grid;
+    /* SỬA DÒNG NÀY: Ép cột không được phình to hơn lưới */
+    grid-template-columns: repeat(6, minmax(0, 1fr)); 
+    gap: 10px;
+  }
+}
+.shopee-home-container {
+  background-color: #f5f5f5; /* Nền xám nhạt làm nổi bật thẻ sản phẩm trắng */
+  min-height: 100vh;
+}
+
+.shopee-main-content {
+  /* 1. KHÓA CHIỀU RỘNG TỐI ĐA GẦN GIỐNG SHOPEE THẬT */
+  max-width: 1200px; 
+  
+  /* 2. CĂN GIỮA MÀN HÌNH (Ma thuật nằm ở đây: margin trái/phải tự động) */
+  margin: 0 auto;    
+  
+  /* 3. Đẩy nội dung cách xa Header/Footer một chút và chừa biên 15px cho màn hình nhỏ */
+  padding: 30px 15px; 
+}
