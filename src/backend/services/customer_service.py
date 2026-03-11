@@ -48,12 +48,12 @@ def create_customer_account(db: Session, user_name: str, password: str):
 def authenticate_customer(db: Session, user_name: str, password: str):
     # Trim khoảng trắng thừa
     clean_user_name = user_name.strip()
-    print('b2.1')
+  
     # Tìm kiếm
     customer = db.exec(
         select(Customer).where(Customer.user_name == clean_user_name)
     ).first()
-    print('b2.2')
+    
     if not customer:
         # Log để dev biết nhưng trả về lỗi chung cho user bảo mật
         print(f"DEBUG: Không tìm thấy user '{clean_user_name}' trong DB")

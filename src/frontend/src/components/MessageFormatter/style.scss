@@ -1,0 +1,35 @@
+.formatted-message {
+  .chat-text {
+    line-height: 1.6;
+    color: #333;
+    font-size: 14px;
+
+    /* Class mới dành riêng cho các dòng chứa sản phẩm */
+    .clickable-text-line {
+      cursor: pointer;
+      margin-bottom: 10px;
+      transition: color 0.2s ease;
+
+      /* Khi rê chuột vào dòng chữ này */
+      &:hover {
+        color: #ee4d2d; /* Đổi cả đoạn text thành màu cam */
+
+        strong {
+          text-decoration: underline; /* Gạch chân phần chữ in đậm (tên sản phẩm) */
+          color: #d73a1e; /* Cam đậm hơn một chút */
+        }
+      }
+    }
+
+    /* CSS mặc định cho chữ in đậm */
+    strong {
+      color: #ee4d2d;
+      font-weight: 600;
+      transition: color 0.2s ease, text-decoration 0.2s ease;
+    }
+
+    p {
+      margin: 0;
+    }
+  }
+}

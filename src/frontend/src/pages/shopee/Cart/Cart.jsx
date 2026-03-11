@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios'; // BẮT BUỘC IMPORT AXIOS
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
-import ShopGroup from '../../../components/ShopGroup'; 
+import ShopGroup from '../../../components/ShopGroup';
 import './style.scss';
 
 function Cart() {
-  const [cartData, setCartData] = useState([]); 
+  const [cartData, setCartData] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]); // Sửa lại tên biến cho chuẩn: chứa mảng ID
   const [loading, setLoading] = useState(true);
 
@@ -24,9 +24,9 @@ function Cart() {
         const response = await axios.get('http://localhost:8000/cart/my-cart', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        
+
         if (response.data.status === 'success') {
-          setCartData(response.data.data); 
+          setCartData(response.data.data);
         }
       } catch (error) {
         console.error("Lỗi lấy giỏ hàng:", error);
@@ -41,10 +41,10 @@ function Cart() {
   // 2. TÍNH TOÁN DỮ LIỆU TỰ ĐỘNG (Phần này bạn bị thiếu)
   // Lấy ra tất cả cart_id có trong giỏ hàng
   const allCartIds = cartData.flatMap(shop => shop.items).map(i => i.cart_id);
-  
+
   // Kiểm tra xem số lượng tick chọn có bằng tổng số lượng trong giỏ không
   const isAllSelected = allCartIds.length > 0 && selectedIds.length === allCartIds.length;
-  
+
   // Tính tổng tiền những món được tick chọn
   const totalAmount = cartData.flatMap(shop => shop.items)
     .filter(item => selectedIds.includes(item.cart_id))
@@ -76,38 +76,110 @@ function Cart() {
     }
   };
 
-  const handleQuantityChange = (shopId, cartId, type) => {
-    const newData = cartData.map(shop => {
-      if (shop.shop_id !== shopId) return shop;
-      return {
+  const handleQuantityChange = async (shopId, cartId, type) => {
+    const token = localStorage.getItem('access_token');
+    // Tìm item hiện tại để kiểm tra logic trước khi gọi API (tùy chọn)
+    const currentShop = cartData.find(s => s.shop_id === shopId);
+    const currentItem = currentShop?.items.find(i => i.cart_id === cartId);
+
+    if (type === 'decrease' && currentItem?.quantity <= 1) return;
+
+    try {
+      const endpoint = type === 'increase' ? 'increaseitem' : 'decrease';
+      const response = await axios.patch(`http://localhost:8000/cart/${endpoint}/${cartId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.status === 'success') {
+        window.dispatchEvent(new Event('cartUpdated'));
+        const newData = cartData.map(shop => {
+          if (shop.shop_id !== shopId) return shop;
+          return {
+            ...shop,
+            items: shop.items.map(item => {
+              if (item.cart_id === cartId) {
+                return { ...item, quantity: type === 'increase' ? item.quantity + 1 : item.quantity - 1 };
+              }
+              return item;
+            })
+          };
+        });
+        setCartData(newData);
+      }
+    } catch (error) {
+      console.error("Lỗi cập nhật số lượng:", error);
+      alert(error.response?.data?.detail || "Không thể cập nhật số lượng");
+    }
+  };
+
+
+  const handleRemove = async (cartId) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) return;
+
+    const token = localStorage.getItem('access_token');
+    try {
+      await axios.delete(`http://localhost:8000/cart/remove/${cartId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Xóa sản phẩm khỏi State để UI cập nhật ngay lập tức
+      const newData = cartData.map(shop => ({
         ...shop,
-        items: shop.items.map(item => {
-          if (item.cart_id === cartId) {
-            let newQty = item.quantity;
-            if (type === 'increase' && newQty < item.stock) newQty++;
-            if (type === 'decrease' && newQty > 1) newQty--;
-            return { ...item, quantity: newQty };
-          }
-          return item;
-        })
-      };
-    });
-    setCartData(newData);
-    // Sau này bạn có thể gọi API updateQuantity lên Backend ở vị trí này
+        items: shop.items.filter(item => item.cart_id !== cartId)
+      })).filter(shop => shop.items.length > 0);
+      window.dispatchEvent(new Event('cartUpdated'));
+      setCartData(newData);
+      // Xóa id khỏi danh sách được chọn nếu đang chọn
+      setSelectedIds(selectedIds.filter(id => id !== cartId));
+
+    } catch (error) {
+      console.error("Lỗi xóa sản phẩm:", error);
+      alert("Không thể xóa sản phẩm này");
+    }
   };
 
-  const handleRemove = (cartId) => {
-    alert(`Đã xóa sản phẩm ID: ${cartId}`);
-    // Tạm thời ẩn sản phẩm trên UI sau khi bấm xóa
-    const newData = cartData.map(shop => ({
-      ...shop,
-      items: shop.items.filter(item => item.cart_id !== cartId)
-    })).filter(shop => shop.items.length > 0); // Nếu shop không còn món nào thì xóa luôn shop
-    setCartData(newData);
-  };
+const handleDeleteSelected = async () => {
+  // 1. Kiểm tra nếu chưa chọn gì
+  if (selectedIds.length === 0) {
+    alert("Vui lòng chọn sản phẩm để xóa!");
+    return;
+  }
 
+  // 2. Xác nhận
+  if (!window.confirm(`Bạn có chắc muốn xóa ${selectedIds.length} mục đã chọn?`)) {
+    return;
+  }
+
+  const token = localStorage.getItem('access_token');
+
+  try {
+    // 3. Gọi API xóa hàng loạt (truyền mảng selectedIds vào body)
+    const response = await axios.post(
+      'http://localhost:8000/cart/remove-multiple', 
+      selectedIds, // Gửi trực tiếp mảng [1, 2, 3]
+      {
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+
+    if (response.data.status === 'success') {
+      // 4. Cập nhật UI: Lọc bỏ các item có cart_id nằm trong selectedIds
+      const newData = cartData.map(shop => ({
+        ...shop,
+        items: shop.items.filter(item => !selectedIds.includes(item.cart_id))
+      })).filter(shop => shop.items.length > 0); // Xóa shop nếu không còn item nào
+
+      setCartData(newData);
+      setSelectedIds([]); // Xóa sạch danh sách tick chọn
+      alert(response.data.message);
+    }
+  } catch (error) {
+    console.error("Lỗi xóa hàng loạt:", error);
+    alert("Không thể xóa các mục đã chọn. Vui lòng thử lại.");
+  }
+};
   // 4. HIỂN THỊ GIAO DIỆN
-  if (loading) return <div style={{textAlign: 'center', marginTop: '100px'}}>Đang tải giỏ hàng...</div>;
+  if (loading) return <div style={{ textAlign: 'center', marginTop: '100px' }}>Đang tải giỏ hàng...</div>;
 
   return (
     <div className="cart-page-container">
@@ -126,10 +198,10 @@ function Cart() {
 
         {/* Gọi Component ShopGroup ra và truyền dữ liệu */}
         {cartData.length === 0 ? (
-          <div style={{textAlign: 'center', padding: '50px', background: 'white'}}>Giỏ hàng của bạn đang trống.</div>
+          <div style={{ textAlign: 'center', padding: '50px', background: 'white' }}>Giỏ hàng của bạn đang trống.</div>
         ) : (
           cartData.map((shop) => (
-            <ShopGroup 
+            <ShopGroup
               key={shop.shop_id}
               shop={shop}
               selectedIds={selectedIds}
@@ -147,15 +219,15 @@ function Cart() {
             <div className="left-actions">
               <input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} />
               <button className="action-btn" onClick={handleSelectAll}>Chọn Tất Cả</button>
-              <button className="action-btn" onClick={() => alert("Xóa các mục đã chọn")}>Xóa</button>
+              <button className="action-btn" onClick={handleDeleteSelected}>Xóa</button>
             </div>
-            
+
             <div className="right-checkout">
               <div className="total-summary">
                 <span className="label">Tổng cộng ({selectedIds.length} sản phẩm):</span>
                 <span className="total-price">{totalAmount.toLocaleString('vi-VN')}₫</span>
               </div>
-              <button className="btn-buy" disabled={selectedIds.length === 0}>
+              <button className="btn-buy" disabled={selectedIds.length === 0} >
                 Mua Hàng
               </button>
             </div>

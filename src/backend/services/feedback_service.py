@@ -48,6 +48,7 @@ async def evaluate_AI_feedback(history_chat: list, user_comment: str = ""):
         "message": "\n".join(history_chat),
         "user_comment": user_comment
     })
+
 class FeedbackService :
     @staticmethod
     async def create_feedback (feedback : CreateFeedback , session : Session) :

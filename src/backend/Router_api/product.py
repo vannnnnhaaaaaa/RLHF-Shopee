@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, Form, File, UploadFile, HTTPException, status ,Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session 
 from typing import List, Optional
-
+from sqlmodel import select
 # Import từ project của bạn (Hãy điều chỉnh lại đường dẫn nếu cần)
 from src.backend.connect_database import get_session
 from src.backend.auth import get_current_seller 
 from src.backend.services.product_service import get_product_by_id, create_new_product , get_products_by_seller , get_random_active_products
 from src.backend.schemas import ProductListResponse
+from src.backend.models import Product
 router_product = APIRouter(
     prefix="/product",
    
@@ -187,3 +188,21 @@ def get_detail_product(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Lỗi hệ thống khi tải chi tiết sản phẩm"
         )
+
+@router_product.get("/search-by-name/{name}")
+def search_product_by_name(
+    name: str ,
+    session: Session = Depends(get_session)
+):
+    try:
+        statement = select(Product).where(Product.name.ilike(f"%{name}%"))
+        result = session.exec(statement).first()
+        print(result)
+        return {
+            "status": "success",
+            "data": result.id,
+          
+        }
+    except Exception as e:
+        print(f"LỖI TÌM KIẾM: {e}") # In ra terminal để dễ debug
+        raise HTTPException(status_code=500, detail=f"Lỗi hệ thống: {str(e)}")

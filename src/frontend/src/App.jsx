@@ -2,7 +2,7 @@ import { Route, BrowserRouter, Routes } from 'react-router-dom'
 
 import Signup from './pages/signup'
 import LoginPage from './pages/login'
-import Shopee from './pages/shopee/HomePage'
+import HomePage from './pages/shopee/HomePage/Shopee'
 import BecomeSeller from './pages/Seller/become_seller'
 import SellerDashboard from './pages/Seller/dashboard_seller'
 import AddProduct from './pages/Seller/add_product'
@@ -14,6 +14,8 @@ import HomeDashboard from './pages/Seller/home_page'
 import AdminDashboard from './pages/admin/RLHF/adminrRLHF'
 import DetailProduct from './pages/shopee/DetailProduct'
 import Cart from './pages/shopee/Cart'
+import Profile from './pages/customer'
+import ChatWidget from './components/ChatWidget/ChatWidget'
 function App() {
 
 
@@ -23,7 +25,8 @@ function App() {
         <Routes>
           <Route path='/customer/signup' element={<Signup />} />
           <Route path='/customer/login' element={<LoginPage />} />
-          <Route path='/customer/home' element={<Shopee />} />
+          <Route path='/customer/home' element={<HomePage />} />
+          <Route path='/customer/profile' element={<Profile />} />
           <Route path="/product/public/:id" element={<DetailProduct />} />
 
           <Route path='/cartitem' element={<Cart />} />
@@ -40,7 +43,9 @@ function App() {
             <Route path="orders/manage" element={<ManageOrders />} />
             <Route path="orders/managereturn" element={<ReturnManage />} />
           </Route>
+          
         </Routes>
+        <ChatWidget/>
       </BrowserRouter>
     </>
   )

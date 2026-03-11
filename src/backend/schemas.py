@@ -177,3 +177,17 @@ class ProductListResponse(SQLModel):
 class AddToCartRequest(SQLModel):
     product_id: int
     quantity: int = 1 
+
+
+class UpdateProfile (SQLModel) :
+    name : str
+    map_id : int
+    number :str
+    address_detail : str 
+
+class CustomerUpdate(SQLModel):
+    name: Optional[str] = None
+    number: Optional[str] = None
+    map_id: Optional[int] = None
+    address_detail: Optional[str] = None
+    note : Optional[str] = None

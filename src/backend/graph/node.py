@@ -85,16 +85,13 @@ def retriever_node(state, limit=5):
     seen_ids = set()
     results = []
     
-  
     search_query = state.get('keyword') 
     
- 
     if not search_query:
         search_query = state.get('question_rewrite') or state.get('question')
         
     print(f"   🎯 Search Query dùng để tìm kiếm: '{search_query}'")
     
-
     vectors_query = model_embedding.encode(search_query).tolist()
  
     min_p = state.get('min_price')
@@ -199,7 +196,7 @@ def generate_node(state) :
            - Lời chào + Intro thu hút.
            - Danh sách 3-5 sản phẩm nổi bật nhất (Gạch đầu dòng, kèm giá và ưu điểm).
            - Câu chốt (CTA): Mời khách bấm vào xem ảnh hoặc mua ngay.
-           - **Dòng cuối cùng bắt buộc:** `SELECTED_PRODUCTS: [Tên sản phẩm 1], [Tên sản phẩm 2],...` (Lấy NGUYÊN VĂN tên đầy đủ trong context để hệ thống hiển thị thẻ sản phẩm).
+           - **Dòng cuối cùng bắt buộc:** `SELECTED_PRODUCTS: [ID sản phẩm 1 ], [ID sản phẩm 2],...` lần lượt theo thứ tự bạn đã đề xuất (CỰC KỲ QUAN TRỌNG : phải lấy id phù hợp với sản phẩm bạn đều xuất)
         VÍ DỤ OUTPUT MONG MUỐN:
         "Dạ em tìm thấy mấy mẫu giày búp bê xinh lắm nè chị ơi! 😍
 
@@ -208,7 +205,7 @@ def generate_node(state) :
         ...
 
         Chị ưng mẫu nào bấm vào xem ảnh chi tiết nha! 👇
-        SELECTED_PRODUCTS: Giày bup bê nữ FREE SHIP, giày oxford mũi vuông da bóng siêu đẹp mã 28, Giày Lolita Nữ Quai Ngọc BUỘC NƠ Cao Cấp..."
+        SELECTED_PRODUCTS:285, 22 ..."
     """
     prompt = ChatPromptTemplate.from_messages([
         ('system' , system_prompt),

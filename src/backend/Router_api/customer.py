@@ -4,11 +4,10 @@ from sqlmodel import Session
 # Import từ project của bạn
 from src.backend.services.customer_service import create_customer_account, authenticate_customer
 from src.backend.connect_database import get_session
-from src.backend.auth import create_access_token
+from src.backend.auth import create_access_token , get_current_customer
 
-# LƯU Ý: Nhớ import Model Seller của bạn vào đây nhé (Sửa lại đường dẫn nếu cần)
-from src.backend.models import Seller 
-
+from src.backend.models import Seller , Customer , Map
+from src.backend.schemas import UpdateProfile
 # Khởi tạo Router
 router_customer = APIRouter(
     prefix="/customer",
@@ -25,11 +24,10 @@ def register(
     API Đăng ký tài khoản Khách hàng
     Nhận dữ liệu dạng Form Data.
     """
-    # Chỉ log username, KHÔNG log password
+  
     print(f"Bắt đầu xử lý đăng ký cho user_name: {user_name}")
     
     try:
-        # Gọi tầng Service để xử lý logic (Băm mật khẩu + Lưu DB)
         new_customer = create_customer_account( 
             db=session,
             user_name=user_name, 
@@ -46,10 +44,8 @@ def register(
         }
         
     except HTTPException:
-        # Re-raise lỗi HTTP (ví dụ service báo lỗi 400 do trùng tên đăng nhập)
         raise
     except Exception as e:
-        # Log lỗi thực tế ra console/file để Dev sửa
         print(f"Lỗi hệ thống lúc đăng ký: {str(e)}") 
         # Trả về lỗi chung chung cho người dùng
         raise HTTPException(
@@ -69,28 +65,22 @@ def login(
     API Đăng nhập cho Khách hàng. 
     Trả về Token chứa role='customer' và cờ has_shop (True/False).
     """
-   
     try:
-        print('b1')
-        # 1. Xác thực tài khoản (Service)
         customer = authenticate_customer(
             db=session,
             user_name=user_name, 
             password=password
         )
-        print('b3')
         # 2. Tạo Token và gắn Role
         token_data = {
             "user_id": customer.id,
             "auth": "customer"  
         }
         access_token = create_access_token(data=token_data)
-
         # 3. KIỂM TRA HAS_SHOP Ở ĐÂY
         # Đổi 'Seller' thành tên Model đúng của bạn (ví dụ Sell hoặc Seller)
         # Truy vấn xem có bản ghi nào trong bảng Seller có customer_id bằng với customer.id không
         seller_profile = session.query(Seller).filter(Seller.customer_id == customer.id).first()
-        
         # Nếu tìm thấy -> True, nếu không tìm thấy (None) -> False
         has_shop_flag = True if seller_profile else False
 
@@ -99,7 +89,7 @@ def login(
             "status": "success",
             "access_token": access_token,
             "token_type": "bearer",
-            "has_shop": has_shop_flag,  # <--- Gắn cờ True/False vào đây
+            "has_shop": has_shop_flag,  
             "auth": "customer",
             "user_info": {
                 "id": customer.id,
@@ -111,3 +101,50 @@ def login(
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router_customer.get("/profile")
+def get_profile(session: Session = Depends(get_session), customer : Customer = Depends(get_current_customer)):
+    # Trả về thông tin cơ bản
+    profile_data = {
+        "id": customer.id,
+        "full_name": customer.name,
+        "phone_number": customer.number,
+        "address_detail": customer.address_detail,
+        "map_id": customer.map_id,
+        "full_address_string": "" 
+    }
+
+    # Nếu khách đã có map_id (Quận/Huyện), ta lấy tên Quận và tên Thành phố
+    if customer.map_id:
+        district = session.get(Map, customer.map_id)
+        if district and district.parent_id:
+            city = session.get(Map, district.parent_id)
+            # Tạo chuỗi: "Quận 1, Thành phố Hồ Chí Minh"
+            profile_data["full_address_string"] = f"{district.name}, {city.name}"
+
+    return {"status": "success", "data": profile_data}
+
+
+
+@router_customer.patch('/updateprofile')
+def update_profile (
+    data_update : UpdateProfile  ,
+    session : Session = Depends(get_session) ,
+    current_customer : Customer = Depends(get_current_customer)
+) :
+    customer = session.get(Customer , current_customer.id)
+    if not customer :
+        raise HTTPException(status_code=404 , detail='không tim thấy người dùng ')
+    customer.address_detail = data_update.address_detail
+    customer.map_id = data_update.map_id
+    customer.number = data_update.number 
+    customer.name = data_update.name
+    customer.note = data_update.note
+    try :
+        session.add(customer)
+        session.commit()
+        session.refresh(customer)
+        return {'status': 'đã thêm thành công' }
+    except Exception as e :
+        raise HTTPException(status_code=500 , detail=f'Error {e}')
+    

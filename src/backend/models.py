@@ -98,11 +98,14 @@ class FinalResult(SQLModel, table=True):
 #-- --- Phần tọa độ vs sản phẩm -- ---- 
 class Map(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)   
-    city: str 
-    district: str 
-    latitude: float 
-    longitude: float
+    name: str 
+    type : str
+    parent_id : Optional[int]
+    latitude: Optional[float] 
+    longitude: Optional[float] 
+    note : Optional[str]
 
+    
 class Shipping(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)   
     base_fee: float = Field(default=10000)

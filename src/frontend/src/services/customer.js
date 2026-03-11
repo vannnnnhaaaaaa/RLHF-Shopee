@@ -1,5 +1,6 @@
 const API_BASE_URL = "http://127.0.0.1:8000/customer";
 
+import axios from 'axios';
 // Hàm gọi API Đăng ký
 export const registerCustomer = async (username, password) => {
     // SỬA: Dùng FormData thay vì JSON
@@ -42,4 +43,27 @@ export const loginCustomer = async (username, password) => {
     }
 
     return data;
+};
+
+
+
+
+
+const getAuthHeader = () => ({
+  headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` }
+});
+
+export const userService = {
+  // Lấy thông tin cá nhân
+  getProfile: async () => {
+    const response = await axios.get(`${API_URL}/profile`, getAuthHeader());
+    return response.data;
+  },
+
+  // Cập nhật thông tin cá nhân
+  updateProfile: async (profileData) => {
+    console.log(profileData)
+    const response = await axios.patch(`${API_URL}/update-profile`, profileData, getAuthHeader());
+    return response.data;
+  }
 };

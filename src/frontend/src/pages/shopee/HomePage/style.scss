@@ -21,3 +21,136 @@
   /* 3. Đẩy nội dung cách xa Header/Footer một chút và chừa biên 15px cho màn hình nhỏ */
   padding: 30px 15px; 
 }
+
+$shopee-orange: #ee4d2d;
+
+.chatbot-wrapper {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 9999;
+
+  .chatbot-toggle-btn {
+    background-color: $shopee-orange;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+    &.hidden {
+      display: none;
+    }
+  }
+
+  .chatbot-window {
+    display: none;
+    flex-direction: column;
+    width: 350px;
+    height: 450px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+    overflow: hidden;
+    
+    &.open {
+      display: flex;
+    }
+
+    .chatbot-header {
+      background-color: $shopee-orange;
+      color: white;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      h4 { margin: 0; font-size: 16px; }
+      button {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+      }
+    }
+
+    .chatbot-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background-color: #f5f5f5;
+
+      .message-bubble {
+        max-width: 80%;
+        padding: 10px 15px;
+        border-radius: 15px;
+        font-size: 14px;
+        line-height: 1.4;
+
+        &.bot {
+          align-self: flex-start;
+          background-color: white;
+          color: #333;
+          border-bottom-left-radius: 2px;
+          border: 1px solid #ddd;
+        }
+
+        &.user {
+          align-self: flex-end;
+          background-color: #e8f5e9; // Màu xanh lá nhạt
+          color: #333;
+          border-bottom-right-radius: 2px;
+          border: 1px solid #c8e6c9;
+        }
+
+        &.loading {
+          font-weight: bold;
+          letter-spacing: 2px;
+        }
+      }
+    }
+
+    .chatbot-input-area {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ddd;
+      background-color: white;
+
+      input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        outline: none;
+        font-size: 14px;
+
+        &:focus { border-color: $shopee-orange; }
+      }
+
+      button {
+        background-color: transparent;
+        color: $shopee-orange;
+        border: none;
+        padding: 0 15px;
+        font-weight: bold;
+        cursor: pointer;
+
+        &:disabled {
+          color: #ccc;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+}
