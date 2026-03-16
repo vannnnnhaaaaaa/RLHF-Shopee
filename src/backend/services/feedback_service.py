@@ -52,8 +52,10 @@ async def evaluate_AI_feedback(history_chat: list, user_comment: str = ""):
 class FeedbackService :
     @staticmethod
     async def create_feedback (feedback : CreateFeedback , session : Session) :
-        analyst = await evaluate_AI_feedback(feedback.history , feedback.comment)  
+        analyst = await evaluate_AI_feedback(feedback.history , feedback.comment) 
+        human_tags_str = ", ".join(feedback.root_cause_by_human) if feedback.root_cause_by_human else "" 
         new_feedback = Feedback(
+            root_cause_by_human = human_tags_str ,
             thread_id = feedback.thread_id,
             rating = feedback.rating ,
             ai_score = analyst.score ,

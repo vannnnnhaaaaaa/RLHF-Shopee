@@ -9,24 +9,6 @@ function ChatWidget() {
   const [rating, setRating] = useState(0);
   const [selectedTags, setSelectedTags] = useState([]);
   const [comment, setComment] = useState("");
-
-  // Cấu hình tags cho từng mức sao
-  const feedbackOptions = {
-    1: ["AI không hiểu câu hỏi", "Trả lời sai kiến thức", "Thái độ không tốt", "Lỗi kỹ thuật"],
-    2: ["Trả lời lạc đề", "Gợi ý sai sản phẩm", "Tốc độ rất chậm", "Thông tin sơ sài"],
-    3: ["Tạm chấp nhận được", "Cần cải thiện tốc độ", "Thông tin chưa đầy đủ"],
-    4: ["Trả lời đúng trọng tâm", "Gợi ý sản phẩm tốt", "Dễ hiểu", "Hữu ích"],
-    5: ["Rất thông minh", "Giải quyết vấn đề nhanh", "Tư vấn tuyệt vời", "Giao diện đẹp"]
-  };
-
-  const handleCloseChat = () => {
-    // Nếu đã có tin nhắn trao đổi thì hiện feedback, nếu chưa có gì thì đóng luôn
-    if (messages.length > 1) {
-      setShowFeedback(true);
-    } else {
-      setIsChatOpen(false);
-    }
-  };
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [messages, setMessages] = useState([
     { sender: 'bot', text: 'Chào bạn! Mình là trợ lý AI. Mình có thể giúp gì cho bạn?' }
@@ -37,9 +19,71 @@ function ChatWidget() {
 
   const messagesEndRef = useRef(null);
 
+  // Cấu hình tags cho từng mức sao
+  const feedbackOptions = {
+    1: ["AI không hiểu câu hỏi", "Trả lời sai kiến thức", "Thái độ không tốt", "Lỗi kỹ thuật"],
+    2: ["Trả lời lạc đề", "Gợi ý sai sản phẩm", "Tốc độ rất chậm", "Thông tin sơ sài"],
+    3: ["Tạm chấp nhận được", "Cần cải thiện tốc độ", "Thông tin chưa đầy đủ"],
+    4: ["Trả lời đúng trọng tâm", "Gợi ý sản phẩm tốt", "Dễ hiểu", "Hữu ích"],
+    5: ["Rất thông minh", "Giải quyết vấn đề nhanh", "Tư vấn tuyệt vời", "Giao diện đẹp"]
+  };
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // 1. XỬ LÝ KHI BẤM NÚT ĐÓNG CHAT
+  const handleCloseChat = () => {
+    // Nếu có hơn 1 tin nhắn (tức là user đã chat với bot), thì hiện form feedback
+    if (messages.length > 1) {
+      setShowFeedback(true);
+    } else {
+      // Nếu chưa chat gì thì đóng luôn
+      setIsChatOpen(false);
+    }
+  };
+
+  // 2. HÀM XỬ LÝ KHI SUBMIT FEEDBACK
+  // 2. HÀM XỬ LÝ KHI SUBMIT FEEDBACK
+  const submitFeedback = async () => {
+    try {
+    
+      const formattedHistory = messages.map(msg => 
+        `${msg.sender === 'user' ? 'human' : 'ai'}: ${msg.text}`
+      );
+      const feedbackData = {
+        thread_id: threadId,
+        rating: rating,
+        root_cause_by_human : selectedTags ,
+        comment: comment, 
+        history : formattedHistory
+      };
+
+      console.log("Đang gửi đánh giá lên API...", feedbackData);
+      
+      // Gọi API sang FastAPI
+      const response = await axios.post('http://localhost:8000/feedback/', feedbackData);
+      
+      console.log("Lưu feedback thành công:", response.data);
+      // Gợi ý: Chỗ này có thể dùng thư viện react-toastify để hiện thông báo đẹp hơn
+      alert("Cảm ơn bạn đã gửi đánh giá trải nghiệm!");
+      
+    } catch (error) {
+      console.error("Lỗi khi gọi API gửi đánh giá:", error);
+      alert("Có lỗi xảy ra khi gửi đánh giá. Hệ thống đã ghi nhận.");
+    } finally {
+      // Sau khi gửi (thành công hoặc thất bại) đều dọn dẹp form và đóng chat
+      resetAndCloseChat();
+    }
+  };
+  // Hàm phụ để dọn dẹp state khi đóng hẳn cửa sổ
+  const resetAndCloseChat = () => {
+    setShowFeedback(false);
+    setIsChatOpen(false);
+    setRating(0);
+    setSelectedTags([]);
+    setComment("");
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -51,14 +95,11 @@ function ChatWidget() {
     setIsChatLoading(true);
 
     try {
-      // Gọi API lên Backend
       const response = await axios.post('http://localhost:8000/chat', {
         question: userMsg,
         thread_id: threadId,
         history: []
       });
-      console.log("DỮ LIỆU API TRẢ VỀ:", response);
-
       const botReply = response.data.answer;
       setMessages(prev => [...prev, { sender: 'bot', text: botReply }]);
     } catch (error) {
@@ -81,13 +122,13 @@ function ChatWidget() {
       <div className={`chatbot-window ${isChatOpen ? 'open' : ''}`}>
         <div className="chatbot-header">
           <h4>Hỗ trợ trực tuyến</h4>
-          <button onClick={() => setIsChatOpen(false)}>✖</button>
+          {/* SỬA LẠI SỰ KIỆN ONCLICK GỌI HÀM handleCloseChat */}
+          <button onClick={handleCloseChat}>✖</button>
         </div>
 
         <div className="chatbot-messages">
           {messages.map((msg, index) => (
             <div key={index} className={`message-bubble ${msg.sender}`}>
-              {/* NẾU LÀ BOT THÌ ĐƯA VÀO FORMATTER ĐỂ XỬ LÝ MARKDOWN */}
               {msg.sender === 'bot' ? (
                 <MessageFormatter rawText={msg.text} />
               ) : (
@@ -104,37 +145,41 @@ function ChatWidget() {
           <div ref={messagesEndRef} />
         </div>
 
-        <form className="chatbot-input-area" onSubmit={handleSendMessage}>
-          <input
-            type="text"
-            placeholder="Nhập tin nhắn..."
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            disabled={isChatLoading}
-          />
-          <button type="submit" disabled={isChatLoading || !inputMessage.trim()}>
-            Gửi
-          </button>
-        </form>
+        {/* Ẩn input area nếu đang hiện form feedback */}
+        {!showFeedback && (
+          <form className="chatbot-input-area" onSubmit={handleSendMessage}>
+            <input
+              type="text"
+              placeholder="Nhập tin nhắn..."
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              disabled={isChatLoading}
+            />
+            <button type="submit" disabled={isChatLoading || !inputMessage.trim()}>
+              Gửi
+            </button>
+          </form>
+        )}
+
+        {/* COMPONENT ĐÁNH GIÁ */}
         {showFeedback && (
           <div className="feedback-overlay">
             <div className="feedback-content">
               <h5>Đánh giá trải nghiệm</h5>
 
-              {/* 1. Chọn Sao */}
               <div className="star-rating">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <span
                     key={star}
                     className={`star ${rating >= star ? 'active' : ''}`}
                     onClick={() => { setRating(star); setSelectedTags([]); }}
+                    style={{ cursor: 'pointer', fontSize: '24px', color: rating >= star ? '#ffd700' : '#ccc' }}
                   >
                     ★
                   </span>
                 ))}
               </div>
 
-              {/* 2. Hiện Tags dựa trên sao đã chọn */}
               {rating > 0 && (
                 <div className="tags-container">
                   {feedbackOptions[rating].map((tag) => (
@@ -153,7 +198,6 @@ function ChatWidget() {
                 </div>
               )}
 
-              {/* 3. Nhập ý kiến thêm */}
               <textarea
                 placeholder="Ý kiến khác (không bắt buộc)..."
                 value={comment}
@@ -161,15 +205,14 @@ function ChatWidget() {
               />
 
               <div className="feedback-actions">
-                <button className="skip-btn" onClick={() => setIsChatOpen(false)}>Để sau</button>
+                {/* Sửa lại nút Để sau để dọn dẹp state và đóng popup */}
+                <button className="skip-btn" onClick={resetAndCloseChat}>Để sau</button>
                 <button className="send-btn" onClick={submitFeedback} disabled={rating === 0}>Gửi đánh giá</button>
               </div>
             </div>
           </div>
         )}
       </div>
-
-
     </div>
   );
 }

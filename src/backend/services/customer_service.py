@@ -69,3 +69,9 @@ def authenticate_customer(db: Session, user_name: str, password: str):
         )
         
     return customer
+
+
+def check_exist_info_customer (user : Customer) :  
+    if not user.address_detail  or not user.number or not user.name == None :
+        return False
+    return True

@@ -76,8 +76,8 @@ function Navbar() {
             <div className="nav-item">
               <TbWorld className="icon" /> Tiếng Việt
             </div>
-            <div className="nav-item user-profile">
-              <FaRegUserCircle className="icon" /> phungvanha1
+            <div className="nav-item user-profile" onClick={()=>navigate ('/customer/account')}>
+              <FaRegUserCircle className="icon" /> My Account
             </div>
           </div>
         </nav>
@@ -85,7 +85,7 @@ function Navbar() {
         {/* === PHẦN CHÍNH (MAIN NAV) === */}
         <div className="navbar-main">
           {/* Logo - Nhấn về trang chủ */}
-          <div className="logo-section" onClick={() => navigate('/customer/home')} style={{cursor: 'pointer'}}>
+          <div className="logo-section" onClick={() => navigate('/customer')} style={{cursor: 'pointer'}}>
             <div className="logo-icon-fake">S</div>
             <span className="logo-text">Shopee</span>
           </div>
@@ -106,7 +106,7 @@ function Navbar() {
           </div>
 
           {/* Giỏ hàng - Nhấn để vào trang Cart */}
-          <div className="cart-section" onClick={() => navigate('/cartitem')} style={{cursor: 'pointer'}}>
+          <div className="cart-section" onClick={() => navigate('/customer/cartitem')} style={{cursor: 'pointer'}}>
             <div className="cart-icon-wrapper">
               <FiShoppingCart className="cart-icon" />
               {/* Chỉ hiện badge nếu có sản phẩm */}

@@ -39,6 +39,8 @@ class CreateFeedback(SQLModel) :
     rating : Optional[int] 
     comment : Optional[str] 
     history : list
+    root_cause_by_human: Optional[list] = []
+
 
 class FeedbackResponse (SQLModel) :
     id: int
@@ -191,3 +193,63 @@ class CustomerUpdate(SQLModel):
     map_id: Optional[int] = None
     address_detail: Optional[str] = None
     note : Optional[str] = None
+
+
+class VoucherCreate (SQLModel) :
+    code : str 
+    discount_type : str
+    discount_value : float
+    creator_type : str 
+
+    max_discount : float 
+    min_spend : Optional[float] 
+
+    quantity : int 
+    valid_unit : datetime
+    product_id : Optional[int] = None
+
+
+#-- --- Bill --- -- 
+class CreateBillDetail(SQLModel):
+    product_id: int
+    quantity: int
+    price_at_purchase: float
+
+class CreateBill(SQLModel):
+    total_price: float
+    total_shipping: float
+    status: str = "pending"
+    payment_method: str = "COD"
+    payment_status: str = "pending"
+    discount_product: float = 0.0
+    discount_shipping: float = 0.0
+    shopee_voucher_id: Optional[int] = None
+    seller_voucher_id: Optional[int] = None
+    
+    # Danh sách các sản phẩm trong hóa đơn
+    details: list[CreateBillDetail] 
+
+
+# --- SCHEMAS CHO ĐẦU RA (RESPONSE) ---
+class ResponseBillDetail(SQLModel):
+    id: int
+    product_id: int
+    quantity: int
+    price_at_purchase: float
+
+class ResponseBill(SQLModel):
+    id: int
+    customer_id: int
+    total_price: float
+    total_shipping: float
+    status: str
+    payment_method: str
+    payment_status: str
+    discount_product: float
+    discount_shipping: float
+    shopee_voucher_id: Optional[int]
+    seller_voucher_id: Optional[int]
+    created_at: datetime
+    
+    # Trả về kèm danh sách chi tiết hóa đơn
+    detail_bill: list[ResponseBillDetail] = []

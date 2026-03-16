@@ -30,6 +30,7 @@ def extract_keywords_node(state):
     - Nếu khách viết tắt keyword thì hãy viết rõ ra lại (vd: ip12prm -> Iphone 12 promax, ss -> samsung và những từ viết tắt khác ..)
     - TUYỆT ĐỐI KHÔNG trả lời câu hỏi.
     - TUYỆT ĐỐI KHÔNG đưa ra gợi ý hay danh sách.
+    - TUYỆT ĐỐI KHÔNG đưa thêm từ làm sai lệch ngữ nghĩa khi cách nói của khách đã đủ ngữ nghĩa (vớ nam , quần nữ ...)
 
     1. CHỈ TRẢ VỀ JSON THUẦN. KHÔNG CÓ LỜI DẪN, KHÔNG GIẢI THÍCH, KHÔNG DÙNG DẤU NHÁY ```json.
     2. NẾU KHÔNG CÓ THÔNG TIN GIÁ, HÃY ĐỂ LÀ null.

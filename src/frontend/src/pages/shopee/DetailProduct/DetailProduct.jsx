@@ -102,9 +102,9 @@ function DetailProduct() {
   if (loading) {
     return (
       <div className="detail-page-container">
-        <Navbar />
+  
         <div style={{ textAlign: 'center', padding: '100px 0' }}>Đang tải chi tiết sản phẩm...</div>
-        <Footer />
+     
       </div>
     );
   }
@@ -112,18 +112,18 @@ function DetailProduct() {
   if (!product) {
     return (
       <div className="detail-page-container">
-        <Navbar />
+ 
         <div style={{ textAlign: 'center', padding: '100px 0', color: 'red' }}>
           Sản phẩm không tồn tại hoặc đã bị gỡ!
         </div>
-        <Footer />
+
       </div>
     );
   }
 
   return (
     <div className="detail-page-container">
-      <Navbar />
+ 
 
       <div className="detail-main-content">
         <div className="breadcrumb">
@@ -209,7 +209,7 @@ function DetailProduct() {
           </div>
         </div>
       </div>
-      <Footer />
+    
     </div>
   );
 }

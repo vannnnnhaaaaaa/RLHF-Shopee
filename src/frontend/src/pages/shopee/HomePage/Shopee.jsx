@@ -4,7 +4,7 @@ import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import ProductCard from '../../../components/ProductCart/ProductCart';
 // CHỈ IMPORT CHATWIDGET VÀO ĐÂY LÀ ĐỦ
-import ChatWidget from '../../../components/ChatWidget/ChatWidget';
+
 import './style.scss'; 
 
 function HomePage() {
@@ -30,13 +30,12 @@ function HomePage() {
 
   return (
     <div className="test-home-container">
-      <Navbar />
-      
+
       {/* KHU VỰC SẢN PHẨM */}
       <div className="main-content">
         <div className="daily-discover">
           <div className="discover-header">
-            <h3>BÀI TEST GỢI Ý HÔM NAY</h3>
+            <h3> GỢI Ý HÔM NAY</h3>
           </div>
           
           {loading ? (
@@ -51,10 +50,10 @@ function HomePage() {
         </div>
       </div>
 
-      <Footer/>
+
 
       {/* GỌI CHATBOT RA MÀN HÌNH CHÍNH (Chỉ 1 dòng này là đủ) */}
-      <ChatWidget />
+
 
     </div>
   );

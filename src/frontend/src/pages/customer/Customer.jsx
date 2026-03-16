@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { userService } from '../../services/customer'; // Đường dẫn tùy thuộc cấu trúc của bạn
+import { userService } from '../../services/customer'; 
 import axios from 'axios';
 import './style.scss';
 
@@ -8,32 +8,56 @@ function AddressSelector({ currentMapId, onDistrictSelect }) {
   const [cities, setCities] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [selectedCity, setSelectedCity] = useState('');
-  const [selectedDistrict, setSelectedDistrict] = useState(currentMapId || '');
+  const [selectedDistrict, setSelectedDistrict] = useState('');
 
-  // Lấy danh sách thành phố khi mở form
+  // Gom chung vào 1 luồng khởi tạo duy nhất để tránh race condition
   useEffect(() => {
-    const fetchCities = async () => {
+    const initLocationData = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/map/get-locations');
-        // Lưu ý: API FastAPI trả về { status: "success", data: [...] } nên phải là res.data.data
-        setCities(res.data.data); 
-      } catch (err) {
-        console.error("Lỗi lấy danh sách thành phố:", err);
+        // 1. Luôn lấy danh sách Tỉnh/Thành (Level 1) trước tiên
+        const cityRes = await axios.get('http://localhost:8000/map/get-locations');
+        setCities(cityRes.data.data || []);
+
+        // 2. Nếu Customer ĐÃ CÓ map_id, tiến hành load data tương ứng
+        if (currentMapId) {
+          // Gọi API để tìm xem Quận này thuộc Tỉnh/Thành nào
+          const detailRes = await axios.get(`http://localhost:8000/map/get-location/${currentMapId}`);
+          const locationDetail = detailRes.data.data;
+
+          if (locationDetail && locationDetail.parent_id) {
+            const cityId = locationDetail.parent_id;
+            setSelectedCity(cityId);
+
+            // Lấy danh sách Quận/Huyện thuộc Tỉnh/Thành đó
+            const distRes = await axios.get(`http://localhost:8000/map/get-locations?parent_id=${cityId}`);
+            setDistricts(distRes.data.data || []);
+            
+            // Set giá trị cho thẻ select Quận/Huyện
+            setSelectedDistrict(currentMapId);
+          }
+        }
+      } catch (error) {
+        console.error("Lỗi khi khởi tạo dữ liệu địa chỉ:", error);
       }
     };
-    fetchCities();
-  }, []);
 
+    initLocationData();
+  }, [currentMapId]); // Chỉ chạy lại nếu currentMapId thay đổi từ cha truyền xuống
+
+  // 3. Xử lý khi Customer TỰ CHỌN/ĐỔI Tỉnh/Thành mới
   const handleCityChange = async (e) => {
     const cityId = e.target.value;
     setSelectedCity(cityId);
-    setSelectedDistrict(''); // Reset quận
-    onDistrictSelect(null);  // Reset map_id ở form ngoài
+    
+    // Reset lại Quận/Huyện vì Tỉnh/Thành đã thay đổi
+    setSelectedDistrict(''); 
+    onDistrictSelect(null);  
     
     if (cityId) {
       try {
+        // Lấy danh sách Quận/Huyện mới
         const res = await axios.get(`http://localhost:8000/map/get-locations?parent_id=${cityId}`);
-        setDistricts(res.data.data);
+        setDistricts(res.data.data || []);
       } catch (err) {
         console.error("Lỗi lấy danh sách quận:", err);
       }
@@ -45,8 +69,8 @@ function AddressSelector({ currentMapId, onDistrictSelect }) {
   const handleDistrictChange = (e) => {
     const districtId = e.target.value;
     setSelectedDistrict(districtId);
-    // Truyền map_id (ID của Quận) ngược lại cho Form Profile ở ngoài
-    onDistrictSelect(parseInt(districtId)); 
+    // Trả data về cho Component cha (Profile)
+    onDistrictSelect(districtId ? parseInt(districtId) : null); 
   };
 
   return (
@@ -78,37 +102,35 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // Load thông tin profile khi vào trang
   useEffect(() => {
     const loadProfile = async () => {
       try {
         const res = await userService.getProfile();
         if (res.status === 'success') {
-          const data = res.data.data; // Dữ liệu customer nằm trong res.data.data
+          const data = res.data.data; 
           setFormData({
             name: data.name || '',
-            phone_number: data.number || '',
-            map_id: data.map_id || null,
+            number: data.number || '', 
+            map_id: data.map_id || null, // Nếu null, AddressSelector sẽ tự hiểu là user mới
             address_detail : data.address_detail || '',
-            note : data.address_detail || ''
+            note : data.note || '' 
           });
           setDisplayAddress(data.full_address_string || "");
         }
       } catch (err) { 
         console.error("Lỗi load profile:", err); 
       } finally {
-        setLoading(false);
+        // Dừng loading -> AddressSelector mới được render và chạy API map
+        setLoading(false); 
       }
     };
     loadProfile();
   }, []);
 
-  // Xử lý thay đổi các ô input thường
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Xử lý lưu thông tin
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsUpdating(true);
@@ -116,11 +138,10 @@ function Profile() {
       const res = await userService.updateProfile(formData);
       if (res.status === 'success') {
         alert("Cập nhật thông tin thành công!");
-        // Cập nhật lại chuỗi địa chỉ hiển thị nếu có thay đổi
         if (res.data?.data?.full_address_string) {
           setDisplayAddress(res.data.data.full_address_string);
         } else {
-          window.location.reload(); // Cách nhanh nhất để load lại dữ liệu hiển thị chuẩn
+          window.location.reload(); 
         }
       }
     } catch (err) {
@@ -135,23 +156,29 @@ function Profile() {
   return (
     <div className="profile-container">
       <h2>Hồ Sơ Của Tôi</h2>
-      <p>Quản lý thông tin hồ sơ và địa chỉ nhận hàng</p>
+      <p>Quản lý thông tin hồ sơ và địa chỉ</p>
+      
+      {displayAddress && (
+        <div style={{ padding: '10px', backgroundColor: '#eef2ff', marginBottom: '20px', borderRadius: '4px' }}>
+          <strong>Địa chỉ đang lưu:</strong> {displayAddress}
+        </div>
+      )}
+
       <hr />
       
       <form onSubmit={handleSubmit} className="profile-form">
         <div className="form-group">
           <label>Họ và tên</label>
-          <input name="name" value={formData.full_name} onChange={handleChange} required />
+          <input name="name" value={formData.name} onChange={handleChange} required />
         </div>
 
         <div className="form-group">
           <label>Số điện thoại</label>
-          <input name="number" value={formData.phone_number} onChange={handleChange} required />
+          <input name="number" value={formData.number} onChange={handleChange} required />
         </div>
 
-        
         <div className="form-group">
-          <label>Chọn lại Khu vực</label>
+          <label>Chọn Khu vực</label>
           <AddressSelector 
              currentMapId={formData.map_id} 
              onDistrictSelect={(districtId) => setFormData({...formData, map_id: districtId})} 
@@ -162,19 +189,19 @@ function Profile() {
           <label>Số nhà / Tên đường</label>
           <input 
             name="address_detail" 
-            value={formData.number} 
+            value={formData.address_detail} 
             onChange={handleChange} 
             placeholder="Ví dụ: 123/45A Lê Lợi" 
           />
         </div>
 
         <div className="form-group">
-          <label>Ghi chú NOTE </label>
+          <label>Ghi chú (NOTE)</label>
           <textarea 
             name="note" 
-            value={formData.address_detail} 
+            value={formData.note} 
             onChange={handleChange} 
-            placeholder="Ví dụ: Giao vào lúc 12h trưa , thứ 2 tới thứ 6 ... " 
+            placeholder="Ví dụ: Giao vào lúc 12h trưa..." 
           />
         </div>
         

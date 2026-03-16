@@ -21,8 +21,8 @@ class Feedback(SQLModel, table=True):
 
     ai_score : int 
     agent_sentiment :Optional [str] = None 
-    root_cause : Optional[str] = None
-
+    root_cause_by_ai : Optional[str] = None
+    root_cause_by_human : Optional[str] = None
     process_status: str = Field(default="pending")
     related_tasks: List["Task"] = Relationship(back_populates="feedback_info")
 

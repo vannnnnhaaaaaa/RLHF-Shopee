@@ -3,13 +3,14 @@ import axios from 'axios'; // BẮT BUỘC IMPORT AXIOS
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import ShopGroup from '../../../components/ShopGroup';
+import { billService } from '../../../services/bill';
 import './style.scss';
 
 function Cart() {
   const [cartData, setCartData] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]); // Sửa lại tên biến cho chuẩn: chứa mảng ID
   const [loading, setLoading] = useState(true);
-
+  const [isProcessing, setIsProcessing] = useState(false)
   // 1. GỌI API KHI MỞ TRANG
   useEffect(() => {
     const fetchMyCart = async () => {
@@ -39,6 +40,88 @@ function Cart() {
   }, []);
 
   // 2. TÍNH TOÁN DỮ LIỆU TỰ ĐỘNG (Phần này bạn bị thiếu)
+  const handleCheckout = async () => {
+    if (selectedIds.length === 0) return;
+    setIsProcessing(true);
+    try {
+      // 1. Lấy ra danh sách các item đang được tick chọn
+      const selectedItems = cartData
+        .flatMap(shop => shop.items)
+        .filter(item => selectedIds.includes(item.cart_id));
+
+      // 2. Map dữ liệu sang chuẩn CreateBillDetail của Backend
+      const billDetails = selectedItems.map(item => ({
+        product_id: item.product_id, // Đảm bảo API cart trả về cả product_id
+        quantity: item.quantity,
+        price_at_purchase: item.price
+      }));
+
+      // 3. Khởi tạo payload hóa đơn (Cập nhật cho khớp Schema)
+      const payload = {
+
+        total_price: totalAmount,
+        total_shipping: 30000, // Phí ship mặc định
+
+        // Trạng thái đơn và thanh toán
+        status: "pending",
+        payment_method: "COD",
+        payment_status: "pending", // Đã bổ sung
+
+        // Dữ liệu Khuyến mãi (Tạm thời gán 0/null nếu chưa có UI chọn voucher)
+        discount_product: 0.0,
+        discount_shipping: 0.0,
+        shopee_voucher_id: null,
+        seller_voucher_id: null,
+
+        // Mảng chi tiết sản phẩm
+        details: billDetails
+      };
+      console.log('2')
+      // 4. Gọi API tạo Bill
+      const newBill = await billService.createBill(payload);
+      console.log("Tạo đơn hàng thành công:", newBill);
+
+      // 5. Sau khi mua thành công, xóa các sản phẩm đó khỏi giỏ hàng
+      // Có thể gọi lại hàm xóa hàng loạt hoặc reset state
+      alert("Đặt hàng thành công!");
+
+      // Xóa các sản phẩm đã mua khỏi UI
+      const newData = cartData.map(shop => ({
+        ...shop,
+        items: shop.items.filter(item => !selectedIds.includes(item.cart_id))
+      })).filter(shop => shop.items.length > 0);
+
+      setCartData(newData);
+      setSelectedIds([]);
+
+    } catch (error) {
+      // Dùng console.dir để xem toàn bộ cấu trúc object thay vì dạng string
+      console.dir(error);
+
+      // Kiểm tra xem lỗi có phải do Backend trả về không (có response)
+      if (error.response) {
+        // FastAPI mặc định bọc dữ liệu lỗi trong field 'detail'
+        const errorDetail = error.response.data.detail;
+
+        console.log("Chi tiết lỗi từ Backend:", errorDetail);
+
+        // Kiểm tra đúng mã lỗi để điều hướng
+        if (errorDetail && errorDetail.code === 'MISSING_INFO') {
+          alert(errorDetail.message); // Báo: "Vui lòng cập nhật đầy đủ..."
+          window.location.href = '/customer/account';
+          return; // Dừng lại ở đây, không chạy xuống dòng alert chung chung bên dưới
+        }
+      }
+
+      // Nếu là các lỗi khác (500, mất mạng, timeout...)
+      alert("Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại!");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // 4. HIỂN THỊ GIAO DIỆN
+  if (loading) return <div style={{ textAlign: 'center', marginTop: '100px' }}>Đang tải giỏ hàng...</div>;
   // Lấy ra tất cả cart_id có trong giỏ hàng
   const allCartIds = cartData.flatMap(shop => shop.items).map(i => i.cart_id);
 
@@ -138,52 +221,52 @@ function Cart() {
     }
   };
 
-const handleDeleteSelected = async () => {
-  // 1. Kiểm tra nếu chưa chọn gì
-  if (selectedIds.length === 0) {
-    alert("Vui lòng chọn sản phẩm để xóa!");
-    return;
-  }
-
-  // 2. Xác nhận
-  if (!window.confirm(`Bạn có chắc muốn xóa ${selectedIds.length} mục đã chọn?`)) {
-    return;
-  }
-
-  const token = localStorage.getItem('access_token');
-
-  try {
-    // 3. Gọi API xóa hàng loạt (truyền mảng selectedIds vào body)
-    const response = await axios.post(
-      'http://localhost:8000/cart/remove-multiple', 
-      selectedIds, // Gửi trực tiếp mảng [1, 2, 3]
-      {
-        headers: { Authorization: `Bearer ${token}` }
-      }
-    );
-
-    if (response.data.status === 'success') {
-      // 4. Cập nhật UI: Lọc bỏ các item có cart_id nằm trong selectedIds
-      const newData = cartData.map(shop => ({
-        ...shop,
-        items: shop.items.filter(item => !selectedIds.includes(item.cart_id))
-      })).filter(shop => shop.items.length > 0); // Xóa shop nếu không còn item nào
-
-      setCartData(newData);
-      setSelectedIds([]); // Xóa sạch danh sách tick chọn
-      alert(response.data.message);
+  const handleDeleteSelected = async () => {
+    // 1. Kiểm tra nếu chưa chọn gì
+    if (selectedIds.length === 0) {
+      alert("Vui lòng chọn sản phẩm để xóa!");
+      return;
     }
-  } catch (error) {
-    console.error("Lỗi xóa hàng loạt:", error);
-    alert("Không thể xóa các mục đã chọn. Vui lòng thử lại.");
-  }
-};
+
+    // 2. Xác nhận
+    if (!window.confirm(`Bạn có chắc muốn xóa ${selectedIds.length} mục đã chọn?`)) {
+      return;
+    }
+
+    const token = localStorage.getItem('access_token');
+
+    try {
+      // 3. Gọi API xóa hàng loạt (truyền mảng selectedIds vào body)
+      const response = await axios.post(
+        'http://localhost:8000/cart/remove-multiple',
+        selectedIds, // Gửi trực tiếp mảng [1, 2, 3]
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (response.data.status === 'success') {
+        // 4. Cập nhật UI: Lọc bỏ các item có cart_id nằm trong selectedIds
+        const newData = cartData.map(shop => ({
+          ...shop,
+          items: shop.items.filter(item => !selectedIds.includes(item.cart_id))
+        })).filter(shop => shop.items.length > 0); // Xóa shop nếu không còn item nào
+
+        setCartData(newData);
+        setSelectedIds([]); // Xóa sạch danh sách tick chọn
+        alert(response.data.message);
+      }
+    } catch (error) {
+      console.error("Lỗi xóa hàng loạt:", error);
+      alert("Không thể xóa các mục đã chọn. Vui lòng thử lại.");
+    }
+  };
   // 4. HIỂN THỊ GIAO DIỆN
   if (loading) return <div style={{ textAlign: 'center', marginTop: '100px' }}>Đang tải giỏ hàng...</div>;
 
   return (
     <div className="cart-page-container">
-      <Navbar />
+
 
       <div className="cart-main-content">
         {/* Header Bảng */}
@@ -227,15 +310,15 @@ const handleDeleteSelected = async () => {
                 <span className="label">Tổng cộng ({selectedIds.length} sản phẩm):</span>
                 <span className="total-price">{totalAmount.toLocaleString('vi-VN')}₫</span>
               </div>
-              <button className="btn-buy" disabled={selectedIds.length === 0} >
-                Mua Hàng
+              <button className="btn-buy" disabled={selectedIds.length === 0 || isProcessing} onClick={handleCheckout} >
+                {isProcessing ? 'Đang xử lý...' : 'Mua Hàng'}
               </button>
             </div>
           </div>
         </div>
 
       </div>
-      <Footer />
+
     </div>
   );
 }

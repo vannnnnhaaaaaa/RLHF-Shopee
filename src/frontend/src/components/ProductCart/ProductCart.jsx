@@ -10,7 +10,7 @@ function ProductCard({ product }) {
   };
 
   return (
-    <Link to={`/product/public/${product.id}`} className="shopee-product-card">
+    <Link to={`/customer/product/${product.id}`} className="shopee-product-card">
     <div className="shopee-product-card">
       
       <div className="card-image-wrapper">

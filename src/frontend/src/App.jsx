@@ -16,25 +16,36 @@ import DetailProduct from './pages/shopee/DetailProduct'
 import Cart from './pages/shopee/Cart'
 import Profile from './pages/customer'
 import ChatWidget from './components/ChatWidget/ChatWidget'
+import UserAccount from './pages/shopee/Profile/UserAccount'
+import CustomerLayout from './pages/shopee/CustomerLayout/CustomerLayout'
+import Purchase from './pages/shopee/Purchase/Purchase'
 function App() {
-
-
   return (
     <>
       <BrowserRouter>
         <Routes>
+         
           <Route path='/customer/signup' element={<Signup />} />
           <Route path='/customer/login' element={<LoginPage />} />
-          <Route path='/customer/home' element={<HomePage />} />
-          <Route path='/customer/profile' element={<Profile />} />
-          <Route path="/product/public/:id" element={<DetailProduct />} />
-
-          <Route path='/cartitem' element={<Cart />} />
-
           <Route path='/seller-login' element={<LoginPage />} />
           <Route path='/become-seller' element={<BecomeSeller />} />
           <Route path='/adminDashboard_RLHF' element={<AdminDashboard />} />
-          
+
+      
+          <Route path='/customer' element={<CustomerLayout />}>
+            <Route index element={<HomePage />} />
+
+            <Route path='account' element={<UserAccount />}>
+              <Route index element={<Profile />} />
+              <Route path='purchase' element= {<Purchase/>} />
+            </Route>
+            
+       
+            <Route path='product/:id' element={<DetailProduct />} />
+            <Route path='cartitem' element={<Cart />} />
+          </Route>
+
+          {/* KHU VỰC NGƯỜI BÁN (Giữ nguyên vì bạn đã code chuẩn rồi) */}
           <Route path="/seller-dashboard" element={<SellerDashboard />}>
             <Route index element={<HomeDashboard />} />
             <Route path="orders/cancellations" element={<CancelOrderManage />} />
@@ -43,9 +54,9 @@ function App() {
             <Route path="orders/manage" element={<ManageOrders />} />
             <Route path="orders/managereturn" element={<ReturnManage />} />
           </Route>
-          
+
         </Routes>
-        <ChatWidget/>
+        <ChatWidget />
       </BrowserRouter>
     </>
   )
