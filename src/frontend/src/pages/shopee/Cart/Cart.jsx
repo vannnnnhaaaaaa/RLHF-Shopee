@@ -39,7 +39,6 @@ function Cart() {
     fetchMyCart();
   }, []);
 
-  // 2. TÍNH TOÁN DỮ LIỆU TỰ ĐỘNG (Phần này bạn bị thiếu)
   const handleCheckout = async () => {
     if (selectedIds.length === 0) return;
     setIsProcessing(true);
@@ -236,7 +235,7 @@ function Cart() {
     const token = localStorage.getItem('access_token');
 
     try {
-      // 3. Gọi API xóa hàng loạt (truyền mảng selectedIds vào body)
+    
       const response = await axios.post(
         'http://localhost:8000/cart/remove-multiple',
         selectedIds, // Gửi trực tiếp mảng [1, 2, 3]

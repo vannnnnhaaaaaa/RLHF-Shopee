@@ -1,5 +1,4 @@
-
-from fastapi import HTTPException, status 
+from fastapi import HTTPException, status  , Depends
 from sqlmodel import select , Session
 from sqlalchemy.exc import IntegrityError
 import os
@@ -7,7 +6,7 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 
 from src.backend.models import Customer
-from src.backend.auth import hash_password, verify_password
+from src.backend.auth import hash_password, verify_password , get_current_customer
 
 
 
@@ -71,7 +70,9 @@ def authenticate_customer(db: Session, user_name: str, password: str):
     return customer
 
 
-def check_exist_info_customer (user : Customer) :  
-    if not user.address_detail  or not user.number or not user.name == None :
+def check_exist_info_customer (user : Customer = Depends(get_current_customer)) :  
+    if not user.address_detail  or not user.number or not user.name  or not user.map_id:
+        print("tại sao lại nhảy vô đây nhỉ")
+        print(user)
         return False
     return True

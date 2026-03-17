@@ -7,7 +7,7 @@ from src.backend.connect_database import get_session
 from src.backend.auth import create_access_token , get_current_customer
 
 from src.backend.models import Seller , Customer , Map
-from src.backend.schemas import UpdateProfile
+from src.backend.schemas import CustomerUpdate
 # Khởi tạo Router
 router_customer = APIRouter(
     prefix="/customer",
@@ -107,11 +107,11 @@ def get_profile(session: Session = Depends(get_session), customer : Customer = D
     # Trả về thông tin cơ bản
     profile_data = {
         "id": customer.id,
-        "full_name": customer.name,
-        "phone_number": customer.number,
+        "name": customer.name,
+        "number": customer.number,
         "address_detail": customer.address_detail,
         "map_id": customer.map_id,
-        "full_address_string": "" 
+        "note" : customer.note
     }
 
     # Nếu khách đã có map_id (Quận/Huyện), ta lấy tên Quận và tên Thành phố
@@ -128,23 +128,21 @@ def get_profile(session: Session = Depends(get_session), customer : Customer = D
 
 @router_customer.patch('/updateprofile')
 def update_profile (
-    data_update : UpdateProfile  ,
+    data_update : CustomerUpdate  ,
     session : Session = Depends(get_session) ,
     current_customer : Customer = Depends(get_current_customer)
 ) :
-    customer = session.get(Customer , current_customer.id)
-    if not customer :
-        raise HTTPException(status_code=404 , detail='không tim thấy người dùng ')
-    customer.address_detail = data_update.address_detail
-    customer.map_id = data_update.map_id
-    customer.number = data_update.number 
-    customer.name = data_update.name
-    customer.note = data_update.note
+    print(current_customer)
+    current_customer.address_detail = data_update.address_detail
+    current_customer.map_id = data_update.map_id
+    current_customer.number = data_update.number 
+    current_customer.name = data_update.name
+    current_customer.note = data_update.note
     try :
-        session.add(customer)
+        session.add(current_customer)
         session.commit()
-        session.refresh(customer)
-        return {'status': 'đã thêm thành công' }
+        session.refresh(current_customer)
+        return {'status': 'success' }
     except Exception as e :
         raise HTTPException(status_code=500 , detail=f'Error {e}')
     

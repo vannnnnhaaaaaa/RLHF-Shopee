@@ -26,7 +26,7 @@ function MessageFormatter({ rawText }) {
         return;
     }
    
-    navigate(`/product/public/${productId}`);
+    navigate(`/customer/product/${productId}`);
   };
 
   let productCounter = 0; 

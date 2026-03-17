@@ -10,17 +10,16 @@ function AddressSelector({ currentMapId, onDistrictSelect }) {
   const [selectedCity, setSelectedCity] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
 
-  // Gom chung vào 1 luồng khởi tạo duy nhất để tránh race condition
+  // Luồng 1: Khởi tạo dữ liệu khi mở form (Xử lý cả 2 trường hợp có/không có map_id)
   useEffect(() => {
     const initLocationData = async () => {
       try {
-        // 1. Luôn lấy danh sách Tỉnh/Thành (Level 1) trước tiên
+        // Luôn gọi API lấy danh sách Tỉnh/Thành trước tiên
         const cityRes = await axios.get('http://localhost:8000/map/get-locations');
         setCities(cityRes.data.data || []);
 
-        // 2. Nếu Customer ĐÃ CÓ map_id, tiến hành load data tương ứng
+        // Nếu Customer ĐÃ CÓ map_id (Quận/Huyện) -> Load Tỉnh và Quận tương ứng
         if (currentMapId) {
-          // Gọi API để tìm xem Quận này thuộc Tỉnh/Thành nào
           const detailRes = await axios.get(`http://localhost:8000/map/get-location/${currentMapId}`);
           const locationDetail = detailRes.data.data;
 
@@ -28,11 +27,10 @@ function AddressSelector({ currentMapId, onDistrictSelect }) {
             const cityId = locationDetail.parent_id;
             setSelectedCity(cityId);
 
-            // Lấy danh sách Quận/Huyện thuộc Tỉnh/Thành đó
-            const distRes = await axios.get(`http://localhost:8000/map/get-locations?parent_id=${cityId}`);
+            // Dùng API get-districts vừa sửa ở Backend
+            const distRes = await axios.get(`http://localhost:8000/map/get-districts?city_id=${cityId}`);
             setDistricts(distRes.data.data || []);
             
-            // Set giá trị cho thẻ select Quận/Huyện
             setSelectedDistrict(currentMapId);
           }
         }
@@ -42,26 +40,27 @@ function AddressSelector({ currentMapId, onDistrictSelect }) {
     };
 
     initLocationData();
-  }, [currentMapId]); // Chỉ chạy lại nếu currentMapId thay đổi từ cha truyền xuống
+  }, [currentMapId]); 
 
-  // 3. Xử lý khi Customer TỰ CHỌN/ĐỔI Tỉnh/Thành mới
+  // Luồng 2: Xử lý khi Customer TỰ CHỌN/ĐỔI Tỉnh/Thành (Trường hợp chưa có map_id hoặc muốn đổi)
   const handleCityChange = async (e) => {
     const cityId = e.target.value;
     setSelectedCity(cityId);
     
-    // Reset lại Quận/Huyện vì Tỉnh/Thành đã thay đổi
+    // Đổi Tỉnh thì phải xóa Quận đang chọn đi
     setSelectedDistrict(''); 
     onDistrictSelect(null);  
     
     if (cityId) {
       try {
-        // Lấy danh sách Quận/Huyện mới
-        const res = await axios.get(`http://localhost:8000/map/get-locations?parent_id=${cityId}`);
+        // Dùng API get-districts vừa sửa
+        const res = await axios.get(`http://localhost:8000/map/get-districts?city_id=${cityId}`);
         setDistricts(res.data.data || []);
       } catch (err) {
         console.error("Lỗi lấy danh sách quận:", err);
       }
     } else {
+      // Nếu chọn lại "-- Chọn Tỉnh/Thành --" thì xóa list Quận đi
       setDistricts([]);
     }
   };
@@ -69,7 +68,6 @@ function AddressSelector({ currentMapId, onDistrictSelect }) {
   const handleDistrictChange = (e) => {
     const districtId = e.target.value;
     setSelectedDistrict(districtId);
-    // Trả data về cho Component cha (Profile)
     onDistrictSelect(districtId ? parseInt(districtId) : null); 
   };
 
@@ -88,7 +86,7 @@ function AddressSelector({ currentMapId, onDistrictSelect }) {
   );
 }
 
-// --- FORM PROFILE CHÍNH ---
+// --- FORM PROFILE CHÍNH (GIỮ NGUYÊN NHƯ BẠN VIẾT) ---
 function Profile() {
   const [formData, setFormData] = useState({
     name: '',
@@ -105,13 +103,13 @@ function Profile() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const res = await userService.getProfile();
-        if (res.status === 'success') {
-          const data = res.data.data; 
+        const data = await userService.getProfile();
+       
+        if (data) {
           setFormData({
             name: data.name || '',
             number: data.number || '', 
-            map_id: data.map_id || null, // Nếu null, AddressSelector sẽ tự hiểu là user mới
+            map_id: data.map_id || null, 
             address_detail : data.address_detail || '',
             note : data.note || '' 
           });
@@ -120,7 +118,6 @@ function Profile() {
       } catch (err) { 
         console.error("Lỗi load profile:", err); 
       } finally {
-        // Dừng loading -> AddressSelector mới được render và chạy API map
         setLoading(false); 
       }
     };
@@ -134,8 +131,10 @@ function Profile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsUpdating(true);
+    
     try {
       const res = await userService.updateProfile(formData);
+      console.log(res)
       if (res.status === 'success') {
         alert("Cập nhật thông tin thành công!");
         if (res.data?.data?.full_address_string) {
@@ -205,7 +204,7 @@ function Profile() {
           />
         </div>
         
-        <button type="submit" className="btn-save" disabled={isUpdating}>
+        <button type="submit" className="btn-save" disabled={isUpdating} onClick={handleSubmit}>
           {isUpdating ? "Đang lưu..." : "Lưu thay đổi"}
         </button>
       </form>

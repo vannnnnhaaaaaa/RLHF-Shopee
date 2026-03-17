@@ -49,7 +49,7 @@ def decode_token(token: str = Depends(oauth2_schema)):
         print('user_id',payload)
         user_id: int = payload.get('user_id')
         auth: str = payload.get('auth') # Lấy role ra
-        
+         
         if user_id is None or auth is None:
             raise credentials_exception
             
@@ -72,13 +72,14 @@ def get_current_member(payload: dict = Depends(decode_token), session: Session =
 
 
 def get_current_customer(payload: dict = Depends(decode_token), session: Session = Depends(get_session)):
-    """Dành cho khách hàng mua hàng (role = 'customer')"""
+   
     if payload.get("auth") != "customer":
         raise HTTPException(status_code=403, detail="Bạn không có quyền truy cập. Yêu cầu tài khoản Customer.")
-        
+    print(payload)
     customer = session.get(Customer, payload.get("user_id"))
     if customer is None:
         raise HTTPException(status_code=401, detail="Customer không tồn tại")
+        
     return customer
 
 

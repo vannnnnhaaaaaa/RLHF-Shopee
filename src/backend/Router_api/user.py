@@ -43,6 +43,4 @@ def register (user : UserCreate  , session : Session = Depends(get_session)):
     session.refresh(new_user)
     return new_user
 
-    
-
 

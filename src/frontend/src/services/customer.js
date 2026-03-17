@@ -56,14 +56,33 @@ const getAuthHeader = () => ({
 export const userService = {
   // Lấy thông tin cá nhân
   getProfile: async () => {
-    const response = await axios.get(`${API_URL}/profile`, getAuthHeader());
-    return response.data;
+    const response = await axios.get(`${API_BASE_URL}/profile`, getAuthHeader());
+    console.log(response.data.data)
+    return response.data.data;
   },
 
   // Cập nhật thông tin cá nhân
   updateProfile: async (profileData) => {
-    console.log(profileData)
-    const response = await axios.patch(`${API_URL}/update-profile`, profileData, getAuthHeader());
-    return response.data;
+
+    const token = localStorage.getItem('access_token'); 
+    // Log ra để chắc chắn token lấy lên được, không bị null hay undefined
+    console.log("🔑 Token lấy được từ local:", token); 
+
+    // 2. Tự tay cấu hình config cho Axios
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // Nhớ có dấu cách sau chữ Bearer
+      }
+    };
+
+    try {
+      // 3. Gọi API với 3 tham số rõ ràng: URL, Data, và Config
+      const response = await axios.patch(`${API_BASE_URL}/updateprofile`, profileData, config);
+      return response.data;
+    } catch (error) {
+      console.error("❌ Lỗi khi gọi API updateProfile:", error);
+      throw error;
+    }
   }
 };

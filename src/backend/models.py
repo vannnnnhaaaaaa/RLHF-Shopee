@@ -96,14 +96,14 @@ class FinalResult(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.now)
     
 #-- --- Phần tọa độ vs sản phẩm -- ---- 
-class Map(SQLModel, table=True):
+class Map (SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)   
     name: str 
     type : str
     parent_id : Optional[int]
     latitude: Optional[float] 
     longitude: Optional[float] 
-    note : Optional[str]
+  
 
     
 class Shipping(SQLModel, table=True):
@@ -145,7 +145,7 @@ class Customer(SQLModel, table=True):
     map_id: Optional[int] = Field(foreign_key='map.id')  
     number: Optional[str] = None
     address_detail: Optional[str] = None
-    
+    note:  Optional[str]
     # Quan hệ
     bills: List["Bill"] = Relationship(back_populates="customer")
     cart_items: Optional[List["CartItem"]] = Relationship(back_populates="customer")

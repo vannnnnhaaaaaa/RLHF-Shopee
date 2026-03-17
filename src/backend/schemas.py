@@ -181,11 +181,6 @@ class AddToCartRequest(SQLModel):
     quantity: int = 1 
 
 
-class UpdateProfile (SQLModel) :
-    name : str
-    map_id : int
-    number :str
-    address_detail : str 
 
 class CustomerUpdate(SQLModel):
     name: Optional[str] = None
