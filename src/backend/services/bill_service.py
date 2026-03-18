@@ -13,7 +13,7 @@ def get_cart_items(customer_id: int, session: Session):
     cart_items = session.exec(statement).all()
     
     if not cart_items:
-        raise HTTPException(status_code=400, detail="Giỏ hàng đang trống, không thể thanh toán.")
+        raise HTTPException(status_code=400, detail="Giỏ hàng đang trống, không thể thanh toán." )
     return cart_items
 
 def process_inventory_and_calculate_total(cart_items: list[CartItem], session: Session) -> float:
@@ -54,7 +54,7 @@ def create_checkout_bill(bill_data: CreateBill, customer_id: int, session: Sessi
         calculated_product_total = 0.0
         purchased_product_ids = []
 
-        # --- BƯỚC 1 & 2: KIỂM TRA TỒN KHO, TRỪ TỒN KHO VÀ TÍNH TIỀN ---
+        # --- BƯỚC 1 & 2: KIỂM TRA TỒN KHO, TRỪ TỒN KHO, CỘNG LƯỢT BÁN VÀ TÍNH TIỀN ---
         for item in bill_data.details:
             product = session.get(Product, item.product_id)
             
@@ -69,6 +69,12 @@ def create_checkout_bill(bill_data: CreateBill, customer_id: int, session: Sessi
             
             # Trừ tồn kho
             product.stock -= item.quantity
+            
+            # THÊM MỚI: Tăng số lượng đã bán (sold_count)
+            # Dùng .get() hoặc kiểm tra None để phòng trường hợp DB đang có giá trị NULL
+            current_sold = product.sold_count if product.sold_count is not None else 0
+            product.sold_count = current_sold + item.quantity
+            
             session.add(product)
             
             # Tính tiền dựa trên giá gốc trong DB
@@ -99,14 +105,13 @@ def create_checkout_bill(bill_data: CreateBill, customer_id: int, session: Sessi
         session.add(new_bill)
         session.flush()
 
-        # --- BƯỚC 4: TẠO BILL DETAIL (ĐÃ SỬA LỖI Ở ĐÂY) ---
+        # --- BƯỚC 4: TẠO BILL DETAIL ---
         for item in bill_data.details:
             db_product = session.get(Product, item.product_id)
             bill_detail = BillDetail(
                 bill_id=new_bill.id,
                 product_id=item.product_id,
                 quantity=item.quantity,
-                # Đổi từ unit_price thành price_at_purchase cho khớp Database
                 price_at_purchase=db_product.price 
             )
             session.add(bill_detail)

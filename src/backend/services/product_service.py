@@ -8,8 +8,8 @@ from sqlmodel import Session , select , func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import defer
 # Import các Models của bạn
-from src.backend.models import Product, Product_image
-
+from src.backend.models import Product, Product_image , Product_Variants
+from src.backend.services.ai_engine import get_model_embedding
 # Load biến môi trường
 load_dotenv()
 
@@ -58,6 +58,7 @@ def upload_to_supabase(upload_file: UploadFile, folder: str) -> str:
 # --- HÀM LOGIC CHÍNH: TẠO SẢN PHẨM ---
 def create_new_product(
     db: Session, 
+    variants_list : list,
     seller_id: int, 
     product_data: dict, 
     images: List[UploadFile], 
@@ -79,18 +80,39 @@ def create_new_product(
         video_url = None
         if video and video.filename:
             video_url = upload_to_supabase(video, "product_videos")
-
+        model = get_model_embedding()
+        # FIX LỖI: Lấy data từ dict bằng get(), cấp giá trị mặc định tránh lỗi chuỗi None
+        description_text = product_data.get("description", "")
+        embedding_vector = None
+        if description_text:
+            embedding_vector = model.encode(description_text).tolist()
         # Bước 3: Tạo bản ghi Product trong DB
         new_product = Product(
+            embedding = embedding_vector ,
             **product_data,
             seller_id=seller_id,
             image_link=primary_image_url,
             video_link=video_url
         )
         db.add(new_product)
-        db.flush() # Để lấy được new_product.id
+        db.flush() # Bắt buộc flush để DB sinh ra new_product.id
 
-        # Bước 4: Lưu thông tin chi tiết vào bảng ProductImage (để load slide)
+        # Bước 4: Xử lý Biến thể (Variants) nếu có
+        if product_data.get("has_variants") and variants_list:
+            for variant_data in variants_list:
+                variant_entry = Product_Variants(
+                    product_id=new_product.id,  # Liên kết với sản phẩm vừa tạo
+                    tier_1_name=variant_data.get("tier_1_name"),
+                    tier_1_value=variant_data.get("tier_1_value"),
+                    tier_2_name=variant_data.get("tier_2_name"),
+                    tier_2_value=variant_data.get("tier_2_value"),
+                    price=variant_data.get("price"),
+                    stock=variant_data.get("stock"),
+                    sku_code=variant_data.get("sku_code")
+                )
+                db.add(variant_entry)
+
+        # Bước 5: Lưu thông tin chi tiết vào bảng Product_image (để load slide)
         for index, url in enumerate(image_urls):
             img_entry = Product_image(
                 product_id=new_product.id,
@@ -100,7 +122,7 @@ def create_new_product(
             )
             db.add(img_entry)
 
-        # Bước 5: Commit toàn bộ giao dịch
+        # Bước 6: Commit toàn bộ giao dịch
         db.commit()
         db.refresh(new_product)
         return new_product

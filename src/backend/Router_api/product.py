@@ -29,7 +29,7 @@ def add_product(
     
     # --- 2. HỨNG DỮ LIỆU SKU (BIẾN THỂ) ---
     # Frontend sẽ gửi lên một chuỗi string (do JSON.stringify tạo ra)
-    variants_list: Optional[str] = Form(None), 
+    variantsList: Optional[str] = Form(None), 
     
     # --- 3. Hứng dữ liệu File ---
     images: List[UploadFile] = File(...), 
@@ -51,15 +51,16 @@ def add_product(
 
     # --- XỬ LÝ CHUỖI JSON BIẾN THỂ (SKU) THÀNH LIST ---
     list_variants = []
+    print(variantsList)
     if has_variants:
-        if not variants_list:
+        if not variantsList:
             raise HTTPException(
                 status_code=400, 
                 detail="Sản phẩm có phân loại nhưng không nhận được dữ liệu phân loại."
             )
         try:
             # Dịch ngược chuỗi String từ Frontend thành List[Dict] trong Python
-            list_variants = json.loads(variants_list) 
+            list_variants = json.loads(variantsList) 
         except json.JSONDecodeError:
             raise HTTPException(
                 status_code=400, 
@@ -73,6 +74,7 @@ def add_product(
         "description": description,
         "price": price,
         "stock": stock,
+        "status" : 'active',
         "has_variants": has_variants,
         "weight": weight,
         "length": length,
@@ -113,12 +115,11 @@ def add_product(
     }
 
 
-
 @router_product.get("/list")
 def get_my_products(
-    # --- Query Parameters (Thông số truyền trên URL) ---
+    # --- Query Parameters ---
     status: Optional[str] = Query(None, description="Trạng thái: pending_inbound, rejected, removed... Để trống là lấy TẤT CẢ"),
-    skip: int = Query(0, description="Bỏ qua bao nhiêu bản ghi (Dùng cho Trang 1, Trang 2...)"),
+    skip: int = Query(0, description="Bỏ qua bao nhiêu bản ghi"),
     limit: int = Query(50, description="Số lượng lấy tối đa mỗi lần gọi"),
     
     # --- Dependencies ---
@@ -138,6 +139,10 @@ def get_my_products(
             limit=limit
         )
         
+        # --- FIX LỖI TẠI ĐÂY ---
+        # Ép kiểu an toàn loại bỏ embedding cho toàn bộ list sản phẩm
+        cleaned_products = [p.model_dump(exclude={"embedding"}) for p in products]
+        
         return {
             "status": "success",
             "message": "Lấy danh sách sản phẩm thành công",
@@ -145,7 +150,7 @@ def get_my_products(
                 "filter_status": status if status else "all",
                 "count_returned": len(products)
             },
-            "data": products
+            "data": cleaned_products # Trả về list đã được dọn dẹp
         }
         
     except Exception as e:
@@ -154,6 +159,7 @@ def get_my_products(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Lỗi hệ thống khi tải danh sách sản phẩm"
         )
+    
 @router_product.get(
     "/public/random", 
     response_model=ProductListResponse # <--- "PHÉP THUẬT" NẰM Ở ĐÂY

@@ -1,175 +1,219 @@
-import React, { useState } from 'react';
-import './style.scss'; // Dùng chung file style hoặc tạo ManageOrders.scss riêng
+import React, { useState, useEffect } from 'react';
+import { sellerOrderService } from '../../../services/order';
+import './style.scss';
 
 const ManageOrders = () => {
-  const [activeTab, setActiveTab] = useState('cần-gửi');
+  const [activeTab, setActiveTab] = useState('all');
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Đã XÓA state refresh đi vì không cần load lại toàn bộ màn hình nữa
 
-  // Mock data giả lập các trạng thái đơn hàng
-  const [orders, setOrders] = useState([
-    {
-      id: '260308ABCDEF',
-      customer: 'Nguyễn Văn A',
-      productName: 'Vở học tập cho trẻ nhỏ, có ô li',
-      productImage: 'https://via.placeholder.com/40',
-      status: 'Cần gửi',
-      shippingMethod: 'Giao nhanh 24h',
-      total: 10000,
-      date: '08/03/2026'
-    },
-    {
-      id: '260308XYZ123',
-      customer: 'Trần Thị B',
-      productName: 'Bút bi Thiên Long',
-      productImage: 'https://via.placeholder.com/40',
-      status: 'Đã gửi',
-      shippingMethod: 'Tiêu chuẩn',
-      total: 25000,
-      date: '06/03/2026'
+  const tabs = [
+    { label: 'Tất cả', value: 'all' },
+    { label: 'Cần xác nhận', value: 'pending' },
+    { label: 'Giao tới kho', value: 'accept' },
+    { label: 'Đã gửi', value: 'delivering' },
+    { label: 'Đã hoàn tất', value: 'completed' },
+    { label: 'Chờ xử lý', value: 'processing_cancel' },
+    { label: 'Đã hủy', value: 'cancelled' }
+  ];
+
+  const translateStatus = (status) => {
+    switch (status) {
+      case 'pending': return 'Cần gửi';
+      case 'accept': return 'Đang chuẩn bị'; 
+      case 'delivering': return 'Đã gửi';
+      case 'completed': return 'Đã hoàn tất';
+      case 'processing_cancel': return 'Chờ hủy';
+      case 'cancelled': return 'Đã hủy';
+      default: return status;
     }
-  ]);
+  };
 
-  const tabs = ['Tất cả', 'Cần gửi', 'Đã gửi', 'Đã hoàn tất', 'Chờ xử lý', 'Đã hủy', 'Giao không thành công'];
+  useEffect(() => {
+    const fetchOrders = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const statusParam = activeTab === 'all' ? null : activeTab;
+        const result = await sellerOrderService.getOrders(statusParam);
+        
+        if (result && result.data) {
+           setOrders(result.data); 
+        } else {
+           setOrders([]);
+        }
+      } catch (err) {
+        console.error("Lỗi fetch data:", err);
+        setError("Không thể tải danh sách đơn hàng. Vui lòng thử lại sau.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  // Xóa 'refresh' khỏi mảng dependency
+  }, [activeTab]); 
+
+  // --- LOGIC MỚI: CẬP NHẬT CỤC BỘ KHÔNG LOAD TRANG ---
+
+  // Xử lý: Pending -> Accept
+  const handlePrepareOrder = async (billId) => {
+      try {
+          await sellerOrderService.updateOrderStatus(billId, 'accept');
+          
+          // Cập nhật State Orders cục bộ
+          setOrders(prevOrders => {
+              if (activeTab === 'all') {
+                  // Nếu ở tab Tất cả -> Chỉ đổi trạng thái dòng đó
+                  return prevOrders.map(order => 
+                      order.id === billId ? { ...order, status: 'accept' } : order
+                  );
+              } else {
+                  // Nếu ở tab cụ thể (Cần gửi) -> Bấm xong thì loại bỏ dòng đó khỏi danh sách hiển thị
+                  return prevOrders.filter(order => order.id !== billId);
+              }
+          });
+
+          // (Tùy chọn) Có thể bỏ dòng alert này đi nếu thấy phiền, vì giao diện đã phản hồi ngay lập tức rồi
+          // alert("Đã xác nhận chuẩn bị hàng!"); 
+      } catch (err) {
+          alert("Lỗi: " + (err.response?.data?.detail || "Không thể cập nhật trạng thái"));
+      }
+  }
+
+  // Xử lý: Accept -> Delivering
+  const handleDeliverOrder = async (billId) => {
+      try {
+          await sellerOrderService.updateOrderStatus(billId, 'delivering');
+          
+          // Cập nhật State Orders cục bộ
+          setOrders(prevOrders => {
+              if (activeTab === 'all') {
+                  // Đổi trạng thái hiển thị
+                  return prevOrders.map(order => 
+                      order.id === billId ? { ...order, status: 'delivering' } : order
+                  );
+              } else {
+                  // Xóa khỏi tab 'Đã xác nhận'
+                  return prevOrders.filter(order => order.id !== billId);
+              }
+          });
+
+      } catch (err) {
+          alert("Lỗi: " + (err.response?.data?.detail || "Không thể cập nhật trạng thái"));
+      }
+  }
+
+  // --- KẾT THÚC LOGIC MỚI ---
 
   return (
     <div className="manage-orders-page">
-      {/* Header */}
       <div className="page-header">
-        <div className="header-title">
-          <h2>Quản lý đơn hàng</h2>
-          <span className="subtitle">📢 Người bán cần lưu ý: Đừng để mất thu nhập vì các kiện hàng bị hư hỏng... <a href="#">Tìm hiểu thêm</a></span>
-        </div>
-        <div className="header-actions">
-          <div className="search-box">
-            <input type="text" placeholder="Tìm kiếm ID đơn hàng/ID sản phẩm" />
-            <button>🔍</button>
-          </div>
-          <button className="btn-secondary">Nhãn vận chuyển</button>
-          <button className="btn-secondary">Chương trình & dịch vụ</button>
-          <button className="btn-icon">•••</button>
-        </div>
+        <h2>Quản lý đơn hàng</h2>
       </div>
 
-      {/* Warning Alert */}
-      <div className="warning-alert">
-        <span className="icon">⚠️</span>
-        <p>Chỉ có thể tạo nhãn sau khi đã cài đặt phương thức thu gom hàng. <a href="#">Cập nhật thông tin</a></p>
-        <button className="close-btn">×</button>
-      </div>
-
-      {/* To-do List (Việc cần làm) */}
-      <div className="todo-section">
-        <h3>📋 Việc cần làm</h3>
-        <div className="todo-grid">
-          <div className="todo-item">
-            <p>Vận chuyển trước 23:59 hôm nay</p>
-            <h4>0</h4>
-          </div>
-          <div className="todo-item">
-            <p>Tự động hủy trong 24 giờ trở xuống</p>
-            <h4>0</h4>
-          </div>
-          <div className="todo-item">
-            <p>Quá hạn vận chuyển</p>
-            <h4>0</h4>
-          </div>
-          <div className="todo-item">
-            <p>Hủy</p>
-            <h4>0</h4>
-          </div>
-          <div className="todo-item">
-            <p>Vấn đề kho vận</p>
-            <h4>0</h4>
-          </div>
-          <div className="todo-item">
-            <p>Đã yêu cầu trả hàng/hoàn tiền</p>
-            <h4>0</h4>
-          </div>
-        </div>
-        <div className="todo-footer">
-          <span>Vận chuyển đúng hạn khi Giao nhanh 24h ❓ : <strong>--%</strong> (Mục tiêu: 95%) </span>
-        </div>
-      </div>
-
-      {/* Main Content (Tabs & Table) */}
       <div className="content-container">
-        {/* Tabs */}
+        
+        {/* Render Tabs */}
         <div className="order-tabs">
-          {tabs.map((tab, idx) => {
-            const tabKey = tab.toLowerCase().replace(/ /g, '-');
-            return (
+          {tabs.map((tab) => (
               <button 
-                key={idx} 
-                className={activeTab === tabKey ? 'active' : ''}
-                onClick={() => setActiveTab(tabKey)}
+                key={tab.value} 
+                className={activeTab === tab.value ? 'active' : ''}
+                onClick={() => setActiveTab(tab.value)}
               >
-                {tab}
+                {tab.label}
               </button>
-            );
-          })}
+          ))}
         </div>
 
         {/* Filters */}
         <div className="filter-bar">
-          <div className="filter-row">
-            <button className="btn-filter"><span>⚙️</span> Bộ lọc (6)</button>
-            <select><option>Đang chờ vận chuyển</option></select>
-            <select><option>Trạng thái nhãn</option></select>
-            <select><option>Nhà cung cấp dịch vụ</option></select>
-            <select><option>Nội dung đơn hàng</option></select>
-            <div className="spacer"></div>
-            <button className="btn-sort"><span>⇅</span> Sắp xếp theo</button>
-            <button className="btn-export"><span>📤</span> Xuất</button>
-          </div>
-          <div className="filter-row secondary-filters">
-            <div className="delivery-mode">
-              <span>Cách giao hàng:</span>
-              <button className="active">Giao nhanh 24h</button>
-              <select><option>Cách khác</option></select>
-            </div>
-            <span className="result-count">↻ Tìm thấy {orders.length} đơn hàng</span>
-          </div>
+             <div className="filter-row secondary-filters">
+                <span className="result-count">↻ Tìm thấy {orders.length} đơn hàng</span>
+             </div>
         </div>
 
+        {/* Hiện thông báo lỗi hoặc loading */}
+        {loading && <p style={{textAlign: 'center', padding: '20px'}}>Đang tải dữ liệu...</p>}
+        {error && <p style={{textAlign: 'center', color: 'red', padding: '20px'}}>{error}</p>}
+
         {/* Orders Table */}
-        <div className="table-wrapper">
-          <table className="orders-table">
-            <thead>
-              <tr>
-                <th className="col-check"><input type="checkbox" /></th>
-                <th>Đơn hàng</th>
-                <th>Khách hàng</th>
-                <th>Mặt hàng</th>
-                <th>Trạng thái đơn hàng</th>
-                <th>Phương thức vận chuyển</th>
-                <th>Tổng</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {orders.map((order, idx) => (
-                <tr key={idx}>
-                  <td className="col-check"><input type="checkbox" /></td>
-                  <td className="col-id">
-                    <strong>{order.id}</strong><br/>
-                    <span className="date">{order.date}</span>
-                  </td>
-                  <td>{order.customer}</td>
-                  <td className="col-product">
-                    <img src={order.productImage} alt="Product" />
-                    <span className="text-truncate">{order.productName}</span>
-                  </td>
-                  <td><span className={`status-badge ${order.status === 'Cần gửi' ? 'warning' : 'success'}`}>{order.status}</span></td>
-                  <td>{order.shippingMethod}</td>
-                  <td><strong>{order.total.toLocaleString('vi-VN')}đ</strong></td>
-                  <td>
-                    {order.status === 'Cần gửi' && <button className="btn-primary-small">Chuẩn bị hàng</button>}
-                    {order.status === 'Đã gửi' && <span className="text-muted">Đang giao...</span>}
-                  </td>
+        {!loading && !error && (
+            <div className="table-wrapper">
+            <table className="orders-table">
+                <thead>
+                <tr>
+                    <th className="col-check"><input type="checkbox" /></th>
+                    <th>Đơn hàng</th>
+                    <th>Khách hàng</th>
+                    <th>Mặt hàng</th>
+                    <th>Trạng thái đơn hàng</th>
+                    <th>Phương thức vận chuyển</th>
+                    <th>Tổng</th>
+                    <th>Thao tác</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                {orders.length === 0 ? (
+                    <tr><td colSpan="8" style={{textAlign: 'center', padding: '20px'}}>Không có đơn hàng nào.</td></tr>
+                ) : (
+                    orders.map((order, idx) => (
+                        <tr key={idx}>
+                        <td className="col-check"><input type="checkbox" /></td>
+                        <td className="col-id">
+                            <strong>{order.id}</strong><br/>
+                            <span className="date">{order.date}</span>
+                        </td>
+                        <td>{order.customer}</td>
+                        <td className="col-product">
+                            <img src={order.productImage || 'https://via.placeholder.com/40'} alt="Product" />
+                            <span className="text-truncate">{order.productName}</span>
+                        </td>
+                        <td>
+                            <span className={`status-badge ${
+                                order.status === 'pending' ? 'warning' : 
+                                order.status === 'accept' ? 'info' : 'success'
+                            }`}>
+                                {translateStatus(order.status)}
+                            </span>
+                        </td>
+                        <td>{order.shippingMethod || 'Tiêu chuẩn'}</td>
+                        <td><strong>{order.total?.toLocaleString('vi-VN')}đ</strong></td>
+                        <td>
+                            {/* Nút cho trạng thái Pending */}
+                            {order.status === 'pending' && (
+                                <button className="btn-primary-small" onClick={() => handlePrepareOrder(order.id)}>
+                                    Xác nhận đơn
+                                </button>
+                            )}
+                            
+                            {/* Nút cho trạng thái Accept */}
+                            {order.status === 'accept' && (
+                                <button 
+                                    className="btn-primary-small" 
+                                    style={{ backgroundColor: '#17a2b8' }} 
+                                    onClick={() => handleDeliverOrder(order.id)}
+                                >
+                                    Đã đưa giao tới kho
+                                </button>
+                            )}
+
+                            {/* Các trạng thái còn lại chỉ hiện text */}
+                            {order.status === 'delivering' && <span className="text-muted">Đang giao...</span>}
+                            {order.status === 'completed' && <span className="text-success">Hoàn tất</span>}
+                            {order.status === 'cancelled' && <span className="text-danger">Đã hủy</span>}
+                        </td>
+                        </tr>
+                    ))
+                )}
+                </tbody>
+            </table>
+            </div>
+        )}
       </div>
     </div>
   );

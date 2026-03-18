@@ -96,7 +96,7 @@
       display: flex;
       border-bottom: 1px solid #eee;
       padding: 0 20px;
-
+      
       button {
         background: none; border: none; padding: 16px 20px; font-size: 14px; font-weight: 500; color: #666; cursor: pointer; position: relative;
         &:hover { color: #333; }
@@ -142,28 +142,51 @@
       .orders-table {
         width: 100%; border-collapse: collapse; text-align: left;
 
-        th, td { padding: 16px 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: top; }
+        th, td { padding: 16px 12px; border-bottom: 1px solid #eee; font-size: 13px; vertical-align: middle; }
         th { color: #666; font-weight: 500; white-space: nowrap; }
 
         .col-check { width: 40px; }
         .col-id { width: 150px; .date { color: #888; font-size: 12px; } }
         .col-product {
           display: flex; align-items: center; gap: 10px; min-width: 200px;
-          img { width: 40px; height: 40px; border: 1px solid #eee; border-radius: 4px; }
+          img { width: 40px; height: 40px; border: 1px solid #eee; border-radius: 4px; object-fit: cover; }
           .text-truncate { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         }
 
+        /* Badge Trạng thái */
         .status-badge {
-          padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;
+          padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; display: inline-block;
           &.warning { background: #fff8e1; color: #f57c00; }
           &.success { background: #e8f5e9; color: #388e3c; }
+          &.info { background: #e3f2fd; color: #0288d1; } /* Thêm màu xanh dương cho trạng thái Accept */
         }
 
+        /* Nút bấm Thao tác - Đã fix cứng 1 size */
         .btn-primary-small {
-          background: #00bfa5; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 13px; cursor: pointer;
+          background: #00bfa5; 
+          color: white; 
+          border: none; 
+          padding: 8px 12px; 
+          border-radius: 4px; 
+          font-size: 13px; 
+          cursor: pointer;
+          
+          /* Ép size cố định */
+          display: inline-block;
+          width: 160px; /* Rộng vừa đủ cho text */
+          text-align: center; /* Căn giữa chữ */
+          box-sizing: border-box; /* Chuẩn hóa box model */
+          line-height: 1.4;
+          transition: background-color 0.2s; /* Thêm hiệu ứng hover cho mượt */
+
           &:hover { background: #00a699; }
         }
+
+        /* Màu sắc cho các text hiển thị trạng thái */
         .text-muted { color: #888; font-style: italic; }
+        .text-success { color: #388e3c; font-weight: 500; }
+        .text-danger { color: #d32f2f; font-weight: 500; }
+        .text-info { color: #0288d1; font-weight: 500; }
       }
     }
   }

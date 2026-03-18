@@ -196,7 +196,7 @@ class Product(SQLModel, table=True):
         sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
 
-class Product_Variants (SQLModel) :
+class Product_Variants (SQLModel , table=True ) :
     id : Optional[int] = Field(default=None , primary_key=True )
     product_id : int = Field (foreign_key='product.id')
     tier_1_name : Optional[str]

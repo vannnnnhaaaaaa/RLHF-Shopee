@@ -249,3 +249,7 @@ class ResponseBill(SQLModel):
     
     # Trả về kèm danh sách chi tiết hóa đơn
     detail_bill: list[ResponseBillDetail] = []
+
+
+class UpdateOrderStatusRequest(BaseModel):
+    status: str
