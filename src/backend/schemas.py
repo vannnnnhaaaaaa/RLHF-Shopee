@@ -1,5 +1,6 @@
 from sqlmodel import SQLModel , Field
 from typing import Optional
+from pydantic import BaseModel
 from datetime import datetime
 class ProductRead(SQLModel) :
     id : int 
@@ -205,12 +206,12 @@ class VoucherCreate (SQLModel) :
 
 
 #-- --- Bill --- -- 
-class CreateBillDetail(SQLModel):
+class CreateBillDetail(BaseModel):
     product_id: int
     quantity: int
     price_at_purchase: float
 
-class CreateBill(SQLModel):
+class CreateBill(BaseModel):
     total_price: float
     total_shipping: float
     status: str = "pending"

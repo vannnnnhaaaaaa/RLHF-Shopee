@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Form, File, UploadFile, HTTPException, s
 from sqlalchemy.orm import Session 
 from typing import List, Optional
 from sqlmodel import select
+import json 
 # Import từ project của bạn (Hãy điều chỉnh lại đường dẫn nếu cần)
 from src.backend.connect_database import get_session
 from src.backend.auth import get_current_seller 
@@ -10,7 +11,6 @@ from src.backend.schemas import ProductListResponse
 from src.backend.models import Product
 router_product = APIRouter(
     prefix="/product",
-   
 )
 
 @router_product.post("/add")
@@ -27,16 +27,20 @@ def add_product(
     width: float = Form(0.0),
     height: float = Form(0.0),
     
-    # --- 2. Hứng dữ liệu File ---
+    # --- 2. HỨNG DỮ LIỆU SKU (BIẾN THỂ) ---
+    # Frontend sẽ gửi lên một chuỗi string (do JSON.stringify tạo ra)
+    variants_list: Optional[str] = Form(None), 
+    
+    # --- 3. Hứng dữ liệu File ---
     images: List[UploadFile] = File(...), 
     video: Optional[UploadFile] = File(None), 
     
-    # --- 3. Dependencies ---
+    # --- 4. Dependencies ---
     session: Session = Depends(get_session),
     current_seller = Depends(get_current_seller) 
 ):
     """
-    API Thêm sản phẩm mới (Nhận FormData chứa Text + File)
+    API Thêm sản phẩm mới (Hỗ trợ Sản phẩm thường & Sản phẩm có phân loại SKU)
     """
     # Validate số lượng ảnh tối thiểu
     if len(images) < 5:
@@ -45,7 +49,24 @@ def add_product(
             detail="Vui lòng cung cấp ít nhất 5 hình ảnh cho sản phẩm."
         )
 
-    # Gom toàn bộ text thành 1 Dictionary cho gọn gàng trước khi truyền xuống Service
+    # --- XỬ LÝ CHUỖI JSON BIẾN THỂ (SKU) THÀNH LIST ---
+    list_variants = []
+    if has_variants:
+        if not variants_list:
+            raise HTTPException(
+                status_code=400, 
+                detail="Sản phẩm có phân loại nhưng không nhận được dữ liệu phân loại."
+            )
+        try:
+            # Dịch ngược chuỗi String từ Frontend thành List[Dict] trong Python
+            list_variants = json.loads(variants_list) 
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=400, 
+                detail="Dữ liệu phân loại (variants_data) sai định dạng JSON."
+            )
+
+    # Gom toàn bộ text thành 1 Dictionary cho gọn gàng
     product_data_dict = {
         "name": name,
         "category": category,
@@ -53,27 +74,29 @@ def add_product(
         "price": price,
         "stock": stock,
         "has_variants": has_variants,
-        # Nếu model Product của bạn có các trường kích thước, mở comment bên dưới:
         "weight": weight,
         "length": length,
         "width": width,
         "height": height
     }
-    print(product_data_dict)
+
     try:
-        # Đẩy dữ liệu xuống Service xử lý DB và File
+        # Đẩy toàn bộ dữ liệu xuống Service xử lý DB và File
         new_product = create_new_product(
             db=session,
             seller_id=current_seller.id,
             product_data=product_data_dict,
             images=images,
-            video=video ,
-           
+            video=video,
+            variants_list=list_variants # Truyền list_variants xuống Service tại đây!
         )
         
     except HTTPException:
-        raise # Quăng lại lỗi HTTP nếu Service cố tình văng lỗi (ví dụ file quá lớn)
+        # Quăng lại lỗi HTTP nếu Service chủ động văng lỗi (ví dụ: file quá lớn, trùng tên...)
+        raise 
     except Exception as e:
+        # Bắt các lỗi hệ thống không lường trước (lỗi SQL, lỗi code logic...)
+        print(f"Lỗi Server khi thêm sản phẩm: {str(e)}") # Print ra terminal để dễ debug
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=f"Lỗi hệ thống khi thêm sản phẩm: {str(e)}"
@@ -85,8 +108,7 @@ def add_product(
         "message": "Thêm sản phẩm thành công!",
         "data": {
             "product_id": new_product.id,
-            "name": new_product.name,
-            "image_link": new_product.image_link
+            "name": new_product.name
         }
     }
 

@@ -8,13 +8,14 @@ from src.backend.services.customer_service import check_exist_info_customer
 from src.backend.auth import get_current_customer
 router_bill = APIRouter(prefix="/bills", tags=["Bills"])
 
-@router_bill.post("/add_bill", response_model=ResponseBill)
-async def create_bill_endpoint(
+
+
+@router_bill.post("/add_bill")
+def create_bill_endpoint(
     bill_data: CreateBill, 
     current_user = Depends(get_current_customer), 
     session: Session = Depends(get_session)
 ):
-    # 1. Kiểm tra xem user có đủ thông tin địa chỉ, SĐT chưa
     if not check_exist_info_customer(current_user):
         raise HTTPException(
             status_code=400, 
@@ -22,11 +23,13 @@ async def create_bill_endpoint(
         )
  
     try:
-        # 3. Bắt đầu tạo hóa đơn
-        result = await create_checkout_bill(bill_data=bill_data,customer_id= current_user.id, session=session)
-
+        # Bắt đầu tạo hóa đơn
+        result = create_checkout_bill(bill_data=bill_data, customer_id=current_user.id, session=session)
         return result
+    except HTTPException as http_exc:
+        # THÊM ĐOẠN NÀY: Bắt các lỗi HTTP do mình chủ động raise (như 400 Hết hàng) và trả thẳng ra FE
+        raise http_exc
     except Exception as e:
+        # Lỗi hệ thống thực sự (sập DB, sai cú pháp code...) thì mới trả ra 500
         print(f"API Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-        
+        raise HTTPException(status_code=500, detail="Lỗi hệ thống không xác định")

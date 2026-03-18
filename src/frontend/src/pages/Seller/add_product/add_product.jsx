@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './style.scss';
 
-// Danh sách hạng mục trích xuất từ hình ảnh
 const CATEGORIES = [
   { id: "bach_hoa_online", name: "Bách Hóa Online" },
   { id: "balo_tui_vi_nam", name: "Balo & Túi Ví Nam" },
@@ -45,9 +44,8 @@ const AddProduct = () => {
     height: ''
   });
 
-  // State quản lý Media
-  const [images, setImages] = useState([]); // Mảng chứa các object { file, previewUrl }
-  const [video, setVideo] = useState(null); // Object { file, previewUrl }
+  const [images, setImages] = useState([]);
+  const [video, setVideo] = useState(null);
 
   const [hasVariants, setHasVariants] = useState(false);
   const [tiers, setTiers] = useState([{ name: '', options: [] }]);
@@ -62,18 +60,14 @@ const AddProduct = () => {
   // --- 3. XỬ LÝ MEDIA (HÌNH ẢNH & VIDEO) ---
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
-
-    // Giới hạn tổng số ảnh tối đa (ví dụ 9 ảnh)
     if (images.length + files.length > 9) {
       alert("Chỉ được tải lên tối đa 9 ảnh!");
       return;
     }
-
     const newImages = files.map(file => ({
       file,
       previewUrl: URL.createObjectURL(file)
     }));
-
     setImages(prev => [...prev, ...newImages]);
   };
 
@@ -84,7 +78,7 @@ const AddProduct = () => {
   const handleVideoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 100 * 1024 * 1024) { // 100MB limit
+      if (file.size > 100 * 1024 * 1024) {
         alert("Video quá lớn. Vui lòng chọn video dưới 100MB.");
         return;
       }
@@ -95,9 +89,7 @@ const AddProduct = () => {
     }
   };
 
-  const removeVideo = () => {
-    setVideo(null);
-  };
+  const removeVideo = () => setVideo(null);
 
   // --- 4. LOGIC BIẾN THỂ (VARIANTS) ---
   const addTier = () => {
@@ -134,7 +126,6 @@ const AddProduct = () => {
     setTiers(newTiers);
   };
 
-  // Tự động sinh bảng ma trận
   useEffect(() => {
     if (!hasVariants) return;
 
@@ -170,69 +161,110 @@ const AddProduct = () => {
     setVariantsList(newList);
   };
 
-  // --- 5. SUBMIT FORM ---
+  // --- 5. SUBMIT FORM (ĐÃ ĐƯỢC NÂNG CẤP) ---
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // 1. Validate bắt buộc có ít nhất 5 ảnh
+
+    // 1. Validate Ảnh
     if (images.length < 5) {
-        alert("Vui lòng thêm ít nhất 5 ảnh cho sản phẩm!");
-        return;
+      alert("Vui lòng thêm ít nhất 5 ảnh cho sản phẩm!");
+      return;
     }
 
-    // 2. Khởi tạo FormData
+    // 2. Chuẩn bị dữ liệu xử lý Biến thể (SKU)
+    let finalPrice = formData.price;
+    let finalStock = formData.stock;
+    let formattedVariants = [];
+
+    if (hasVariants) {
+      // Validate xem người dùng đã nhập đủ giá và kho cho biến thể chưa
+      const isVariantsValid = variantsList.every(v => v.price !== '' && v.stock !== '');
+      if (!isVariantsValid || variantsList.length === 0) {
+        alert("Vui lòng nhập đầy đủ Giá và Số lượng cho tất cả biến thể!");
+        return;
+      }
+
+      // Lấy biến thể đầu tiên làm thông tin sản phẩm chính
+      finalPrice = variantsList[0].price;
+
+      // Về số lượng kho gốc: Thường kho gốc = Tổng kho các biến thể. 
+      // Tuy nhiên theo ý bạn, ta gán bằng biến thể đầu tiên luôn:
+      finalStock = variantsList[0].stock;
+
+      // Map lại dữ liệu cho khớp với class Product_Variants ở Backend
+      formattedVariants = variantsList.map(v => ({
+        tier_1_name: tiers[0]?.name || null,
+        tier_1_value: v.tier1 || null,
+        tier_2_name: tiers[1]?.name || null,
+        tier_2_value: v.tier2 || null,
+        price: parseFloat(v.price),
+        stock: parseInt(v.stock, 10),
+        sku_code: v.sku || null // Map từ sku sang sku_code
+      }));
+    }
+
+    // 3. Khởi tạo FormData
     const formDataToSend = new FormData();
 
-    // 3. Nạp các trường Text (Dữ liệu cơ bản)
+    // 4. Nạp các trường Text (Dữ liệu cơ bản)
     formDataToSend.append('name', formData.name);
     formDataToSend.append('category', formData.category);
     formDataToSend.append('description', formData.description);
-    formDataToSend.append('price', formData.price);
-    formDataToSend.append('stock', formData.stock);
+    formDataToSend.append('price', finalPrice); // Dùng finalPrice đã xử lý
+    formDataToSend.append('stock', finalStock); // Dùng finalStock đã xử lý
     formDataToSend.append('has_variants', hasVariants);
-    
-    // Nạp thêm thông tin vận chuyển (nếu có)
+
+    // Nạp chuỗi JSON chứa danh sách SKU (nếu có biến thể)
+    if (hasVariants) {
+      formDataToSend.append('variants_data', JSON.stringify(formattedVariants));
+    }
+
     formDataToSend.append('weight', formData.weight || 0);
     formDataToSend.append('length', formData.length || 0);
     formDataToSend.append('width', formData.width || 0);
     formDataToSend.append('height', formData.height || 0);
 
-    // 4. Nạp mảng Hình Ảnh (QUAN TRỌNG: Dùng chung key 'images')
+    // 5. Nạp mảng Hình Ảnh
     images.forEach((img) => {
-        formDataToSend.append('images', img.file); 
+      formDataToSend.append('images', img.file);
     });
 
-    // 5. Nạp Video (Nếu người dùng có chọn)
+    // 6. Nạp Video
     if (video && video.file) {
-        formDataToSend.append('video', video.file);
+      formDataToSend.append('video', video.file);
     }
 
-    // 6. Gửi API
+    // 7. Gửi API
     try {
-        // Thay API_BASE_URL bằng domain của bạn
-        const response = await fetch(`http://127.0.0.1:8000/product/add`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${localStorage.getItem('access_token')}`
-            },
-            body: formDataToSend 
-        });
+      const response = await fetch(`http://127.0.0.1:8000/product/add`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem('access_token')}`
+          // KHÔNG SET 'Content-Type': 'application/json' Ở ĐÂY!
+          // Trình duyệt sẽ tự động set 'multipart/form-data' với boundary chuẩn.
+        },
+        body: formDataToSend
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (!response.ok) {
-            throw new Error(data.detail || "Lỗi khi lưu sản phẩm");
-        }
-        
-        alert("Thêm sản phẩm thành công!");
-        console.log("Kết quả từ server:", data);
-       
+      if (!response.ok) {
+        throw new Error(data.detail || "Lỗi khi lưu sản phẩm");
+      }
+
+      alert("Thêm sản phẩm thành công!");
+      console.log("Kết quả từ server:", data);
+
+      // Tùy chọn: Reset form hoặc chuyển trang sau khi thành công
+      // window.location.reload(); 
 
     } catch (error) {
-        console.error("Lỗi:", error);
-        alert(error.message);
+      console.error("Lỗi:", error);
+      alert(error.message);
     }
-};
+  };
+
+
   return (
     <div className="add-product-container">
       {/* ... SIDEBAR GIỮ NGUYÊN ... */}
@@ -589,3 +621,4 @@ const AddProduct = () => {
 };
 
 export default AddProduct;
+

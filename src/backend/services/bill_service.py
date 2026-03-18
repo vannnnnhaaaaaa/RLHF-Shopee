@@ -4,7 +4,7 @@ from datetime import datetime
 
 # Import các model từ project của bạn (giả định tên file là models.py)
 from src.backend.models import Product, CartItem, Bill, BillDetail
-
+from src.backend.schemas import CreateBill
 # --- CÁC HÀM NHIỆM VỤ NHỎ (HELPER FUNCTIONS) ---
 
 def get_cart_items(customer_id: int, session: Session):
@@ -49,70 +49,92 @@ def clear_customer_cart(customer_id: int, session: Session):
     
     for item in items_to_delete:
         session.delete(item)
-
-
-# --- HÀM NHẠC TRƯỞNG (GOM TRANSACTION) ---
-
-def create_checkout_bill(
-    customer_id: int, 
-    address_id: int, # Truyền thêm ID địa chỉ giao hàng
-    note: str, 
-    session: Session
-):
-    """
-    Hàm xử lý luồng thanh toán chính.
-    Nếu có bất kỳ lỗi nào xảy ra ở các hàm con, toàn bộ thay đổi sẽ bị HỦY (Rollback).
-    """
+def create_checkout_bill(bill_data: CreateBill, customer_id: int, session: Session):
     try:
-        # BƯỚC 1: Lấy danh sách sản phẩm trong giỏ
-        cart_items = get_cart_items(customer_id, session)
-        
-        # BƯỚC 2 & 3: Kiểm tra, trừ tồn kho và tính tổng tiền
-        total_price = process_inventory_and_calculate_total(cart_items, session)
-        
-        # BƯỚC 4: Tạo record cho bảng Bill (Hóa đơn cha)
+        calculated_product_total = 0.0
+        purchased_product_ids = []
+
+        # --- BƯỚC 1 & 2: KIỂM TRA TỒN KHO, TRỪ TỒN KHO VÀ TÍNH TIỀN ---
+        for item in bill_data.details:
+            product = session.get(Product, item.product_id)
+            
+            if not product:
+                raise HTTPException(status_code=404, detail=f"Sản phẩm ID {item.product_id} không tồn tại.")
+            
+            if product.stock < item.quantity:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Sản phẩm '{product.name}' chỉ còn {product.stock} sản phẩm."
+                )
+            
+            # Trừ tồn kho
+            product.stock -= item.quantity
+            session.add(product)
+            
+            # Tính tiền dựa trên giá gốc trong DB
+            calculated_product_total += product.price * item.quantity
+            purchased_product_ids.append(item.product_id)
+
+        # --- BƯỚC 3: TẠO BILL ---
+        final_total_price = (
+            calculated_product_total 
+            + bill_data.total_shipping 
+            - bill_data.discount_product 
+            - bill_data.discount_shipping
+        )
+
         new_bill = Bill(
             customer_id=customer_id,
-            map_id=address_id,
-            total_price=total_price,
-            note=note,
-            status="pending", # Trạng thái chờ xử lý
+            total_price=final_total_price, 
+            total_shipping=bill_data.total_shipping,
+            status=bill_data.status,
+            payment_method=bill_data.payment_method,
+            payment_status=bill_data.payment_status,
+            discount_product=bill_data.discount_product,
+            discount_shipping=bill_data.discount_shipping,
+            shopee_voucher_id=bill_data.shopee_voucher_id,
+            seller_voucher_id=bill_data.seller_voucher_id,
             created_at=datetime.now()
         )
         session.add(new_bill)
-        session.flush() # Đẩy tạm xuống DB để lấy được ID của new_bill ngay lập tức
-        
-        # BƯỚC 5: Tạo các record cho bảng BillDetail (Chi tiết hóa đơn)
-        for item in cart_items:
-            # Truy vấn lại giá sản phẩm để lưu giá tại thời điểm mua
-            product = session.get(Product, item.product_id) 
-            
+        session.flush()
+
+        # --- BƯỚC 4: TẠO BILL DETAIL (ĐÃ SỬA LỖI Ở ĐÂY) ---
+        for item in bill_data.details:
+            db_product = session.get(Product, item.product_id)
             bill_detail = BillDetail(
                 bill_id=new_bill.id,
                 product_id=item.product_id,
                 quantity=item.quantity,
-                unit_price=product.price
+                # Đổi từ unit_price thành price_at_purchase cho khớp Database
+                price_at_purchase=db_product.price 
             )
             session.add(bill_detail)
-            
-        # BƯỚC 6: Xóa giỏ hàng
-        clear_customer_cart(customer_id, session)
-        
-        # BƯỚC 7: NẾU MỌI THỨ OK -> COMMIT LƯU VĨNH VIỄN
+
+        # --- BƯỚC 5: XÓA CÁC SẢN PHẨM ĐÃ MUA KHỎI GIỎ HÀNG ---
+        if purchased_product_ids:
+            statement = select(CartItem).where(
+                CartItem.customer_id == customer_id,
+                CartItem.product_id.in_(purchased_product_ids)
+            )
+            items_to_delete = session.exec(statement).all()
+            for cart_item in items_to_delete:
+                session.delete(cart_item)
+
+        # --- BƯỚC 6: COMMIT ---
         session.commit()
-        session.refresh(new_bill) # Lấy data mới nhất cập nhật vào object
-        
+        session.refresh(new_bill)
+
         return {
             "status": "success", 
             "message": "Đặt hàng thành công", 
             "bill_id": new_bill.id
         }
-        
+
     except HTTPException as http_exc:
         session.rollback()
         raise http_exc
-        
     except Exception as e:
-    
         session.rollback()
-        raise HTTPException(status_code=500, detail=f"Lỗi hệ thống khi thanh toán: {str(e)}")
+        print(f"Transaction Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Lỗi hệ thống khi xử lý thanh toán.")

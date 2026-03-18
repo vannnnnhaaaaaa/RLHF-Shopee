@@ -39,7 +39,6 @@ function App() {
               <Route index element={<Profile />} />
               <Route path='purchase' element= {<Purchase/>} />
             </Route>
-            
        
             <Route path='product/:id' element={<DetailProduct />} />
             <Route path='cartitem' element={<Cart />} />

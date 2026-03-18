@@ -61,12 +61,9 @@ function Cart() {
         total_price: totalAmount,
         total_shipping: 30000, // Phí ship mặc định
 
-        // Trạng thái đơn và thanh toán
-        status: "pending",
         payment_method: "COD",
-        payment_status: "pending", // Đã bổ sung
+        payment_status: "pending", 
 
-        // Dữ liệu Khuyến mãi (Tạm thời gán 0/null nếu chưa có UI chọn voucher)
         discount_product: 0.0,
         discount_shipping: 0.0,
         shopee_voucher_id: null,
@@ -89,7 +86,7 @@ function Cart() {
         ...shop,
         items: shop.items.filter(item => !selectedIds.includes(item.cart_id))
       })).filter(shop => shop.items.length > 0);
-
+      window.dispatchEvent(new Event('cartUpdated'));
       setCartData(newData);
       setSelectedIds([]);
 

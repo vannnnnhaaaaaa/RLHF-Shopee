@@ -12,7 +12,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 SECRET_KEY = 'TOI_YEU_LAP_TRINH_FULLSTACK_AI'
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30 
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 # URL này dùng cho Swagger UI biết chỗ để test login
 oauth2_schema = OAuth2PasswordBearer(tokenUrl="/login")
