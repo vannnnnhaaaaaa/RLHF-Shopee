@@ -1,31 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { purchaseApi } from '../../../services/purchase';
+import purchase_customer_service from '../../../services/purchase'; 
 import OrderCard from '../../../components/OrderCard/OrderCard';
+
 import './style.scss';
 
+// Đã cập nhật lại danh sách TABS theo đúng luồng dữ liệu của Seller
 const TABS = [
-  { id: 'ALL', label: 'All' },
-  { id: 'TO_PAY', label: 'To Pay' },
-  { id: 'TO_SHIP', label: 'To Ship' },
-  { id: 'TO_RECEIVE', label: 'To Receive' },
-  { id: 'COMPLETED', label: 'Completed' },
-  { id: 'CANCELLED', label: 'Cancelled' },
-  { id: 'RETURN_REFUND', label: 'Return Refund' },
+  { id: 'ALL', label: 'Tất cả' },
+  { id: 'PENDING', label: 'Chờ duyệt' },
+  { id: 'ACCEPT', label: 'Đã xác nhận đơn' },
+  { id: 'DELIVERING', label: 'Đang giao' },
+  { id: 'COMPLETED', label: 'Đã nhận' },
+  { id: 'PROCESSING_CANCEL', label: 'Đang hủy đơn' },
+  { id: 'CANCELLED', label: 'Đã hủy' }
 ];
+
+const LIMIT = 7; 
 
 const Purchase = () => {
   const [activeTab, setActiveTab] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const [page, setPage] = useState(1);
 
-  // Gọi API giả lập mỗi khi tab thay đổi
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    setPage(1); 
+  };
+
   useEffect(() => {
     const fetchOrders = async () => {
       setIsLoading(true);
       try {
-        const data = await purchaseApi.getOrders(activeTab, searchQuery);
-        setOrders(data);
+        const data = await purchase_customer_service.getOrderStatus(activeTab, page, LIMIT);
+        setOrders(Array.isArray(data) ? data : []); 
       } catch (error) {
         console.error("Lỗi khi tải đơn hàng:", error);
       } finally {
@@ -34,7 +44,7 @@ const Purchase = () => {
     };
 
     fetchOrders();
-  }, [activeTab]);
+  }, [activeTab, page]); 
 
   return (
     <div className="purchase-container">
@@ -44,7 +54,7 @@ const Purchase = () => {
         {TABS.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
             className={`tab-item ${activeTab === tab.id ? 'active' : ''}`}
           >
             {tab.label}
@@ -59,7 +69,7 @@ const Purchase = () => {
         </svg>
         <input
           type="text"
-          placeholder="You can search by Seller Name, Order ID or Product name"
+          placeholder="Tìm kiếm theo Tên Shop, Mã đơn hàng hoặc Tên sản phẩm"
           className="search-input"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -70,7 +80,7 @@ const Purchase = () => {
       <div className="orders-list">
         {isLoading ? (
           <div className="loading-text">Đang tải dữ liệu...</div>
-        ) : orders.length > 0 ? (
+        ) : orders && orders.length > 0 ? (
           orders.map((order) => (
             <OrderCard key={order.id} order={order} />
           ))
@@ -80,6 +90,29 @@ const Purchase = () => {
           </div>
         )}
       </div>
+
+      {/* 4. Khu vực Phân trang (Pagination) */}
+      {!isLoading && orders.length > 0 && (
+        <div className="pagination-container" style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginTop: '20px' }}>
+          <button 
+            onClick={() => setPage((prev) => prev - 1)} 
+            disabled={page === 1}
+            className="pagination-btn"
+          >
+            Trang trước
+          </button>
+          
+          <span style={{ fontWeight: 'bold' }}>Trang {page}</span>
+          
+          <button 
+            onClick={() => setPage((prev) => prev + 1)} 
+            disabled={orders.length < LIMIT} 
+            className="pagination-btn"
+          >
+            Trang sau
+          </button>
+        </div>
+      )}
 
     </div>
   );

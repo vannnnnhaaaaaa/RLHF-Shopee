@@ -143,3 +143,5 @@ def create_checkout_bill(bill_data: CreateBill, customer_id: int, session: Sessi
         session.rollback()
         print(f"Transaction Error: {str(e)}")
         raise HTTPException(status_code=500, detail="Lỗi hệ thống khi xử lý thanh toán.")
+    
+

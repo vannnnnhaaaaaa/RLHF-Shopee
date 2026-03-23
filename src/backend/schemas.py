@@ -214,9 +214,9 @@ class CreateBillDetail(BaseModel):
 class CreateBill(BaseModel):
     total_price: float
     total_shipping: float
-    status: str = "pending"
+    status: str = "PENDING"
     payment_method: str = "COD"
-    payment_status: str = "pending"
+    payment_status: str = "PENDING"
     discount_product: float = 0.0
     discount_shipping: float = 0.0
     shopee_voucher_id: Optional[int] = None
@@ -253,3 +253,7 @@ class ResponseBill(SQLModel):
 
 class UpdateOrderStatusRequest(BaseModel):
     status: str
+
+
+class StatusBillbyCustomer (BaseModel) :
+    status : str

@@ -2,82 +2,83 @@ import React from 'react';
 import './style.scss';
 
 const OrderCard = ({ order }) => {
+  if (!order) return null;
+
   return (
     <div className="order-card">
-      
-      {/* Header: Tên Shop & Trạng thái */}
+
+      {/* Header */}
       <div className="order-header">
         <div className="shop-info">
-          {order.isFavorite && (
-            <span className="badge-favorite">Yêu thích</span>
-          )}
-          <span className="shop-name">{order.shopName}</span>
+          <span className="badge-favorite">Yêu thích</span>
+          <span className="shop-name">Tên Shop (Đang cập nhật)</span>
           <button className="btn-chat">
             <span className="icon">💬</span> Chat
           </button>
           <button className="btn-view-shop">
-            <span className="icon">🏪</span> View Shop
+            <span className="icon">🏪</span> Xem Shop
           </button>
         </div>
+
         <div className="order-status-info">
-          {order.statusText && (
-            <span className="delivery-status">
-              <span className="icon">🚚</span> {order.statusText}
-            </span>
-          )}
-          {order.statusText && <span className="divider">|</span>}
-          <span className="order-status text-red">
-            {order.status}
-          </span>
+          <div className="delivery-status">
+            <span className="icon">🚚</span> {order.payment_method}
+          </div>
+          <span className="divider">|</span>
+          <div className="order-status text-red">
+            {order.status.toUpperCase()}
+          </div>
         </div>
       </div>
 
-      {/* Body: Thông tin Sản phẩm */}
+      {/* Body */}
       <div className="order-body">
+        {/* Lấy sản phẩm đầu tiên trong mảng items để hiển thị đại diện */}
         <div className="product-info-wrapper">
           <div className="product-image-placeholder">
-            {/* Vị trí để thẻ <img> sau này */}
-            Image
+            {order.items && order.items.length > 0 ? (
+              <img
+                src={order.items[0].product_image}
+                alt="Product"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : "Ảnh"}
           </div>
           <div className="product-details">
-            <h3 className="product-name">{order.productName}</h3>
-            <p className="product-variation">Variation: {order.variation}</p>
-            <p className="product-quantity">x{order.quantity}</p>
+            <h3 className="product-name">
+              {order.items && order.items.length > 0 ? order.items[0].product_name : "Đang cập nhật"}
+            </h3>
+
+            {/* ĐÃ CẬP NHẬT: Hiển thị Category ở đây */}
+            <p className="product-variation">
+              Phân loại: {order.items && order.items.length > 0 && order.items[0].product_category ? order.items[0].product_category : "Không có"}
+            </p>
+
+            <p className="product-quantity">
+              x{order.items && order.items.length > 0 ? order.items[0].quantity : 1}
+            </p>
           </div>
         </div>
+
         <div className="product-pricing">
-          {order.originalPrice && (
-            <span className="original-price">
-              {order.originalPrice.toLocaleString('vi-VN')}đ
-            </span>
-          )}
           <span className="current-price">
-            {order.price.toLocaleString('vi-VN')}đ
+            ₫{order.total_price?.toLocaleString('vi-VN')}
           </span>
         </div>
       </div>
 
-      {/* Footer: Tổng tiền & Nút Action */}
+      {/* Footer */}
       <div className="order-footer">
         <div className="total-amount-wrapper">
-          <span className="total-label">Order Total:</span>
+          <span className="total-label">Thành tiền:</span>
           <span className="total-value">
-            {order.totalAmount.toLocaleString('vi-VN')}đ
+            ₫{order.total_price?.toLocaleString('vi-VN')}
           </span>
         </div>
+
         <div className="action-buttons">
-          {order.status === 'COMPLETED' ? (
-             <button className="btn-primary">
-               Buy Again
-             </button>
-          ) : (
-             <button className="btn-primary">
-               Re-order
-             </button>
-          )}
-          <button className="btn-secondary">
-            Contact Seller
-          </button>
+          <button className="btn-secondary">Liên hệ người bán</button>
+          <button className="btn-primary">Mua lại</button>
         </div>
       </div>
 

@@ -16,7 +16,7 @@ const ManageOrders = () => {
     { label: 'Giao tới kho', value: 'accept' },
     { label: 'Đã gửi', value: 'delivering' },
     { label: 'Đã hoàn tất', value: 'completed' },
-    { label: 'Chờ xử lý', value: 'processing_cancel' },
+    { label: 'Chờ xử lý trả hàng', value: 'processing_cancel' },
     { label: 'Đã hủy', value: 'cancelled' }
   ];
 

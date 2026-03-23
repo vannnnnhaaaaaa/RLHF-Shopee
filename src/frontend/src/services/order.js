@@ -49,5 +49,8 @@ export const sellerOrderService = {
         console.error("Lỗi cập nhật trạng thái:", error);
         throw error;
     }
-  }
+  },
+
+  // lấy dánh sách đơn hàng của Customer 
+  
 };

@@ -3,8 +3,8 @@ from sqlmodel import Session ,select
 from typing import Optional 
 
 from src.backend.connect_database import get_session
-from src.backend.schemas import CreateBill, ResponseBill , UpdateOrderStatusRequest
-from src.backend.services.bill_service import create_checkout_bill 
+from src.backend.schemas import CreateBill, ResponseBill , UpdateOrderStatusRequest , StatusBillbyCustomer
+from src.backend.services.bill_service import create_checkout_bill
 from src.backend.services.customer_service import check_exist_info_customer
 from src.backend.auth import get_current_customer , get_current_seller
 from src.backend.models import Bill , BillDetail , Product , Customer
@@ -40,7 +40,7 @@ def create_bill_endpoint(
 def get_bills_for_seller(
     status: Optional[str] = None,
     skip: int = 0,
-    limit: int = 50,
+    limit: int = 10,
     session: Session = Depends(get_session),
     current_seller = Depends(get_current_seller)
 ):
@@ -66,7 +66,7 @@ def get_bills_for_seller(
         )
 
         if status:
-            valid_statuses = ["pending","accept", "delivering", "completed", "processing_cancel", "cancelled"]
+            valid_statuses = ["PENDING","ACCEPT", "DELIVERING", "COMPLETED", "PROCESSING_CANCEL", "CANCELLED"]
             if status not in valid_statuses:
                 raise HTTPException(status_code=400, detail="Trạng thái không hợp lệ.")
             statement = statement.where(Bill.status == status)
@@ -185,3 +185,5 @@ def update_order_status(
     except Exception as e:
         print(f"Lỗi khi cập nhật trạng thái đơn {bill_id}: {e}")
         raise HTTPException(status_code=500, detail="Lỗi hệ thống khi cập nhật đơn hàng.")
+
+
