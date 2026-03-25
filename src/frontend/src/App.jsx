@@ -15,10 +15,10 @@ import AdminDashboard from './pages/admin/RLHF/adminrRLHF'
 import DetailProduct from './pages/shopee/DetailProduct'
 import Cart from './pages/shopee/Cart'
 import Profile from './pages/customer'
-import ChatWidget from './components/ChatWidget/ChatWidget'
 import UserAccount from './pages/shopee/Profile/UserAccount'
 import CustomerLayout from './pages/shopee/CustomerLayout/CustomerLayout'
 import Purchase from './pages/shopee/Purchase/Purchase'
+import NotificationPage from './components/NotificationPage'
 function App() {
   return (
     <>
@@ -38,6 +38,7 @@ function App() {
             <Route path='account' element={<UserAccount />}>
               <Route index element={<Profile />} />
               <Route path='purchase' element= {<Purchase/>} />
+              <Route path='notifications' element={<NotificationPage />} /> 
             </Route>
        
             <Route path='product/:id' element={<DetailProduct />} />
@@ -56,7 +57,6 @@ function App() {
           </Route>
 
         </Routes>
-        <ChatWidget />
       </BrowserRouter>
     </>
   )

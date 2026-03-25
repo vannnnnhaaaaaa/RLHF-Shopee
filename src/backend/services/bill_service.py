@@ -3,8 +3,8 @@ from fastapi import HTTPException
 from datetime import datetime
 
 # Import các model từ project của bạn (giả định tên file là models.py)
-from src.backend.models import Product, CartItem, Bill, BillDetail
-from src.backend.schemas import CreateBill
+from src.backend.models import Product, CartItem, Order, OrderItem
+from src.backend.schemas import CreateOrder
 # --- CÁC HÀM NHIỆM VỤ NHỎ (HELPER FUNCTIONS) ---
 
 def get_cart_items(customer_id: int, session: Session):
@@ -49,13 +49,13 @@ def clear_customer_cart(customer_id: int, session: Session):
     
     for item in items_to_delete:
         session.delete(item)
-def create_checkout_bill(bill_data: CreateBill, customer_id: int, session: Session):
+def create_checkout_order(order_data: CreateOrder, customer_id: int, session: Session):
     try:
         calculated_product_total = 0.0
         purchased_product_ids = []
 
         # --- BƯỚC 1 & 2: KIỂM TRA TỒN KHO, TRỪ TỒN KHO, CỘNG LƯỢT BÁN VÀ TÍNH TIỀN ---
-        for item in bill_data.details:
+        for item in order_data.details:
             product = session.get(Product, item.product_id)
             
             if not product:
@@ -81,40 +81,40 @@ def create_checkout_bill(bill_data: CreateBill, customer_id: int, session: Sessi
             calculated_product_total += product.price * item.quantity
             purchased_product_ids.append(item.product_id)
 
-        # --- BƯỚC 3: TẠO BILL ---
+        # --- BƯỚC 3: TẠO ORDER ---
         final_total_price = (
             calculated_product_total 
-            + bill_data.total_shipping 
-            - bill_data.discount_product 
-            - bill_data.discount_shipping
+            + order_data.total_shipping 
+            - order_data.discount_product 
+            - order_data.discount_shipping
         )
 
-        new_bill = Bill(
+        new_order = Order(
             customer_id=customer_id,
             total_price=final_total_price, 
-            total_shipping=bill_data.total_shipping,
-            status=bill_data.status,
-            payment_method=bill_data.payment_method,
-            payment_status=bill_data.payment_status,
-            discount_product=bill_data.discount_product,
-            discount_shipping=bill_data.discount_shipping,
-            shopee_voucher_id=bill_data.shopee_voucher_id,
-            seller_voucher_id=bill_data.seller_voucher_id,
+            total_shipping=order_data.total_shipping,
+            status=order_data.status,
+            payment_method=order_data.payment_method,
+            payment_status=order_data.payment_status,
+            discount_product=order_data.discount_product,
+            discount_shipping=order_data.discount_shipping,
+            shopee_voucher_id=order_data.shopee_voucher_id,
+            seller_voucher_id=order_data.seller_voucher_id,
             created_at=datetime.now()
         )
-        session.add(new_bill)
+        session.add(new_order)
         session.flush()
 
-        # --- BƯỚC 4: TẠO BILL DETAIL ---
-        for item in bill_data.details:
+        # --- BƯỚC 4: TẠO ORDER ITEM ---
+        for item in order_data.details:
             db_product = session.get(Product, item.product_id)
-            bill_detail = BillDetail(
-                bill_id=new_bill.id,
+            order_item = OrderItem(
+                order_id=new_order.id,
                 product_id=item.product_id,
                 quantity=item.quantity,
                 price_at_purchase=db_product.price 
             )
-            session.add(bill_detail)
+            session.add(order_item)
 
         # --- BƯỚC 5: XÓA CÁC SẢN PHẨM ĐÃ MUA KHỎI GIỎ HÀNG ---
         if purchased_product_ids:
@@ -128,12 +128,12 @@ def create_checkout_bill(bill_data: CreateBill, customer_id: int, session: Sessi
 
         # --- BƯỚC 6: COMMIT ---
         session.commit()
-        session.refresh(new_bill)
+        session.refresh(new_order)
 
         return {
             "status": "success", 
             "message": "Đặt hàng thành công", 
-            "bill_id": new_bill.id
+            "order_id": new_order.id
         }
 
     except HTTPException as http_exc:

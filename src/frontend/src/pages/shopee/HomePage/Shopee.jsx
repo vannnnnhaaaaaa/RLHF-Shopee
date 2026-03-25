@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Navbar from '../../../components/Navbar';
-import Footer from '../../../components/Footer';
 import ProductCard from '../../../components/ProductCart/ProductCart';
-// CHỈ IMPORT CHATWIDGET VÀO ĐÂY LÀ ĐỦ
-
+import ChatWidget from '../../../components/ChatWidget/ChatWidget';
+import { isCustomerLoggedIn } from '../../../utils/auth';
 import './style.scss'; 
 
 function HomePage() {
@@ -50,11 +48,8 @@ function HomePage() {
         </div>
       </div>
 
-
-
-      {/* GỌI CHATBOT RA MÀN HÌNH CHÍNH (Chỉ 1 dòng này là đủ) */}
-
-
+      {/* CHATBOT CHỈ HIỆN KHI USER LÀ CUSTOMER ĐÃ ĐĂNG NHẬP */}
+      {isCustomerLoggedIn() && <ChatWidget />}
     </div>
   );
 }

@@ -22,12 +22,12 @@ const ManageOrders = () => {
 
   const translateStatus = (status) => {
     switch (status) {
-      case 'pending': return 'Cần gửi';
-      case 'accept': return 'Đang chuẩn bị'; 
-      case 'delivering': return 'Đã gửi';
-      case 'completed': return 'Đã hoàn tất';
-      case 'processing_cancel': return 'Chờ hủy';
-      case 'cancelled': return 'Đã hủy';
+      case 'PENDING': return 'Cần gửi';
+      case 'ACCEPT': return 'Đang chuẩn bị'; 
+      case 'DELIVERING': return 'Đã gửi';
+      case 'COMPLETED': return 'Đã hoàn tất';
+      case 'PROCESSING_CANCEL': return 'Chờ hủy';
+      case 'CANCELLED': return 'Đã hủy';
       default: return status;
     }
   };
@@ -175,8 +175,8 @@ const ManageOrders = () => {
                         </td>
                         <td>
                             <span className={`status-badge ${
-                                order.status === 'pending' ? 'warning' : 
-                                order.status === 'accept' ? 'info' : 'success'
+                                order.status === 'PENDING' ? 'warning' : 
+                                order.status === 'ACCEPT' ? 'info' : 'success'
                             }`}>
                                 {translateStatus(order.status)}
                             </span>
@@ -184,15 +184,15 @@ const ManageOrders = () => {
                         <td>{order.shippingMethod || 'Tiêu chuẩn'}</td>
                         <td><strong>{order.total?.toLocaleString('vi-VN')}đ</strong></td>
                         <td>
-                            {/* Nút cho trạng thái Pending */}
-                            {order.status === 'pending' && (
+                            {/* Nút cho trạng thái PENDING */}
+                            {order.status === 'PENDING' && (
                                 <button className="btn-primary-small" onClick={() => handlePrepareOrder(order.id)}>
                                     Xác nhận đơn
                                 </button>
                             )}
                             
-                            {/* Nút cho trạng thái Accept */}
-                            {order.status === 'accept' && (
+                            {/* Nút cho trạng thái ACCEPT */}
+                            {order.status === 'ACCEPT' && (
                                 <button 
                                     className="btn-primary-small" 
                                     style={{ backgroundColor: '#17a2b8' }} 
@@ -203,9 +203,9 @@ const ManageOrders = () => {
                             )}
 
                             {/* Các trạng thái còn lại chỉ hiện text */}
-                            {order.status === 'delivering' && <span className="text-muted">Đang giao...</span>}
-                            {order.status === 'completed' && <span className="text-success">Hoàn tất</span>}
-                            {order.status === 'cancelled' && <span className="text-danger">Đã hủy</span>}
+                            {order.status === 'DELIVERING' && <span className="text-muted">Đang giao...</span>}
+                            {order.status === 'COMPLETED' && <span className="text-success">Hoàn tất</span>}
+                            {order.status === 'CANCELLED' && <span className="text-danger">Đã hủy</span>}
                         </td>
                         </tr>
                     ))

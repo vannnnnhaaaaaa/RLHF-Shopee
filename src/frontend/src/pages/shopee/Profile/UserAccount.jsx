@@ -26,7 +26,7 @@ function UserAccount() {
         <nav className="sidebar-menu">
           <div className="menu-item" onClick={() => navigate('/customer/account')}>👤 My Profile</div>
           <div className="menu-item" onClick={() => navigate('/customer/account/purchase')}>📋 My Purchase</div>
-          <div className="menu-item">🔔 Notifications</div>
+          <div className="menu-item" onClick={() => navigate('/customer/account/notifications')}>🔔 Notifications</div>
           <div className="menu-item">🎟️ My Vouchers</div>
 
         </nav>

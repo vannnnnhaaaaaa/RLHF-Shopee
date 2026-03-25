@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // Dùng Link và useNavigate để chuyển trang
+import { useNavigate, Link } from 'react-router-dom'; 
 import axios from 'axios';
 import './style.scss';
 import { FaFacebook, FaInstagram, FaRegUserCircle } from 'react-icons/fa';
-import { IoMdNotificationsOutline } from 'react-icons/io';
+// Đã xóa import IoMdNotificationsOutline ở đây vì nó đã được chuyển vào trong file NotificationDropdown.jsx
 import { FiHelpCircle, FiSearch, FiShoppingCart } from 'react-icons/fi';
 import { TbWorld } from 'react-icons/tb';
+import { NotificationDropdown } from '../NotificationDropdown'; // Đảm bảo đường dẫn này đúng với project của bạn
 
 function Navbar() {
   const navigate = useNavigate();
@@ -67,9 +68,10 @@ function Navbar() {
           </div>
 
           <div className="top-right">
-            <div className="nav-item">
-              <IoMdNotificationsOutline className="icon" /> Thông Báo
-            </div>
+            
+            {/* [ĐÃ THÊM]: COMPONENT THÔNG BÁO DROPDOWN Ở ĐÂY */}
+            <NotificationDropdown />
+            
             <div className="nav-item">
               <FiHelpCircle className="icon" /> Hỗ Trợ
             </div>

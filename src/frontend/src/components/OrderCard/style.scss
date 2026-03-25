@@ -177,39 +177,145 @@
     }
 
     .action-buttons {
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.5rem;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+       justify-content: flex-end;
+       margin-top: 15px;
+       position: relative;
 
-      .btn-primary {
-        background-color: #ef4444;
-        color: #ffffff;
-        padding: 0.5rem 1.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.875rem;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.2s;
+        // Định dạng chung cho các nút phụ (Liên hệ, Trả hàng)
+        .btn-secondary {
+          padding: 8px 16px;
+          border: 1px solid #d9d9d9;
+          background-color: transparent;
+          color: #555;
+          border-radius: 2px;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-size: 14px;
 
-        &:hover {
-          background-color: #dc2626;
+          &:hover {
+            background-color: #f5f5f5;
+          }
+        }
+
+        // Nút chính (Primary buttons)
+        .btn-primary {
+          padding: 8px 16px;
+          border: none;
+          border-radius: 2px;
+          cursor: pointer;
+          font-weight: 500;
+          transition: all 0.2s;
+          font-size: 14px;
+        }
+
+        // --- NÚT HỦY ĐƠN HÀNG (MÀU ĐỎ) ---
+        .btn-cancel {
+          background-color: #ff4d4f;
+          color: white;
+
+          &:hover {
+            background-color: #ff7875;
+            box-shadow: 0 2px 5px rgba(255, 77, 79, 0.3);
+          }
+        }
+
+        // --- NÚT ĐÃ NHẬN HÀNG (MÀU CAM SHOPEE) ---
+        .btn-received {
+          background-color: #ee4d2d;
+          color: white;
+
+          &:hover {
+            background-color: #d4380d;
+            box-shadow: 0 2px 5px rgba(238, 77, 45, 0.3);
+          }
+        }
+
+        // --- NÚT ĐÁNH GIÁ (MÀU CAM SHOPEE) ---
+        .btn-rate {
+          background-color: #ee4d2d;
+          color: white;
+
+          &:hover {
+            background-color: #d4380d;
+            box-shadow: 0 2px 5px rgba(238, 77, 45, 0.3);
+          }
+        }
+
+        // --- NÚT MUA LẠI (MÀU XANH LÁ) ---
+        .btn-rebuy {
+          background-color: #52c41a;
+          color: white;
+
+          &:hover {
+            background-color: #73d13d;
+            box-shadow: 0 2px 5px rgba(82, 196, 26, 0.3);
+          }
+        }
+
+        // --- DROPDOWN CONTAINER ---
+        .dropdown-container {
+          position: relative;
+
+          .btn-more {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            .chevron {
+              font-size: 10px;
+              transition: transform 0.2s;
+
+              &.up {
+                transform: rotate(180deg);
+              }
+            }
+          }
+
+          // --- DROPDOWN MENU ---
+          .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 1000;
+            min-width: 160px;
+            margin-top: 4px;
+
+            .dropdown-item {
+              width: 100%;
+              padding: 10px 16px;
+              background: none;
+              border: none;
+              text-align: left;
+              cursor: pointer;
+              font-size: 14px;
+              color: #374151;
+              transition: background-color 0.2s;
+
+              &:hover {
+                background-color: #f9fafb;
+              }
+
+              &:first-child {
+                border-radius: 4px 4px 0 0;
+              }
+
+              &:last-child {
+                border-radius: 0 0 4px 4px;
+              }
+
+              &:not(:last-child) {
+                border-bottom: 1px solid #f3f4f6;
+              }
+            }
+          }
         }
       }
-
-      .btn-secondary {
-        background-color: transparent;
-        border: 1px solid #d1d5db;
-        color: #374151;
-        padding: 0.5rem 1.5rem;
-        border-radius: 0.25rem;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: background-color 0.2s;
-
-        &:hover {
-          background-color: #f9fafb;
-        }
-      }
-    }
   }
 }

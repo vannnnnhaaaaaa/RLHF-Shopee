@@ -7,7 +7,7 @@ export const billService = {
     const token = localStorage.getItem('access_token');
     if (!token) throw new Error("Vui lòng đăng nhập!");
 
-    const response = await axios.post(`${API_URL}/bills/add_bill`, billData, {
+    const response = await axios.post(`${API_URL}/orders/checkout`, billData, {
       headers: { 
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'

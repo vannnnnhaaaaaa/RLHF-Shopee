@@ -205,13 +205,13 @@ class VoucherCreate (SQLModel) :
     product_id : Optional[int] = None
 
 
-#-- --- Bill --- -- 
-class CreateBillDetail(BaseModel):
+#-- --- Order --- -- 
+class CreateOrderItem(BaseModel):
     product_id: int
     quantity: int
     price_at_purchase: float
 
-class CreateBill(BaseModel):
+class CreateOrder(BaseModel):
     total_price: float
     total_shipping: float
     status: str = "PENDING"
@@ -222,18 +222,18 @@ class CreateBill(BaseModel):
     shopee_voucher_id: Optional[int] = None
     seller_voucher_id: Optional[int] = None
     
-    # Danh sách các sản phẩm trong hóa đơn
-    details: list[CreateBillDetail] 
+    # Danh sách các sản phẩm trong đơn hàng
+    details: list[CreateOrderItem] 
 
 
 # --- SCHEMAS CHO ĐẦU RA (RESPONSE) ---
-class ResponseBillDetail(SQLModel):
+class ResponseOrderItem(SQLModel):
     id: int
     product_id: int
     quantity: int
     price_at_purchase: float
 
-class ResponseBill(SQLModel):
+class ResponseOrder(SQLModel):
     id: int
     customer_id: int
     total_price: float
@@ -247,13 +247,21 @@ class ResponseBill(SQLModel):
     seller_voucher_id: Optional[int]
     created_at: datetime
     
-    # Trả về kèm danh sách chi tiết hóa đơn
-    detail_bill: list[ResponseBillDetail] = []
+    # Trả về kèm danh sách chi tiết đơn hàng
+    items: list[ResponseOrderItem] = []
 
 
-class UpdateOrderStatusRequest(BaseModel):
-    status: str
-
-
-class StatusBillbyCustomer (BaseModel) :
+class StatusOrderbyCustomer (BaseModel) :
     status : str
+
+
+#-- --- Notification --- --
+class ResponseNotification(SQLModel):
+    id: int
+    user_id: int
+    title: str
+    body: str
+    image_url: Optional[str]
+    order_id: Optional[int]
+    is_read: bool
+    created_at: datetime

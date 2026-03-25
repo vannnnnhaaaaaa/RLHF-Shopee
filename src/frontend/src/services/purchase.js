@@ -16,7 +16,7 @@ const purchase_customer_service = {
   getOrderStatus: async (status = 'All', page = 1, limit = 7) => {
     try {
       // Gắn query parameters vào URL
-      const url = `${API_URL}/order/customer/get-status/${status}?page=${page}&limit=${limit}`;
+      const url = `${API_URL}/orders/customer/get-status/${status}?page=${page}&limit=${limit}`;
 
       const response = await axios.get(url, getAuthHeader());
       console.log('Dữ liệu lấy về:', response.data);

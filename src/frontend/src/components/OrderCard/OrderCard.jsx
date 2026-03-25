@@ -1,8 +1,32 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './style.scss';
 
 const OrderCard = ({ order }) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
   if (!order) return null;
+
+  // Chuẩn hóa chuỗi trạng thái thành chữ in hoa để so sánh cho an toàn
+  const currentStatus = order.status?.toUpperCase() || '';
+
+  // Hàm đóng dropdown khi click bên ngoài
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleDropdownToggle = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
 
   return (
     <div className="order-card">
@@ -26,14 +50,13 @@ const OrderCard = ({ order }) => {
           </div>
           <span className="divider">|</span>
           <div className="order-status text-red">
-            {order.status.toUpperCase()}
+            {currentStatus}
           </div>
         </div>
       </div>
 
       {/* Body */}
       <div className="order-body">
-        {/* Lấy sản phẩm đầu tiên trong mảng items để hiển thị đại diện */}
         <div className="product-info-wrapper">
           <div className="product-image-placeholder">
             {order.items && order.items.length > 0 ? (
@@ -49,7 +72,6 @@ const OrderCard = ({ order }) => {
               {order.items && order.items.length > 0 ? order.items[0].product_name : "Đang cập nhật"}
             </h3>
 
-            {/* ĐÃ CẬP NHẬT: Hiển thị Category ở đây */}
             <p className="product-variation">
               Phân loại: {order.items && order.items.length > 0 && order.items[0].product_category ? order.items[0].product_category : "Không có"}
             </p>
@@ -77,8 +99,56 @@ const OrderCard = ({ order }) => {
         </div>
 
         <div className="action-buttons">
-          <button className="btn-secondary">Liên hệ người bán</button>
-          <button className="btn-primary">Mua lại</button>
+          {/* PENDING hoặc ACCEPT */}
+          {(currentStatus === 'PENDING' || currentStatus === 'ACCEPT') && (
+            <>
+              <button className="btn-secondary">Liên hệ người bán</button>
+              <button className="btn-primary btn-cancel">Hủy đơn hàng</button>
+            </>
+          )}
+
+          {/* DELIVERING */}
+          {currentStatus === 'DELIVERING' && (
+            <>
+              <button className="btn-secondary">Liên hệ người bán</button>
+              <button className="btn-primary btn-received">Đã nhận được hàng</button>
+            </>
+          )}
+
+          {/* COMPLETED */}
+          {currentStatus === 'COMPLETED' && (
+            <>
+              {order.can_rate && (
+                <button className="btn-primary btn-rate">Đánh giá</button>
+              )}
+              {order.can_return && (
+                <button className="btn-secondary">Yêu cầu Trả hàng/Hoàn tiền</button>
+              )}
+              <div className="dropdown-container" ref={dropdownRef}>
+                <button
+                  className="btn-secondary btn-more"
+                  onClick={handleDropdownToggle}
+                >
+                  Thêm
+                  <span className={`chevron ${isDropdownOpen ? 'up' : 'down'}`}>▼</span>
+                </button>
+                {isDropdownOpen && (
+                  <div className="dropdown-menu">
+                    <button className="dropdown-item">Mua lại</button>
+                    <button className="dropdown-item">Liên hệ người bán</button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* CANCELLED */}
+          {currentStatus === 'CANCELLED' && (
+            <>
+              <button className="btn-secondary">Chi tiết hủy đơn</button>
+              <button className="btn-primary btn-rebuy">Mua lại</button>
+            </>
+          )}
         </div>
       </div>
 

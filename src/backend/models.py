@@ -147,7 +147,7 @@ class Customer(SQLModel, table=True):
     address_detail: Optional[str] = None
     note:  Optional[str]
     # Quan hệ
-    bills: List["Bill"] = Relationship(back_populates="customer")
+    orders: List["Order"] = Relationship(back_populates="customer")
     cart_items: Optional[List["CartItem"]] = Relationship(back_populates="customer")
 
 
@@ -269,7 +269,8 @@ class CartItem(SQLModel, table=True):
     customer: Customer = Relationship(back_populates="cart_items")
     product: Product = Relationship()
 
-class Bill(SQLModel, table=True):
+class Order(SQLModel, table=True):
+    __tablename__ = "orders"  # Use "orders" as table name since "order" is reserved
     id: Optional[int] = Field(default=None, primary_key=True)    
     total_price: float
     total_shipping: float
@@ -282,21 +283,31 @@ class Bill(SQLModel, table=True):
     discount_shipping: float = Field(default=0)
     
     customer_id: int = Field(foreign_key='customer.id') 
-    customer: Customer = Relationship(back_populates="bills")
+    customer: Customer = Relationship(back_populates="orders")
     
     # LƯU MÃ VOUCHER ĐÃ ÁP DỤNG
     shopee_voucher_id: Optional[int] = Field(default=None, foreign_key="voucher.id")
     seller_voucher_id: Optional[int] = Field(default=None, foreign_key="voucher.id")
     
-    detail_bill: List["BillDetail"] = Relationship(back_populates="bill")
+    items: List["OrderItem"] = Relationship(back_populates="order")
 
-class BillDetail(SQLModel, table=True):
+class OrderItem(SQLModel, table=True):
+    __tablename__ = "order_items"  # Use "order_items" as table name
     id: Optional[int] = Field(default=None, primary_key=True)    
     quantity: int 
     price_at_purchase: float
 
-    bill_id: int = Field(foreign_key='bill.id')
-    bill: Bill = Relationship(back_populates="detail_bill")
+    order_id: int = Field(foreign_key='orders.id')  # Reference the "orders" table
+    order: Order = Relationship(back_populates="items")
     
     product_id: int = Field(foreign_key="product.id")
     product: Product = Relationship()
+class Notification(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True) # ID của người nhận thông báo
+    title: str
+    body: str
+    image_url: Optional[str] = None
+    order_id: Optional[int] = None
+    is_read: bool = Field(default=False)
+    created_at: datetime = Field(default_factory=datetime.utcnow)

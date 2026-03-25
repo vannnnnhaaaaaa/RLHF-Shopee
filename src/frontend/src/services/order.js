@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000/bills'; // Đổi lại port hoặc host của Backend nếu cần
+const API_URL = 'http://localhost:8000/orders'; // Updated to use orders API
 
 // Hàm lấy token từ localStorage
 const getAuthHeader = () => {
@@ -17,7 +17,7 @@ export const sellerOrderService = {
   // Lấy danh sách đơn hàng của Seller
   getOrders: async (status = null, skip = 0, limit = 50) => {
     try {
-      let url = `${API_URL}/seller/get-bills?skip=${skip}&limit=${limit}`;
+      let url = `${API_URL}/seller/get-orders?skip=${skip}&limit=${limit}`;
       
       // Vì React component đã truyền thẳng chuỗi tiếng Anh (pending, accept...)
       // Nên ta chỉ cần nối chuỗi trực tiếp, không cần dùng statusMap nữa.
