@@ -50,6 +50,7 @@ function App() {
             <Route path="orders/cancellations" element={<CancelOrderManage />} />
             <Route path="products/add" element={<AddProduct />} />
             <Route path="products/manage" element={<ManageProducts />} />
+            <Route path="products/manage/products/edit/:id" element={<AddProduct />} />
             <Route path="orders/manage" element={<ManageOrders />} />
             <Route path="orders/managereturn" element={<ReturnManage />} />
           </Route>

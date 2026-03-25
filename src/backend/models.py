@@ -170,25 +170,30 @@ class Product(SQLModel, table=True):
     description: str 
     image_link: str
     video_link: str
-    has_variants : bool
-    stock : int = Field(default=0)
+    has_variants: bool
+    stock: int = Field(default=0)
     category: Optional[str] = None 
     embedding: Optional[List[float]] = Field(sa_column=Column(Vector(384)))
-    discount_percent : Optional[int]  
+    discount_percent: Optional[int]  
     shop_badge: Optional[str] 
-    tag : Optional[str] 
+    tag: Optional[str] 
     weight: float 
     length: float 
-    width : float
-    height : float
-    create_at : datetime = Field(default_factory=datetime.now)
+    width: float
+    height: float
+    create_at: datetime = Field(default_factory=datetime.now)
     status: str = Field(default="pending_inbound")
     
-    # Điểm do AI tự động tính để xếp hạng
+    # [ĐÃ SỬA]: Thêm cascade xóa mồ côi (delete-orphan) cho SKUs
+    skus: List["Product_Variants"] = Relationship(
+        back_populates="product",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
+    
     ai_ranking_score: float = Field(default=0.0, index=True)
     
     seller_id: int = Field(foreign_key="seller.id")
-    seller: Seller = Relationship(back_populates='products')
+    seller: "Seller" = Relationship(back_populates='products')
     
     reviews: List["Review"] = Relationship(back_populates="product")
     images: List["Product_image"] = Relationship(
@@ -196,15 +201,19 @@ class Product(SQLModel, table=True):
         sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
 
-class Product_Variants (SQLModel , table=True ) :
-    id : Optional[int] = Field(default=None , primary_key=True )
-    product_id : int = Field (foreign_key='product.id')
-    tier_1_name : Optional[str]
-    tier_1_value : Optional[str]
-    tier_2_name : Optional[str]
-    tier_2_value : Optional[str]
-    price : float
-    stock : int
+class Product_Variants(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    product_id: int = Field(foreign_key='product.id')
+    tier_1_name: Optional[str]
+    tier_1_value: Optional[str]
+    tier_2_name: Optional[str]
+    tier_2_value: Optional[str]
+    price: float
+    stock: int
+    
+    # [ĐÃ SỬA]: Phải có Relationship và trỏ ngược lại 'skus' bên bảng Product
+    product: Optional[Product] = Relationship(back_populates="skus")
+
 
 class Product_image(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

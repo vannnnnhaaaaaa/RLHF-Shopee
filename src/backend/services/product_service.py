@@ -6,7 +6,7 @@ from supabase import create_client, Client
 from fastapi import HTTPException, UploadFile, status
 from sqlmodel import Session , select , func
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import defer
+from sqlalchemy.orm import defer , selectinload
 # Import các Models của bạn
 from src.backend.models import Product, Product_image , Product_Variants
 from src.backend.services.ai_engine import get_model_embedding
@@ -135,7 +135,6 @@ def create_new_product(
         db.rollback()
         print(f"General Error: {str(e)}")
         raise e
-
 def get_products_by_seller(
     db: Session, 
     seller_id: int, 
@@ -144,18 +143,21 @@ def get_products_by_seller(
     limit: int = 50
 ):
     """
-    Lấy danh sách sản phẩm của người bán.
-    - Hỗ trợ lọc theo status (nếu có).
-    - Hỗ trợ phân trang để tối ưu hiệu năng.
+    Lấy danh sách sản phẩm của người bán kèm theo các SKU (Phân loại hàng).
     """
-    # Bước 1: Khởi tạo câu truy vấn gốc (chỉ lấy của người bán này)
-    statement = select(Product).where(Product.seller_id == seller_id)
+    # Bước 1: Khởi tạo câu truy vấn gốc. 
+    # Dùng options(selectinload(...)) để kéo luôn mảng skus về, tránh lỗi N+1 Query
+    statement = (
+        select(Product)
+        .options(selectinload(Product.skus)) # Giả sử trong model Product bạn đặt tên relationship là 'skus'
+        .where(Product.seller_id == seller_id)
+    )
     
-    # Bước 2: Nếu Frontend có truyền status lên, ta thêm điều kiện WHERE
+    # Bước 2: Lọc theo status
     if status:
         statement = statement.where(Product.status == status)
         
-    # Bước 3: Sắp xếp sản phẩm mới nhất lên đầu và áp dụng phân trang
+    # Bước 3: Phân trang và sắp xếp
     statement = statement.order_by(Product.id.desc()).offset(skip).limit(limit)
     
     # Bước 4: Thực thi truy vấn
@@ -196,3 +198,84 @@ def get_product_by_id(db: Session, product_id: int):
     # Dùng .first() vì ID là duy nhất, lấy ra dòng đầu tiên tìm thấy
     result = db.exec(statement).first() 
     return result
+
+def update_product_service(
+   db, product_id, seller_id, product_data, 
+    list_variants, list_tiers, list_existing_images, new_images, video
+):
+    # 1. Tìm sản phẩm và kiểm tra quyền
+    statement = (
+        select(Product)
+        .where(Product.id == product_id, Product.seller_id == seller_id)
+        .options(selectinload(Product.skus), selectinload(Product.images))
+    )
+    product = db.exec(statement).first()
+    
+    if not product:
+        raise HTTPException(status_code=404, detail="Không tìm thấy sản phẩm hoặc không có quyền.")
+
+    # 2. Cập nhật thông tin cơ bản (Name, Price, Category...)
+    for key, value in product_data.items():
+        setattr(product, key, value)
+
+    # 3. XỬ LÝ HÌNH ẢNH
+    # 3.1: Xóa các ảnh cũ KHÔNG nằm trong danh sách `list_existing_images` truyền lên
+    existing_ids_to_keep = [img.get("id") for img in list_existing_images if img.get("id")]
+    
+    images_to_delete = [img for img in product.images if img.id not in existing_ids_to_keep]
+    for img in images_to_delete:
+        db.delete(img) # Xóa khỏi DB (Bạn có thể thêm logic xóa file trên Cloudinary/S3 ở đây)
+        
+    # 3.2: Thêm ảnh mới (giống logic ở hàm create_new_product)
+    if new_images:
+        for file in new_images:
+            # Code upload file của bạn (Ví dụ lưu ra ổ cứng hoặc S3)
+            # image_url = upload_file_to_storage(file)
+            image_url = "dummy_url_for_new_image" # THAY BẰNG LOGIC UPLOAD CỦA BẠN
+            
+            new_img_record = Product_image(product_id=product.id, image_link=image_url)
+            db.add(new_img_record)
+            
+            # Cập nhật ảnh đại diện (ảnh bìa) nếu cần
+            if not existing_ids_to_keep and file == new_images[0]:
+                product.image_link = image_url 
+
+    # 4. XỬ LÝ BIẾN THỂ (SKU)
+    if not product_data["has_variants"]:
+        for sku in product.skus:
+            db.delete(sku)
+    else:
+        incoming_sku_ids = [v.get("id") for v in list_variants if v.get("id")]
+        
+        skus_to_delete = [sku for sku in product.skus if sku.id not in incoming_sku_ids]
+        for sku in skus_to_delete:
+            db.delete(sku)
+            
+        # An toàn lấy tên Tier 1 và Tier 2 từ list_tiers React truyền lên
+        tier_1_name = list_tiers[0].get("name") if len(list_tiers) > 0 else None
+        tier_2_name = list_tiers[1].get("name") if len(list_tiers) > 1 else None
+
+        for variant_data in list_variants:
+            v_id = variant_data.get("id")
+            if v_id:
+                existing_sku = next((s for s in product.skus if s.id == v_id), None)
+                if existing_sku:
+                    existing_sku.tier_1_value = variant_data.get("tier1")
+                    existing_sku.tier_2_value = variant_data.get("tier2")
+                    existing_sku.price = float(variant_data.get("price"))
+                    existing_sku.stock = int(variant_data.get("stock"))
+            else:
+                new_sku = Product_Variants(
+                    product_id=product.id,
+                    tier_1_name=tier_1_name, # Đã có tên Tier 1 an toàn
+                    tier_1_value=variant_data.get("tier1"),
+                    tier_2_name=tier_2_name, # Đã có tên Tier 2 an toàn
+                    tier_2_value=variant_data.get("tier2"),
+                    price=float(variant_data.get("price") or 0),
+                    stock=int(variant_data.get("stock") or 0)
+                )
+                db.add(new_sku)
+
+    db.commit()
+    db.refresh(product)
+    return product

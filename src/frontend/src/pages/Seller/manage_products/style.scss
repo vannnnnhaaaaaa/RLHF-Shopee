@@ -8,6 +8,62 @@ $bg-light: #f9f9f9;
 $bg-white: #ffffff;
 
 .manage-products-page {
+  /* Nút Xem phân loại */
+.toggle-sku-btn {
+  background: none;
+  border: none;
+  color: #ee4d2d; /* Màu cam đặc trưng của sàn TMĐT */
+  font-size: 12px;
+  padding: 4px 0;
+  cursor: pointer;
+  margin-top: 5px;
+  text-align: left;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* Bảng phụ chứa SKU */
+.sku-expanded-row {
+  background-color: #fafafa;
+  border-bottom: 1px solid #eee;
+
+  .sku-table-container {
+    padding: 10px 20px 20px 60px; /* Thụt lùi vào so với sp chính */
+    
+    .sku-inner-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+
+      th {
+        padding: 10px;
+        background-color: #f6f6f6;
+        border-bottom: 1px solid #e0e0e0;
+        text-align: left;
+        font-weight: 500;
+        font-size: 13px;
+        color: #555;
+      }
+
+      td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #f1f1f1;
+        font-size: 14px;
+        
+        &.sku-name {
+          color: #333;
+        }
+      }
+      
+      tr:last-child td {
+        border-bottom: none;
+      }
+    }
+  }
+}
   padding: 20px 30px;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   color: $text-main;

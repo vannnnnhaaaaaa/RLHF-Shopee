@@ -99,3 +99,69 @@ export const create_new_product = async (payload) => {
       throw new Error(message);
   }
 };
+
+// Thêm vào src/services/product.js
+export const get_product_detail = async (productId) => {
+  const token = localStorage.getItem('access_token');
+  try {
+    // Gọi đúng vào API /seller/{id} mới tạo
+    const response = await axios.get(`${API_URL}/product/seller/${productId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy chi tiết sản phẩm:", error);
+    throw error;
+  }
+};
+
+// Thêm hàm này vào src/services/product.js
+export const update_product = async (productId, payload) => {
+  // Đã thêm biến 'tiers' vào đây
+  const { formData, hasVariants, variantsList, tiers, newImages, existingImages, video } = payload;
+  const token = localStorage.getItem('access_token');
+  const formDataToSend = new FormData();
+
+  formDataToSend.append('name', formData.name);
+  formDataToSend.append('category', formData.category);
+  formDataToSend.append('description', formData.description);
+  formDataToSend.append('has_variants', hasVariants);
+  formDataToSend.append('weight', formData.weight || 0);
+  formDataToSend.append('length', formData.length || 0);
+  formDataToSend.append('width', formData.width || 0);
+  formDataToSend.append('height', formData.height || 0);
+
+  if (hasVariants) {
+      formDataToSend.append('variantsList', JSON.stringify(variantsList)); 
+      // [THÊM MỚI]: Gửi kèm Tiers (Màu sắc, kích thước...) lên Backend
+      formDataToSend.append('tiersList', JSON.stringify(tiers)); 
+
+      formDataToSend.append('price', variantsList[0].price);
+      formDataToSend.append('stock', variantsList[0].stock);
+  } else {
+      formDataToSend.append('price', formData.price);
+      formDataToSend.append('stock', formData.stock);
+  }
+
+  formDataToSend.append('existingImages', JSON.stringify(existingImages));
+
+  if (newImages && newImages.length > 0) {
+      newImages.forEach((img) => formDataToSend.append('newImages', img.file));
+  }
+
+  if (video && !video.isExisting && video.file) {
+      formDataToSend.append('video', video.file);
+  }
+
+  try {
+      const response = await axios.put(`${API_URL}/product/edit/${productId}`, formDataToSend, {
+          headers: { 'Authorization': `Bearer ${token}` }
+      });
+      return response.data;
+  } catch (error) {
+      const message = error.response?.data?.detail || "Lỗi khi cập nhật sản phẩm";
+      throw new Error(message);
+  }
+};

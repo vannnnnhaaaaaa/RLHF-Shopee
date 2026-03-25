@@ -12,12 +12,12 @@ const ManageOrders = () => {
 
   const tabs = [
     { label: 'Tất cả', value: 'all' },
-    { label: 'Cần xác nhận', value: 'pending' },
-    { label: 'Giao tới kho', value: 'accept' },
-    { label: 'Đã gửi', value: 'delivering' },
-    { label: 'Đã hoàn tất', value: 'completed' },
-    { label: 'Chờ xử lý trả hàng', value: 'processing_cancel' },
-    { label: 'Đã hủy', value: 'cancelled' }
+    { label: 'Cần xác nhận', value: 'PENDING' },
+    { label: 'Giao tới kho', value: 'ACCEPT' },
+    { label: 'Đang giao hàng', value: 'DELIVERING' },
+    { label: 'Đã hoàn tất', value: 'COMPLETED' },
+    { label: 'Chờ xử lý trả hàng', value: 'PROCESSING_CANCEL' },
+    { label: 'Đã hủy', value: 'CANCELLED' }
   ];
 
   const translateStatus = (status) => {
