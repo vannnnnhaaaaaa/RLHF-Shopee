@@ -27,8 +27,11 @@ function DetailProduct() {
           // "Đắp" dữ liệu thật vào cấu trúc mà giao diện cần để tránh bị sập
           const safeProduct = {
             ...rawData,
-            // Nếu API không có mảng images, ta tự tạo mảng chứa 1 ảnh chính
-            images: rawData.image_link ? [rawData.image_link] : ['https://via.placeholder.com/500?text=No+Image'],
+            // ← NEW: Lấy danh sách ảnh từ bảng product_image (từ API)
+            // Nếu API có mảng images, lấy từ đó. Nếu không, fallback về image_link
+            images: rawData.images && Array.isArray(rawData.images) && rawData.images.length > 0
+              ? rawData.images.map(img => img.image_url)  // Chuyển đổi image object => url string
+              : (rawData.image_link ? [rawData.image_link] : ['https://via.placeholder.com/500?text=No+Image']),
             // Gán giá trị mặc định nếu DB chưa có các trường này
             original_price: rawData.price || 0,
             discount_percent: rawData.discount_percent || 0,
@@ -96,6 +99,51 @@ function DetailProduct() {
       } else {
         alert("❌ Có lỗi hệ thống xảy ra. Vui lòng thử lại sau.");
         console.error("Lỗi add to cart:", error);
+      }
+    }
+  };
+
+  // NEW: Handle "Buy Now" - Add to cart and redirect to cart page
+  const handleBuyNow = async () => {
+    // 1. Check if user is authenticated
+    const token = localStorage.getItem('access_token');
+    
+    if (!token) {
+      alert("Vui lòng đăng nhập để mua sản phẩm!");
+      navigate('/customer/login');
+      return;
+    }
+
+    try {
+      // 2. Add product to cart
+      const response = await axios.post(
+        'http://localhost:8000/cart/add', 
+        {
+          product_id: product.id,
+          quantity: quantity
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      // 3. If successful, redirect to cart with product ID for auto-selection
+      if (response.data.status === 'success') {
+        window.dispatchEvent(new Event('cartUpdated'));
+        // Navigate to cart page and pass product ID via state for auto-selection
+        navigate('/customer/cartitem', {
+          state: { autoSelectProductId: product.id }
+        });
+      }
+      
+    } catch (error) {
+      if (error.response && error.response.data) {
+        alert(`❌ Lỗi: ${error.response.data.detail}`);
+      } else {
+        alert("❌ Có lỗi xảy ra. Vui lòng thử lại sau.");
+        console.error("Lỗi Buy Now:", error);
       }
     }
   };
@@ -197,7 +245,7 @@ function DetailProduct() {
               <button className="btn-add-to-cart" onClick={()=>handleAddToCart()}>
                 🛒 Thêm Vào Giỏ Hàng
               </button>
-              <button className="btn-buy-now">Mua Ngay</button>
+              <button className="btn-buy-now" onClick={handleBuyNow}>Mua Ngay</button>
             </div>
           </div>
         </div>

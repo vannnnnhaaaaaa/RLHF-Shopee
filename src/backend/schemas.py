@@ -2,6 +2,7 @@ from sqlmodel import SQLModel , Field
 from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
+from enum import Enum
 class ProductRead(SQLModel) :
     id : int 
     name : str = Field(index=True)
@@ -100,7 +101,8 @@ class TaskReadDetail (TaskRead) :
     delay_info : Optional[str] = None
     messages : list[ChatMessage]
     agent_sentiment : str 
-    root_cause : str
+    root_cause_by_ai : Optional[str] = None
+    root_cause_by_human : Optional[str] = None
     comment : Optional[str] 
     rating : int
 
@@ -232,6 +234,14 @@ class ResponseOrderItem(SQLModel):
     product_id: int
     quantity: int
     price_at_purchase: float
+    
+    # Thêm thông tin sản phẩm cơ bản
+    product_name: str
+    product_category: Optional[str] = None
+    product_image: str  # ảnh chính duy nhất
+    
+    class Config:
+        from_attributes = True
 
 class ResponseOrder(SQLModel):
     id: int
@@ -251,8 +261,16 @@ class ResponseOrder(SQLModel):
     items: list[ResponseOrderItem] = []
 
 
+class OrderStatus (str , Enum ) :
+    PENDING = "PENDING"
+    ACCEPT = "ACCEPT"
+    DELIVERING = "DELIVERING"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+    PROCESSING_CANCEL = "PROCESSING_CANCEL"
+
 class StatusOrderbyCustomer (BaseModel) :
-    status : str
+    status : OrderStatus
 
 
 #-- --- Notification --- --

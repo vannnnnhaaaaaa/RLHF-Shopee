@@ -211,21 +211,29 @@ def get_detail_product(
     session: Session = Depends(get_session)
 ):
     """
-    API Công khai: Lấy chi tiết 1 sản phẩm dựa vào ID
+    API Công khai: Lấy chi tiết 1 sản phẩm dựa vào ID + toàn bộ hình ảnh từ product_image table
     """
     try:
-        # 1. Gọi xuống DB để tìm sản phẩm
-        product = get_product_by_id(session, product_id)
+        # 1. Query DB kết hợp Eager Loading để lấy luôn dữ liệu từ bảng images
+        statement = (
+            select(Product)
+            .where(Product.id == product_id)
+            .options(selectinload(Product.images))  # ← Eager load toàn bộ images
+        )
+        product = session.exec(statement).first()
         
-        # 2. Xử lý trường hợp có người nhập bậy ID lên thanh URL (VD: /product/99999)
+        # 2. Xử lý trường hợp không tìm thấy sản phẩm
         if not product:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Sản phẩm không tồn tại hoặc đã bị gỡ."
             )
             
-        # 3. Ép kiểu an toàn loại bỏ embedding (hoặc dùng response_model như lúc nãy bạn đã tạo)
+        # 3. Ép kiểu an toàn loại bỏ embedding
         product_dict = product.model_dump(exclude={"embedding"})
+        
+        # 4. Gắn mảng images vào response (từ bảng product_image)
+        product_dict["images"] = [img.model_dump() for img in product.images] if product.images else []
 
         return {
             "status": "success",

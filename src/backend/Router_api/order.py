@@ -5,7 +5,7 @@ from typing import Optional
 from src.backend.connect_database import get_session
 # Lưu ý: Hãy chắc chắn bạn đã đổi tên các schema từ Bill sang Order trong file schemas.py nhé
 from src.backend.schemas import CreateOrder, ResponseOrder, StatusOrderbyCustomer 
-from src.backend.services.order_service import create_checkout_orders, get_customer_orders
+from src.backend.services.order_service import create_checkout_orders, get_customer_orders , update_status_logic
 from src.backend.services.customer_service import check_exist_info_customer
 from src.backend.services.notification_service import create_order_status_notification
 from src.backend.auth import get_current_customer, get_current_seller
@@ -233,3 +233,23 @@ def update_order_status_by_seller(
     except Exception as e:
         print(f"Lỗi khi cập nhật trạng thái đơn {order_id}: {e}")
         raise HTTPException(status_code=500, detail="Lỗi hệ thống khi cập nhật đơn hàng.")
+
+@router_order.patch('/customer/update-status/{order_id}')
+def update_order_status_by_customer(
+    order_id : int ,
+    data : StatusOrderbyCustomer  ,
+    customer : Customer = Depends(get_current_customer),
+    session : Session = Depends(get_session)
+) :
+    try :
+        result = update_status_logic(session=session,customer_id= customer.id ,status= data.status , order_id= order_id)
+        return {
+            'status' : 'sucess' ,
+            'message' : 'Da update thanh cong' ,
+            'data' : result
+        }
+    except HTTPException as http_e :
+        raise http_e
+    except Exception as e :
+        print(f"Error: {e}") 
+        raise HTTPException(status_code=500, detail="Lỗi hệ thống không xác định")

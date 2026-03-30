@@ -48,12 +48,12 @@ def decode_token(token: str = Depends(oauth2_schema)):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         print('user_id',payload)
         user_id: int = payload.get('user_id')
-        auth: str = payload.get('auth') # Lấy role ra
+        role: str = payload.get('role')  # FIX: Lấy 'role' không phải 'auth'
          
-        if user_id is None or auth is None:
+        if user_id is None or role is None:
             raise credentials_exception
             
-        return {"user_id": user_id, "auth": auth}
+        return {"user_id": user_id, "role": role}
     except JWTError:
         raise credentials_exception
 
@@ -62,7 +62,7 @@ def decode_token(token: str = Depends(oauth2_schema)):
 
 def get_current_member(payload: dict = Depends(decode_token), session: Session = Depends(get_session)):
     """Dành cho user làm task (role = 'member')"""
-    if payload.get("auth") != "member":
+    if payload.get("role") != "member":  # FIX: Kiểm tra 'role' không phải 'auth'
         raise HTTPException(status_code=403, detail="Bạn không có quyền truy cập. Yêu cầu tài khoản Member.")
         
     user = session.get(User, payload.get("user_id"))
@@ -73,7 +73,7 @@ def get_current_member(payload: dict = Depends(decode_token), session: Session =
 
 def get_current_customer(payload: dict = Depends(decode_token), session: Session = Depends(get_session)):
     print(payload)
-    if payload.get("auth") != "customer":
+    if payload.get("role") != "customer":  # FIX: Kiểm tra 'role' không phải 'auth'
         raise HTTPException(status_code=403, detail="Bạn không có quyền truy cập. Yêu cầu tài khoản Customer.")
     
     customer = session.get(Customer, payload.get("user_id"))
@@ -85,7 +85,7 @@ def get_current_customer(payload: dict = Depends(decode_token), session: Session
 
 def get_current_admin(payload: dict = Depends(decode_token), session: Session = Depends(get_session)):
     """Dành cho Admin (role = 'admin')"""
-    if payload.get("auth") != "admin":
+    if payload.get("role") != "admin":  # FIX: Kiểm tra 'role' không phải 'auth'
         raise HTTPException(status_code=403, detail="Chỉ Admin mới có quyền thực hiện hành động này.")
         
     admin = session.get(User, payload.get("user_id")) # Giả sử admin cũng nằm trong bảng User

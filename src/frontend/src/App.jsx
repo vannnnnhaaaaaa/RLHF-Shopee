@@ -1,4 +1,4 @@
-import { Route, BrowserRouter, Routes } from 'react-router-dom'
+import { Route, BrowserRouter, Routes, useLocation } from 'react-router-dom'
 
 import Signup from './pages/signup'
 import LoginPage from './pages/login'
@@ -19,46 +19,69 @@ import UserAccount from './pages/shopee/Profile/UserAccount'
 import CustomerLayout from './pages/shopee/CustomerLayout/CustomerLayout'
 import Purchase from './pages/shopee/Purchase/Purchase'
 import NotificationPage from './components/NotificationPage'
-function App() {
+import ChatWidget from './components/ChatWidget/ChatWidget'
+import ShopeeRLHFRoutes from './pages/shope_RLHF'
+
+function AppContent() {
+  const location = useLocation();
+  
+  // Hide chatbot on checkout and payment pages
+  const hideChatbot = location.pathname === '/checkout' || location.pathname === '/payment';
+  
   return (
     <>
-      <BrowserRouter>
-        <Routes>
-         
-          <Route path='/customer/signup' element={<Signup />} />
-          <Route path='/customer/login' element={<LoginPage />} />
-          <Route path='/seller-login' element={<LoginPage />} />
-          <Route path='/become-seller' element={<BecomeSeller />} />
-          <Route path='/adminDashboard_RLHF' element={<AdminDashboard />} />
-
-      
-          <Route path='/customer' element={<CustomerLayout />}>
-            <Route index element={<HomePage />} />
-
-            <Route path='account' element={<UserAccount />}>
-              <Route index element={<Profile />} />
-              <Route path='purchase' element= {<Purchase/>} />
-              <Route path='notifications' element={<NotificationPage />} /> 
-            </Route>
+      <Routes>
        
-            <Route path='product/:id' element={<DetailProduct />} />
-            <Route path='cartitem' element={<Cart />} />
-          </Route>
+        <Route path='/customer/signup' element={<Signup />} />
+        <Route path='/customer/login' element={<LoginPage />} />
+        <Route path='/seller-login' element={<LoginPage />} />
+        <Route path='/become-seller' element={<BecomeSeller />} />
+        <Route path='/adminDashboard_RLHF' element={<AdminDashboard />} />
+        
+        {/* Shopee RLHF Routes */}
+        <Route path='/shope_rlhf/*' element={<ShopeeRLHFRoutes />} />
 
-          {/* KHU VỰC NGƯỜI BÁN (Giữ nguyên vì bạn đã code chuẩn rồi) */}
-          <Route path="/seller-dashboard" element={<SellerDashboard />}>
-            <Route index element={<HomeDashboard />} />
-            <Route path="orders/cancellations" element={<CancelOrderManage />} />
-            <Route path="products/add" element={<AddProduct />} />
-            <Route path="products/manage" element={<ManageProducts />} />
-            <Route path="products/manage/products/edit/:id" element={<AddProduct />} />
-            <Route path="orders/manage" element={<ManageOrders />} />
-            <Route path="orders/managereturn" element={<ReturnManage />} />
-          </Route>
+        {/* Product detail route at root level */}
+        <Route path='/product/:id' element={<DetailProduct />} />
 
-        </Routes>
-      </BrowserRouter>
+    
+        <Route path='/customer' element={<CustomerLayout />}>
+          <Route index element={<HomePage />} />
+
+          <Route path='account' element={<UserAccount />}>
+            <Route index element={<Profile />} />
+            <Route path='purchase' element= {<Purchase/>} />
+            <Route path='notifications' element={<NotificationPage />} /> 
+          </Route>
+     
+          <Route path='product/:id' element={<DetailProduct />} />
+          <Route path='cartitem' element={<Cart />} />
+        </Route>
+
+        {/* KHU VỰC NGƯỜI BÁN (Giữ nguyên vì bạn đã code chuẩn rồi) */}
+        <Route path="/seller-dashboard" element={<SellerDashboard />}>
+          <Route index element={<HomeDashboard />} />
+          <Route path="orders/cancellations" element={<CancelOrderManage />} />
+          <Route path="products/add" element={<AddProduct />} />
+          <Route path="products/manage" element={<ManageProducts />} />
+          <Route path="products/manage/products/edit/:id" element={<AddProduct />} />
+          <Route path="orders/manage" element={<ManageOrders />} />
+          <Route path="orders/managereturn" element={<ReturnManage />} />
+        </Route>
+
+      </Routes>
+      
+      {/* Global Chatbot - Hidden on checkout/payment pages */}
+      {!hideChatbot && <ChatWidget />}
     </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   )
 }
 

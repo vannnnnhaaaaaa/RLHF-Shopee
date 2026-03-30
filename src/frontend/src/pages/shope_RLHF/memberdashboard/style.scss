@@ -1,0 +1,110 @@
+$primary: #3498db;
+$primary-hover: #2980b9;
+$bg-color: #f4f7f6;
+$text-main: #333;
+$text-muted: #666;
+$success: #2ecc71;
+$danger: #e74c3c;
+$warning: #f39c12;
+
+.member-dashboard-wrapper {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background-color: $bg-color;
+  min-height: 100vh;
+  padding: 20px;
+  color: $text-main;
+
+  .container {
+    max-width: 800px;
+    margin: auto;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+
+    h2 { margin: 0; color: $text-main; }
+    p { margin: 5px 0 0 0; color: $text-muted; }
+  }
+
+  .logout-btn {
+    background: $danger;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+    &:hover { background: darken($danger, 10%); }
+  }
+
+  .task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .task-card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 6px solid $primary; // Màu viền mặc định sẽ bị ghi đè bởi React
+    transition: 0.3s;
+
+    .task-info {
+      flex: 1;
+      h3 { margin: 0 0 10px 0; color: $text-main; }
+      p { margin: 5px 0; color: $text-muted; font-size: 14px; }
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 4px;
+      float: right;
+      color: white;
+    }
+
+    .task-action {
+      margin-left: 20px;
+      min-width: 120px;
+    }
+  }
+
+  .btn-primary {
+    background: $primary;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    width: 100%;
+    transition: 0.2s;
+    &:hover { background: $primary-hover; }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    background: white;
+    border-radius: 10px;
+  }
+  
+  .error-state {
+    color: $danger;
+    text-align: center;
+    padding: 20px;
+    background: #fdeaea;
+    border-radius: 8px;
+  }
+}

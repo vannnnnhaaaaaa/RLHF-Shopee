@@ -74,7 +74,7 @@ def login(
         # 2. Tạo Token và gắn Role
         token_data = {
             "user_id": customer.id,
-            "auth": "customer"  
+            "role": "customer"  
         }
         access_token = create_access_token(data=token_data)
         # 3. KIỂM TRA HAS_SHOP Ở ĐÂY

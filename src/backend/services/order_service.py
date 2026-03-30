@@ -4,7 +4,8 @@ from src.backend.models import Order, OrderItem, Product, CartItem
 from src.backend.schemas import CreateOrder
 from fastapi import HTTPException
 from datetime import datetime 
-
+from src.backend.services.notification_service import create_order_status_notification 
+from src.backend.services.notification_service import create_notification
 def get_customer_orders(status: str, current_id: int, session: Session, limit: int = 7, offset: int = 0):
     try:
         normalized_status = status.upper()
@@ -56,10 +57,11 @@ def get_customer_orders(status: str, current_id: int, session: Session, limit: i
         # Lặp qua kết quả JOIN để nhét sản phẩm vào mảng items tương ứng
         for order_item, product in item_results:
             order_dict[order_item.order_id]["items"].append({
+                "id": order_item.id,
                 "product_id": product.id,
-                "product_category" : product.category ,
+                "product_category": product.category,
                 "product_name": product.name,
-                "product_image": product.image_link,
+                "product_image": product.image_link,  # Ảnh chính (primary) từ Product table
                 "quantity": order_item.quantity,
                 "price": order_item.price_at_purchase
             })
@@ -154,6 +156,29 @@ def create_checkout_orders(order_data: CreateOrder, customer_id: int, session: S
         session.commit()
         session.refresh(new_order)
 
+        # --- BƯỚC 7: TẠO THÔNG BÁO CHO KHÁCH HÀNG ---
+        try:
+            # Get image_url from first product to display in notification
+            image_url = None
+            if new_order.items and len(new_order.items) > 0:
+                product = session.get(Product, new_order.items[0].product_id)
+                if product:
+                    image_url = product.image_link
+            
+            # Create notification for successful order creation
+            create_notification(
+                session=session,
+                user_id=new_order.customer_id,
+                title="Đặt hàng thành công!",
+                body=f"Đơn hàng #{new_order.id} của bạn đã được tạo thành công.",
+                order_id=new_order.id,
+                image_url=image_url
+            )
+            session.commit()  # Commit the notification to ensure it's permanently saved
+        except Exception as noti_error:
+            # Log the error but do NOT allow it to rollback the successful order creation
+            print(f"Warning: Could not create notification for order {new_order.id}: {noti_error}")
+
         return {
             "status": "success", 
             "message": "Đặt hàng thành công", 
@@ -167,3 +192,54 @@ def create_checkout_orders(order_data: CreateOrder, customer_id: int, session: S
         session.rollback()
         print(f"Transaction Error: {str(e)}")
         raise HTTPException(status_code=500, detail="Lỗi hệ thống khi xử lý thanh toán.")
+    
+
+def update_status_logic (session : Session , customer_id : int , status : str , order_id : int) :
+    try :
+        statement = select(Order).where(Order.id == order_id , Order.customer_id == customer_id)
+        order = session.exec(statement).first()
+        if not order :
+            raise HTTPException (status_code=404 , detail='Khoong tim thay donw hang cua ban')
+        
+        allow_status = ['CANCELLED' , 'COMPLETED']
+        if status not in allow_status :
+            raise HTTPException(status_code=403 , detail='Bạn không có quyền chuyển sang trạng thái này')
+    
+
+        order.status = status
+        session.add(order)
+        session.commit()
+        session.refresh(order)
+        
+        # Create notification for specific status changes
+        try:
+            image_url = None
+            if order.items and len(order.items) > 0:
+                product = session.get(Product, order.items[0].product_id)
+                if product:
+                    image_url = product.image_link
+            
+            if status == 'CANCELLED':
+                create_notification(
+                    session=session,
+                    user_id=order.customer_id,
+                    title="Đơn hàng đã bị hủy ❌",
+                    body=f"Đơn hàng #{order.id} đã bị hủy. Vui lòng liên hệ người bán để biết thêm chi tiết.",
+                    order_id=order.id,
+                    image_url=image_url
+                )
+            elif status == 'COMPLETED':
+                create_notification(
+                    session=session,
+                    user_id=order.customer_id,
+                    title="Đơn hàng đã hoàn thành 🎉",
+                    body=f"Đơn hàng #{order.id} đã được giao thành công. Cảm ơn bạn đã mua hàng!",
+                    order_id=order.id,
+                    image_url=image_url
+                )
+            session.commit()  # Commit the notification
+        except Exception as noti_error:
+            print(f"Warning: Could not create notification for order {order.id}: {noti_error}")
+    except Exception as e :
+        
+        raise e

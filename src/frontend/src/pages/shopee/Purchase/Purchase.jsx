@@ -25,6 +25,19 @@ const Purchase = () => {
   
   const [page, setPage] = useState(1);
 
+  // --- HÀM MỚI: Cập nhật trạng thái đơn hàng ngay trên giao diện ---
+  const handleUpdateOrderInList = (orderId, newStatus) => {
+    setOrders((prevOrders) => {
+      // Dùng map để tạo mảng mới, tìm đúng orderId và thay đổi status
+      return prevOrders.map((order) => {
+        if (order.id === orderId) {
+          return { ...order, status: newStatus };
+        }
+        return order;
+      });
+    });
+  };
+
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
     setPage(1); 
@@ -82,7 +95,11 @@ const Purchase = () => {
           <div className="loading-text">Đang tải dữ liệu...</div>
         ) : orders && orders.length > 0 ? (
           orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
+            <OrderCard 
+              key={order.id} 
+              order={order} 
+              onUpdateSuccess={handleUpdateOrderInList} // <-- TRUYỀN HÀM XUỐNG ĐÂY
+            />
           ))
         ) : (
           <div className="empty-state">

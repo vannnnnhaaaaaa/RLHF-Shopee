@@ -1,79 +1,138 @@
 // Tái sử dụng các mã màu chủ đạo của dự án
-$primary-color: #ee4d2d; 
+$primary-color: #ee4d2d;
 $primary-hover: #d73211;
 $bg-color: #f5f5f5;
 $text-main: #333;
 $border-color: #dbdbdb;
+$transition-timing: 0.3s ease;
 
-.login-container {
+// ========================================
+// PAGE WRAPPER - Full screen layout with padding
+// ========================================
+.login-page-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 80vh;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
   background-color: $bg-color;
+  box-sizing: border-box;
+}
 
-  .login-card {
+// ========================================
+// LOGIN CARD - Clean white card on background
+// ========================================
+.login-card {
     background: #ffffff;
     padding: 40px;
-    border-radius: 4px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     width: 100%;
-    max-width: 400px;
+    max-width: 420px;
 
     h2 {
       color: $text-main;
-      font-size: 20px;
-      font-weight: 500;
-      margin-bottom: 30px;
+      font-size: 24px;
+      font-weight: 600;
+      margin: 0 0 30px 0;
       text-transform: uppercase;
       text-align: center;
+      letter-spacing: 0.5px;
     }
 
-    .form-group {
-      margin-bottom: 20px;
+    form {
+      width: 100%;
 
-      label {
-        display: block;
-        margin-bottom: 8px;
+      .error-message {
+        color: #d32f2f;
+        background-color: #ffebee;
+        padding: 12px 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
         font-size: 14px;
-        color: #555;
+        border-left: 4px solid #d32f2f;
+        box-sizing: border-box;
       }
 
-      input {
-        width: 100%;
-        padding: 12px 15px;
-        border: 1px solid $border-color;
-        border-radius: 2px;
-        box-sizing: border-box;
+      .form-group {
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
 
-        &:focus {
-          border-color: #888;
-          outline: none;
+        label {
+          display: block;
+          margin-bottom: 8px;
+          font-size: 14px;
+          color: #555;
+          font-weight: 500;
+        }
+
+        input {
+          width: 100%;
+          padding: 12px 15px;
+          border: 1px solid $border-color;
+          border-radius: 4px;
+          box-sizing: border-box;
+          font-size: 14px;
+          font-family: inherit;
+          transition: border-color $transition-timing, box-shadow $transition-timing;
+
+          &:focus {
+            border-color: $primary-color;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.1);
+          }
+
+          &::placeholder {
+            color: #aaa;
+          }
         }
       }
     }
 
     .options-link {
-        text-align: right;
-        margin-bottom: 20px;
-        font-size: 14px;
-        color: #0055aa;
-        cursor: pointer;
+      text-align: right;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: #0055aa;
+      cursor: pointer;
+      transition: color $transition-timing;
+
+      &:hover {
+        color: #003d7a;
+        text-decoration: underline;
+      }
     }
 
     button {
       width: 100%;
-      padding: 12px;
+      padding: 14px 20px;
       background-color: $primary-color;
       color: white;
       border: none;
-      border-radius: 2px;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: 600;
       text-transform: uppercase;
       cursor: pointer;
-      font-weight: 500;
+      transition: background-color $transition-timing, transform 0.2s ease;
+      letter-spacing: 0.5px;
 
-      &:hover {
+      &:hover:not(:disabled) {
         background-color: $primary-hover;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(238, 77, 45, 0.3);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
       }
     }
 
@@ -81,13 +140,86 @@ $border-color: #dbdbdb;
       margin-top: 30px;
       text-align: center;
       font-size: 14px;
-      color: #ccc;
+      color: #999;
+
+      p {
+        margin: 0;
+      }
 
       span {
         color: $primary-color;
         cursor: pointer;
         font-weight: 500;
+        transition: color $transition-timing;
+
+        &:hover {
+          color: $primary-hover;
+          text-decoration: underline;
+        }
       }
+    }
+}
+
+// Responsive design
+@media (max-width: 480px) {
+  .login-page-wrapper {
+    padding: 15px;
+  }
+
+  .login-card {
+    padding: 30px 20px;
+    border-radius: 6px;
+    max-width: 100%;
+
+    h2 {
+      font-size: 20px;
+      margin-bottom: 25px;
+    }
+
+    form .form-group {
+      input {
+        padding: 11px 12px;
+        font-size: 16px; // Prevents zoom on iOS
+      }
+    }
+
+    button {
+      padding: 12px 16px;
+      font-size: 14px;
+    }
+
+    .footer-links {
+      font-size: 13px;
+      margin-top: 20px;
+    }
+  }
+}
+
+@media (max-width: 360px) {
+  .login-card {
+    padding: 25px 15px;
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    form .form-group {
+      margin-bottom: 15px;
+
+      label {
+        font-size: 13px;
+      }
+
+      input {
+        padding: 10px 12px;
+        font-size: 16px;
+      }
+    }
+
+    button {
+      padding: 11px 14px;
+      font-size: 14px;
     }
   }
 }

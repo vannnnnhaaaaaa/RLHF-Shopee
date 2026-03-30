@@ -30,9 +30,16 @@ export const NotificationDropdown = () => {
 
   const navigate = useNavigate();
 
-  // Fetch notifications on component mount
+  // Fetch notifications on component mount and listen for custom events
   useEffect(() => {
     fetchNotifications();
+    
+    // Add listener for custom 'updateNotifications' event
+    // This allows other components to trigger notification refresh
+    window.addEventListener('updateNotifications', fetchNotifications);
+    
+    // Cleanup listener on component unmount
+    return () => window.removeEventListener('updateNotifications', fetchNotifications);
   }, []);
 
   const fetchNotifications = async () => {

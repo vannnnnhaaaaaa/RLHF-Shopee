@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios'; // BẮT BUỘC IMPORT AXIOS
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
@@ -7,6 +8,7 @@ import { billService } from '../../../services/bill';
 import './style.scss';
 
 function Cart() {
+  const location = useLocation(); // Get location for state passed from ProductDetail
   const [cartData, setCartData] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]); // Sửa lại tên biến cho chuẩn: chứa mảng ID
   const [loading, setLoading] = useState(true);
@@ -27,7 +29,26 @@ function Cart() {
         });
 
         if (response.data.status === 'success') {
-          setCartData(response.data.data);
+          const data = response.data.data;
+          setCartData(data);
+          
+          // AUTO-SELECT: If a product ID was passed via location.state (from "Buy Now")
+          if (location.state?.autoSelectProductId) {
+            // Find all cart items for this product across all shops
+            const itemsToSelect = [];
+            data.forEach(shop => {
+              shop.items.forEach(item => {
+                if (item.product_id === location.state.autoSelectProductId) {
+                  itemsToSelect.push(item.cart_id);
+                }
+              });
+            });
+            
+            // Auto-select these items
+            if (itemsToSelect.length > 0) {
+              setSelectedIds(itemsToSelect);
+            }
+          }
         }
       } catch (error) {
         console.error("Lỗi lấy giỏ hàng:", error);
@@ -37,7 +58,7 @@ function Cart() {
     };
 
     fetchMyCart();
-  }, []);
+  }, [location.state]);
 
   const handleCheckout = async () => {
     if (selectedIds.length === 0) return;
@@ -81,7 +102,10 @@ function Cart() {
       // Có thể gọi lại hàm xóa hàng loạt hoặc reset state
       alert("Đặt hàng thành công!");
 
-      // Xóa các sản phẩm đã mua khỏi UI
+      // 6. Dispatch custom event to update notifications bell in Navbar
+      window.dispatchEvent(new Event('updateNotifications'));
+
+      // 7. Xóa các sản phẩm đã mua khỏi UI
       const newData = cartData.map(shop => ({
         ...shop,
         items: shop.items.filter(item => !selectedIds.includes(item.cart_id))

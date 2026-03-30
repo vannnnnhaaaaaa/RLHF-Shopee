@@ -13,17 +13,31 @@ user_router = APIRouter()
 def login (form_data: OAuth2PasswordRequestForm = Depends(), session : Session = Depends(get_session)) :
     user_in_db = session.exec(select(User).where(User.user_name == form_data.username)).first()
     if not user_in_db :
-        raise HTTPException(status_code= 400 , detail="User not found")
+        raise HTTPException(status_code=400 , detail="User not found")
     if not verify_password(form_data.password, user_in_db.hashed_password) :
         raise HTTPException(status_code=400 , detail="Wrong Password")
     
+    # ✅ FIXED: Ensure user has proper auth/role
+    if not user_in_db.auth:
+        user_in_db.auth = 'member'  # Set default role if missing
+        session.add(user_in_db)
+        session.commit()
+    
+    print(f"[LOGIN] User: {user_in_db.user_name}, Role: {user_in_db.auth}")
+    
     access_token = create_access_token({
-        "sub" :user_in_db.user_name ,
-        "user_id" : user_in_db.id,
-        "role" : user_in_db.auth
+        "sub": user_in_db.user_name,
+        "user_id": user_in_db.id,
+        "role": user_in_db.auth
     })
 
-    return {"access_token": access_token, "token_type": "bearer" , 'auth' :user_in_db.auth }
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "auth": user_in_db.auth,
+        "user_id": user_in_db.id,
+        "user_name": user_in_db.user_name
+    }
 
 @user_router.post("/register" , response_model=UserRead)
 def register (user : UserCreate  , session : Session = Depends(get_session)):

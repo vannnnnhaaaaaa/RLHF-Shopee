@@ -2,7 +2,7 @@ from sqlmodel import SQLModel , Field  ,Column , Relationship
 from typing import Optional , List 
 from pgvector.sqlalchemy import Vector
 from datetime import datetime
-
+from sqlalchemy.dialects.postgresql import JSONB
 
 
 class ChatMessage (SQLModel , table= True) :
@@ -10,6 +10,7 @@ class ChatMessage (SQLModel , table= True) :
     thread_id: str = Field(index=True)
     role: str
     content: str
+    suggested_product_ids: Optional[List[int]] = Field(default=None, sa_column=Column(JSONB))
     created_at: datetime = Field(default_factory=datetime.now)
     
 class Feedback(SQLModel, table=True):
@@ -304,10 +305,24 @@ class OrderItem(SQLModel, table=True):
     product: Product = Relationship()
 class Notification(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(index=True) # ID của người nhận thông báo
+    user_id: int = Field(foreign_key="customer.id", index=True) 
+    
+    # 1. PHÂN LOẠI THÔNG BÁO (VD: 'ORDER', 'PROMO', 'SYSTEM')
+    type: str = Field(default="ORDER", index=True) 
+    
     title: str
     body: str
     image_url: Optional[str] = None
+    
+    # Điểm đến 1: Đơn hàng hoặc Sản phẩm
     order_id: Optional[int] = None
+    product_id: Optional[int] = Field(default=None, foreign_key="product.id") 
+    
+    # Điểm đến 2: Đường dẫn tự do (Dành cho Marketing)
+    action_url: Optional[str] = None 
+    
+    # Trạng thái người dùng
     is_read: bool = Field(default=False)
+    is_deleted: bool = Field(default=False) # 3. XÓA MỀM
+    
     created_at: datetime = Field(default_factory=datetime.utcnow)

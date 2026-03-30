@@ -1,0 +1,181 @@
+$primary: #ff4500;
+$bg: #f4f7f6;
+$white: #ffffff;
+$text-main: #333;
+$border-color: #eee;
+
+.admin-dashboard-wrapper {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: $bg;
+  min-height: 100vh;
+  padding: 20px;
+  color: $text-main;
+
+  .main-container {
+    max-width: 1400px;
+    margin: auto;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h1 {
+      color: $primary;
+      margin: 0;
+    }
+  }
+
+  .tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+
+    .tab-btn {
+      background: #ddd;
+      color: #333;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.2s;
+
+      &:hover { background: #ccc; }
+      &.active {
+        background: $primary;
+        color: white;
+      }
+    }
+  }
+
+  .tab-content {
+    border-top: 3px solid $primary;
+    padding-top: 20px;
+  }
+
+  .dashboard-grid {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+
+    @media (max-width: 850px) {
+      flex-direction: column;
+    }
+  }
+
+  .left-column {
+    flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .right-column {
+    flex: 2;
+    position: sticky;
+    top: 20px;
+    
+    @media (max-width: 850px) {
+      position: static;
+      width: 100%;
+    }
+  }
+
+  .section {
+    background: $white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+
+    h2 {
+      color: $primary;
+      border-bottom: 2px solid $border-color;
+      padding-bottom: 10px;
+      margin-top: 0;
+      font-size: 1.2rem;
+    }
+  }
+
+  // Nút bấm chung
+  button {
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+
+    &.btn-primary { background: $primary; color: white; }
+    &.btn-success { background: #2ecc71; color: white; }
+    &.btn-danger { background: #e74c3c; color: white; }
+    &.btn-logout { background: #666; color: white; }
+    
+    &:hover { filter: brightness(0.9); }
+  }
+
+  .item-card {
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid $border-color;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    cursor: pointer;
+    transition: 0.2s;
+
+    &:hover { border-color: $primary; }
+  }
+
+  .status-badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    &.available { background: #e3fcef; color: #00875a; }
+  }
+
+  .chat-container {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+
+    .chat-message {
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 90%;
+      
+      &.msg-human { background-color: #e3f2fd; margin-right: auto; border-left: 4px solid #2196f3; }
+      &.msg-ai { background-color: #e8f5e9; margin-left: auto; border-right: 4px solid #4caf50; }
+    }
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    th, td { padding: 12px; border: 1px solid $border-color; text-align: left; }
+    thead { background-color: #f1f1f1; }
+  }
+
+  .stat-summary-box {
+    display: flex;
+    justify-content: space-between;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    border: 1px solid #e9ecef;
+    text-align: center;
+
+    .stat-item {
+      h3 { margin: 0; color: $primary; font-size: 24px; }
+      p { margin: 5px 0 0 0; color: #666; font-size: 14px; font-weight: bold; }
+    }
+  }
+}

@@ -1,6 +1,20 @@
 from sqlmodel import Session
 from src.backend.models import Notification, Order
 
+def create_notification(session: Session, user_id: int, title: str, body: str, order_id: int = None, image_url: str = None):
+    """
+    Tạo thông báo chung cho người dùng
+    """
+    notification = Notification(
+        user_id=user_id,
+        title=title,
+        body=body,
+        image_url=image_url,
+        order_id=order_id,
+        is_read=False
+    )
+    session.add(notification)
+
 def create_order_status_notification(session: Session, order: Order, new_status: str):
     """
     Tạo thông báo khi trạng thái đơn hàng thay đổi

@@ -62,14 +62,14 @@ const ManageOrders = () => {
   // Xử lý: Pending -> Accept
   const handlePrepareOrder = async (billId) => {
       try {
-          await sellerOrderService.updateOrderStatus(billId, 'accept');
+          await sellerOrderService.updateOrderStatus(billId, 'ACCEPT');
           
           // Cập nhật State Orders cục bộ
           setOrders(prevOrders => {
               if (activeTab === 'all') {
                   // Nếu ở tab Tất cả -> Chỉ đổi trạng thái dòng đó
                   return prevOrders.map(order => 
-                      order.id === billId ? { ...order, status: 'accept' } : order
+                      order.id === billId ? { ...order, status: 'ACCEPT' } : order
                   );
               } else {
                   // Nếu ở tab cụ thể (Cần gửi) -> Bấm xong thì loại bỏ dòng đó khỏi danh sách hiển thị
@@ -87,14 +87,14 @@ const ManageOrders = () => {
   // Xử lý: Accept -> Delivering
   const handleDeliverOrder = async (billId) => {
       try {
-          await sellerOrderService.updateOrderStatus(billId, 'delivering');
+          await sellerOrderService.updateOrderStatus(billId, 'DELIVERING');
           
           // Cập nhật State Orders cục bộ
           setOrders(prevOrders => {
               if (activeTab === 'all') {
                   // Đổi trạng thái hiển thị
                   return prevOrders.map(order => 
-                      order.id === billId ? { ...order, status: 'delivering' } : order
+                      order.id === billId ? { ...order, status: 'DELIVERING' } : order
                   );
               } else {
                   // Xóa khỏi tab 'Đã xác nhận'

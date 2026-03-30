@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { loginCustomer } from "../../services/customer";
 import './style.scss';
-import Footer from "../../components/Footer";
 
 function LoginPage() {
     const [formData, setFormData] = useState({
@@ -76,9 +75,8 @@ function LoginPage() {
         navigate('/customer/signup');
     }
     return (
-        <>
-            <div className="login-container">
-                <div className="login-card">
+        <div className="login-page-wrapper">
+            <div className="login-card">
                     {/* Đổi Title động theo URL để UI tái sử dụng tốt hơn */}
                     <h2>{isSellerLogin ? "ĐĂNG NHẬP KÊNH NGƯỜI BÁN" : "ĐĂNG NHẬP"}</h2>
                     
@@ -120,10 +118,8 @@ function LoginPage() {
                             <p>Mới biết đến ứng dụng? <span onClick={handleSignup}> Đăng ký</span></p>
                         </div>
                     </form>
-                </div>
             </div>
-            <Footer />
-        </>
+        </div>
     );
 }
 
