@@ -168,13 +168,45 @@ const WorkPage = () => {
                     
                     <h2 style={{ color: '#333', margin: 0 }}>{task.title || "Không có tiêu đề"}</h2>
                     <hr />
-                    <div>
-                        <strong style={{ color: '#ff4500' }}>📍 Root Cause (Nguyên nhân lỗi):</strong>
-                        <p style={{ fontStyle: 'italic', color: '#555' }}>{task.root_cause || "Admin chưa phân tích cụ thể."}</p>
+                    
+                    {/* Root Cause from AI */}
+                    <div style={{ marginBottom: '15px' }}>
+                        <strong style={{ color: '#3498db' }}>🤖 Root Cause (AI phân tích):</strong>
+                        <p style={{ fontStyle: task.root_cause_by_ai ? 'normal' : 'italic', color: task.root_cause_by_ai ? '#333' : '#999' }}>
+                            {task.root_cause_by_ai || "AI chưa đưa ra phân tích"}
+                        </p>
                     </div>
-                    <div>
-                        <strong>📝 Ghi chú từ Admin:</strong>
-                        <p>{task.comment || "Làm việc cẩn thận nhé!"}</p>
+
+                    {/* Root Cause from Human (Admin) */}
+                    <div style={{ marginBottom: '15px' }}>
+                        <strong style={{ color: '#e74c3c' }}>🧑‍💻 Root Cause (Human phân tích):</strong>
+                        <p style={{ fontStyle: task.root_cause_by_human ? 'normal' : 'italic', color: task.root_cause_by_human ? '#333' : '#999' }}>
+                            {task.root_cause_by_human || "Admin chưa phân tích cụ thể"}
+                        </p>
+                    </div>
+
+                    {/* Rating */}
+                    <div style={{ marginBottom: '15px' }}>
+                        <strong style={{ color: '#f39c12' }}>⭐ Mức độ hài lòng:</strong>
+                        <p style={{ fontSize: '16px', color: '#f39c12', marginTop: '5px' }}>
+                            {task.rating ? `${task.rating} / 5 Sao - ${'⭐'.repeat(task.rating)}` : 'Chưa có đánh giá'}
+                        </p>
+                    </div>
+
+                    {/* Customer Comment */}
+                    <div style={{ marginBottom: '15px' }}>
+                        <strong style={{ color: '#9b59b6' }}>💬 Đánh giá của Khách hàng:</strong>
+                        <p style={{ 
+                            backgroundColor: '#f8f9fa', 
+                            padding: '10px', 
+                            borderLeft: '4px solid #9b59b6',
+                            borderRadius: '3px',
+                            color: '#333',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word'
+                        }}>
+                            {task.comment || <em style={{ color: '#999' }}>Khách hàng chưa để lại bình luận</em>}
+                        </p>
                     </div>
                 </aside>
 

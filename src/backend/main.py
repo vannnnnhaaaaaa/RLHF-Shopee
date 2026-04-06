@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 from src.backend.Router_api.product import router_product
-from src.backend.Router_api.chat import router_chat
+# from src.backend.Router_api.chat import router_chat
 from src.backend.Router_api.feedback import router_feedback
 from src.backend.Router_api.task import task_router
 from src.backend.Router_api.user import user_router
@@ -29,7 +29,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(router_chat , tags=['Chat'])
+# app.include_router(router_chat , tags=['Chat'])
 app.include_router(router_product , tags=['Products'])
 app.include_router(router_feedback ,tags=['Feedback'] )
 app.include_router(task_router ,tags=['Task'] )

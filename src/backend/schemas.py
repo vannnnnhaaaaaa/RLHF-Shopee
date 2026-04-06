@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel , Field
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 from datetime import datetime
 from enum import Enum
@@ -145,6 +145,29 @@ class SellerCreateRequest(SQLModel):
 class CustomerAuthRequest(SQLModel):
     user_name: str
     password: str
+
+
+# --- DISTRIBUTED TASKS TRACKING ---
+
+class WorkerTaskStatus(SQLModel):
+    """Thông tin worker cho một task"""
+    user_id: int
+    username: str
+    status: str  # "pending", "activate", "completed"
+    time_taken_seconds: Optional[int] = None  # Chỉ có khi status="completed"
+    total_time: int = 0
+    active_time: int = 0
+
+
+class DistributedTaskResponse(SQLModel):
+    """Task đã được phân công với danh sách workers"""
+    id: int
+    title: str
+    description: Optional[str] = None
+    status: str
+    deadline: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    workers: List[WorkerTaskStatus]  # Danh sách 3 user
 
 
 class ProductCreateSchema(SQLModel):

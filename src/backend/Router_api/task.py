@@ -1,8 +1,9 @@
 from fastapi import Depends ,APIRouter , HTTPException
 
 from sqlmodel import Session ,select  , or_
+from datetime import datetime, timedelta
 from src.backend.models import Task , User  , TaskResult
-from src.backend.schemas import   TaskCreate , TaskReadDetail    , TaskApprove , TaskRead
+from src.backend.schemas import TaskCreate , TaskReadDetail, TaskApprove , TaskRead, DistributedTaskResponse, WorkerTaskStatus
 from src.backend.auth import get_current_admin, get_current_member
 from src.backend.connect_database import get_session
 from src.backend.services.task_service import approveTask , review_detail_message , getAllTask
@@ -151,4 +152,63 @@ def delete_task (task_id : int ,current_user : User = Depends(get_current_admin)
         session.commit()
         return {"ok": True ,'status' : "thanh cong" , "detail" : "da xoa thanh cong task can xoa"}
     raise HTTPException(status_code=400 , detail="khong tim thay task can xoa")
-  
+
+
+@task_router.get("/admin/distributed-tasks", response_model=list[DistributedTaskResponse])
+async def get_distributed_tasks(
+    current_admin: User = Depends(get_current_admin),
+    session: Session = Depends(get_session)
+):
+    """
+    Lấy danh sách các task đã được phân công (distributed) trong 3 ngày gần nhất.
+    Kèm theo danh sách 3 worker đang làm task đó.
+    """
+    # Lọc task từ 3 ngày gần nhất
+    three_days_ago = datetime.now() - timedelta(days=3)
+    
+    statement = select(Task).where(
+        Task.status == "distributed",
+        Task.started_at >= three_days_ago
+    ).order_by(Task.started_at.desc())
+    
+    tasks = session.exec(statement).all()
+    result = []
+    
+    for task in tasks:
+        # Lấy danh sách TaskResult (workers) cho task này
+        worker_statement = select(TaskResult).where(
+            TaskResult.task_id == task.id
+        ).order_by(TaskResult.created_at)
+        
+        task_results = session.exec(worker_statement).all()
+        
+        workers = []
+        for tr in task_results:
+            # Tính thời gian hoàn thành
+            time_taken_seconds = None
+            if tr.status == "completed" and task.completed_at and task.started_at:
+                time_diff = task.completed_at - task.started_at
+                time_taken_seconds = int(time_diff.total_seconds())
+            
+            worker = WorkerTaskStatus(
+                user_id=tr.member_user.id,
+                username=tr.member_user.user_name,
+                status=tr.status,
+                time_taken_seconds=time_taken_seconds,
+                total_time=tr.total_time,
+                active_time=tr.active_time
+            )
+            workers.append(worker)
+        
+        dist_task = DistributedTaskResponse(
+            id=task.id,
+            title=task.title,
+            description=task.description,
+            status=task.status,
+            deadline=task.deadline,
+            created_at=task.started_at,
+            workers=workers
+        )
+        result.append(dist_task)
+    
+    return result

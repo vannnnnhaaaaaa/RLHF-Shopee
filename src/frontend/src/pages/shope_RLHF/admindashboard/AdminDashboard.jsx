@@ -25,6 +25,10 @@ const AdminDashboard = () => {
     // States Conflict
     const [conflictTasks, setConflictTasks] = useState([]);
 
+    // States Distributed Tasks
+    const [distributedTasks, setDistributedTasks] = useState([]);
+    const [expandedTaskId, setExpandedTaskId] = useState(null);
+
     // 1. Kiểm tra Auth khi vào trang
     useEffect(() => {
         if (localStorage.getItem('auth') !== 'admin') {
@@ -43,6 +47,8 @@ const AdminDashboard = () => {
             loadConflictTasks();
         } else if (activeTab === 'approval') {
             loadTasks();
+        } else if (activeTab === 'distributed') {
+            loadDistributedTasks();
         }
     }, [activeTab]);
 
@@ -92,7 +98,7 @@ const AdminDashboard = () => {
             });
             const data = await res.json();
             setPendingTasks(data.filter(t => t.status === 'pending'));
-            setActiveTasks(data.filter(t => t.status === 'avaiable')); // Lưu ý: 'avaiable' (chính tả gốc của bạn)
+            setActiveTasks(data.filter(t => t.status === 'distributed'));
         } catch (e) { console.error(e); }
     };
 
@@ -175,6 +181,42 @@ const AdminDashboard = () => {
         } catch (e) { console.error(e); }
     };
 
+    const loadDistributedTasks = async () => {
+        try {
+            const res = await fetch(`${API_URL}/admin/distributed-tasks`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            const data = await res.json();
+            setDistributedTasks(data || []);
+        } catch (e) { console.error(e); }
+    };
+
+    const getStatusBadgeColor = (status) => {
+        switch(status) {
+            case 'pending': return '#757575';      // Gray
+            case 'activate': return '#FFC107';     // Yellow
+            case 'completed': return '#4CAF50';    // Green
+            default: return '#999';
+        }
+    };
+
+    const getStatusLabel = (status) => {
+        switch(status) {
+            case 'pending': return 'Chờ xử lý';
+            case 'activate': return 'Đang làm';
+            case 'completed': return 'Đã hoàn thành';
+            default: return status;
+        }
+    };
+
+    const formatTime = (seconds) => {
+        if (seconds === null || seconds === undefined) return '-';
+        if (seconds < 60) return `${seconds}s`;
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}m ${secs}s`;
+    };
+
     const handleLogout = () => {
         localStorage.clear();
         navigate('/shope_rlhf/login');
@@ -192,6 +234,7 @@ const AdminDashboard = () => {
                     <button className={`tab-btn ${activeTab === 'approval' ? 'active' : ''}`} onClick={() => setActiveTab('approval')}>Duyệt Task đầu vào</button>
                     <button className={`tab-btn ${activeTab === 'conflict' ? 'active' : ''}`} onClick={() => setActiveTab('conflict')}>Xử lý Conflict</button>
                     <button className={`tab-btn ${activeTab === 'stats' ? 'active' : ''}`} onClick={() => setActiveTab('stats')}>Dashboard Hiệu suất</button>
+                    <button className={`tab-btn ${activeTab === 'distributed' ? 'active' : ''}`} onClick={() => setActiveTab('distributed')}>Theo dõi Task phân công</button>
                 </div>
 
                 {/* TAB 1: DUYỆT TASK */}
@@ -346,6 +389,124 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                 )}
+
+                {/* TAB 4: THEO DÕI TASK PHÂN CÔNG */}
+                {activeTab === 'distributed' && (
+                    <div className="tab-content">
+                        <div className="section">
+                            <h2>📊 Danh sách Task đã phân công (3 ngày gần nhất)</h2>
+                            {distributedTasks.length === 0 ? (
+                                <p style={{ color: '#999', textAlign: 'center' }}>Không có task phân công nào.</p>
+                            ) : (
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                            <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #ddd' }}>
+                                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Task ID</th>
+                                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Tiêu đề</th>
+                                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Trạng thái</th>
+                                                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold' }}>Hạn chót</th>
+                                                <th style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>Hành động</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {distributedTasks.map((task) => (
+                                                <React.Fragment key={task.id}>
+                                                    {/* ROW CHÍNH CỦA TASK */}
+                                                    <tr style={{ borderBottom: '1px solid #eee', cursor: 'pointer', backgroundColor: expandedTaskId === task.id ? '#f9f9f9' : 'white' }}>
+                                                        <td style={{ padding: '12px', fontWeight: 'bold' }}>#{task.id}</td>
+                                                        <td style={{ padding: '12px' }}>
+                                                            <strong>{task.title}</strong>
+                                                            <p style={{ fontSize: '13px', color: '#666', margin: '5px 0 0 0' }}>{task.description}</p>
+                                                        </td>
+                                                        <td style={{ padding: '12px' }}>
+                                                            <span style={{
+                                                                display: 'inline-block',
+                                                                padding: '4px 8px',
+                                                                borderRadius: '4px',
+                                                                backgroundColor: getStatusBadgeColor(task.status),
+                                                                color: 'white',
+                                                                fontSize: '12px',
+                                                                fontWeight: 'bold'
+                                                            }}>
+                                                                {getStatusLabel(task.status)}
+                                                            </span>
+                                                        </td>
+                                                        <td style={{ padding: '12px', fontSize: '13px', color: '#666' }}>
+                                                            {new Date(task.deadline).toLocaleDateString('vi-VN')}
+                                                        </td>
+                                                        <td style={{ padding: '12px', textAlign: 'center' }}>
+                                                            <button
+                                                                onClick={() => setExpandedTaskId(expandedTaskId === task.id ? null : task.id)}
+                                                                style={{
+                                                                    padding: '6px 12px',
+                                                                    backgroundColor: expandedTaskId === task.id ? '#ff6b6b' : '#2196F3',
+                                                                    color: 'white',
+                                                                    border: 'none',
+                                                                    borderRadius: '4px',
+                                                                    cursor: 'pointer',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: 'bold'
+                                                                }}
+                                                            >
+                                                                {expandedTaskId === task.id ? '▲ Thu gọn' : '▼ Xem workers'}
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+
+                                                    {/* ROW MỞ RỘNG - DANH SÁCH WORKERS */}
+                                                    {expandedTaskId === task.id && (
+                                                        <tr style={{ backgroundColor: '#fafafa', borderBottom: '2px solid #ddd' }}>
+                                                            <td colSpan="5" style={{ padding: '20px' }}>
+                                                                <div style={{ marginLeft: '20px' }}>
+                                                                    <h3 style={{ marginBottom: '15px', color: '#333' }}>👥 Danh sách 3 Workers</h3>
+                                                                    <table style={{ width: '100%', borderCollapse: 'collapse', marginLeft: '10px' }}>
+                                                                        <thead>
+                                                                            <tr style={{ backgroundColor: '#e3f2fd', borderBottom: '1px solid #ddd' }}>
+                                                                                <th style={{ padding: '10px', textAlign: 'left', fontWeight: 'bold', color: '#1976D2' }}>Tên User</th>
+                                                                                <th style={{ padding: '10px', textAlign: 'left', fontWeight: 'bold', color: '#1976D2' }}>Trạng thái</th>
+                                                                                <th style={{ padding: '10px', textAlign: 'left', fontWeight: 'bold', color: '#1976D2' }}>Thời gian hoàn thành</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {task.workers.map((worker, idx) => (
+                                                                <tr key={worker.user_id} style={{ borderBottom: '1px solid #eee' }}>
+                                                                    <td style={{ padding: '10px' }}>
+                                                                        <strong>{idx + 1}. {worker.username}</strong>
+                                                                    </td>
+                                                                    <td style={{ padding: '10px' }}>
+                                                                        <span style={{
+                                                                            display: 'inline-block',
+                                                                            padding: '4px 8px',
+                                                                            borderRadius: '3px',
+                                                                            backgroundColor: getStatusBadgeColor(worker.status),
+                                                                            color: 'white',
+                                                                            fontSize: '11px',
+                                                                            fontWeight: 'bold'
+                                                                        }}>
+                                                                            {getStatusLabel(worker.status)}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td style={{ padding: '10px', color: worker.status === 'completed' ? '#4CAF50' : '#999', fontWeight: worker.status === 'completed' ? 'bold' : 'normal' }}>
+                                                                        {worker.status === 'completed' ? `⏱️ ${formatTime(worker.time_taken_seconds)}` : '-'}
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
+    </div>
+)}
             </div>
         </div>
     );
