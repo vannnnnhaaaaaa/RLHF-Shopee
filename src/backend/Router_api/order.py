@@ -4,20 +4,115 @@ from typing import Optional
 
 from src.backend.connect_database import get_session
 # Lưu ý: Hãy chắc chắn bạn đã đổi tên các schema từ Bill sang Order trong file schemas.py nhé
-from src.backend.schemas import CreateOrder, ResponseOrder, StatusOrderbyCustomer 
+from src.backend.schemas import CreateOrder, ResponseOrder, StatusOrderbyCustomer , CheckoutPreviewRequest
 from src.backend.services.order_service import create_checkout_orders, get_customer_orders , update_status_logic
 from src.backend.services.customer_service import check_exist_info_customer
 from src.backend.services.notification_service import create_order_status_notification
 from src.backend.auth import get_current_customer, get_current_seller
 # Đã đổi tên Model từ Bill -> Order, BillDetail -> OrderItem
-from src.backend.models import Order, OrderItem, Product, Customer 
+from src.backend.models import Order, OrderItem, Product, Customer ,CartItem
 
 router_order = APIRouter(prefix="/orders", tags=["Orders"]) 
 
 # =====================================================================
 # 1. NHÓM API DÀNH CHO NGƯỜI MUA (CUSTOMER)
 # =====================================================================
+@router_order.post("/checkout/preview")
+def preview_checkout_logic(
+    request: CheckoutPreviewRequest,
+    current_user = Depends(get_current_customer),
+    session: Session = Depends(get_session)
+):
+    """
+    API Tính toán chi phí trước khi Đặt hàng.
+    Frontend gửi mảng cart_ids đã chọn -> Backend tính tiền hàng, tiền ship và gom nhóm theo Shop.
+    """
+    try:
+        # 1. Truy vấn các CartItem khớp với danh sách ID gửi lên và phải thuộc về current_user
+        statement = (
+            select(CartItem, Product)
+            .join(Product, CartItem.product_id == Product.id)
+            .where(CartItem.customer_id == current_user.id)
+            .where(CartItem.id.in_(request.cart_ids))
+        )
+        results = session.exec(statement).all()
 
+        if not results:
+            raise HTTPException(
+                status_code=400, 
+                detail="Không tìm thấy sản phẩm nào hợp lệ trong giỏ hàng để thanh toán."
+            )
+
+        # 2. Khởi tạo biến để lưu trữ kết quả tính toán
+        shops_dict = {}
+        merchandise_subtotal = 0
+        shipping_fee_per_shop = 14000  # Giả sử phí ship đồng giá 14k/Shop. (Sau này có thể viết logic tính theo km ở đây)
+
+        # 3. Quét qua dữ liệu để tính toán và gom nhóm
+        for cart_item, product in results:
+            shop_id = getattr(product, 'seller_id', 1)
+            
+            # --- FIX TRỊÊT ĐỂ LỖI NoneType TẠI ĐÂY ---
+            original_price = product.price or 0
+            # Ép kiểu an toàn: Nếu DB trả về NULL (None), nó sẽ nhận giá trị 0
+            discount_percent = getattr(product, 'discount_percent', 0) or 0
+            stock_count = getattr(product, 'stock', 0) or 0
+            
+            if discount_percent > 0:
+                final_price = round(original_price * (1 - discount_percent / 100))
+            else:
+                final_price = original_price
+
+            # Cộng dồn tiền hàng
+            item_subtotal = final_price * cart_item.quantity
+            merchandise_subtotal += item_subtotal
+
+            # Tạo khung Shop nếu chưa có
+            if shop_id not in shops_dict:
+                shops_dict[shop_id] = {
+                    "shop_id": shop_id,
+                    "shop_name": f"Shop của Người bán {shop_id}",
+                    "shop_badge": "Yêu thích",
+                    "shipping_fee": shipping_fee_per_shop,
+                    "items": []
+                }
+                
+            # Đẩy item vào Shop tương ứng
+            shops_dict[shop_id]["items"].append({
+                "cart_id": cart_item.id,
+                "product_id": product.id,
+                "name": product.name,
+                "variant": "Mặc định",
+                "image": getattr(product, 'image_link', 'https://via.placeholder.com/80'),
+                "original_price": original_price,
+                "price": final_price, 
+                "discount_percent": discount_percent,
+                "quantity": cart_item.quantity,
+                "stock": stock_count
+            })
+
+        # 4. Tính Tổng tiền Ship và Tổng Thanh Toán
+        checkout_data = list(shops_dict.values())
+        shipping_subtotal = len(checkout_data) * shipping_fee_per_shop
+        total_payment = merchandise_subtotal + shipping_subtotal
+
+        # 5. Trả về format JSON cực chuẩn cho trang Checkout của React
+        return {
+            "status": "success",
+            "message": "Tính toán giỏ hàng thành công",
+            "data": {
+                "merchandise_subtotal": merchandise_subtotal,
+                "shipping_subtotal": shipping_subtotal,
+                "total_payment": total_payment,
+                "checkout_data": checkout_data
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"API Error Checkout Preview: {e}")
+        raise HTTPException(status_code=500, detail="Lỗi hệ thống khi tính toán giỏ hàng")
 @router_order.post("/checkout")
 def create_order_endpoint(
     order_data: CreateOrder, 

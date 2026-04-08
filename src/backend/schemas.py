@@ -306,3 +306,6 @@ class ResponseNotification(SQLModel):
     order_id: Optional[int]
     is_read: bool
     created_at: datetime
+
+class CheckoutPreviewRequest(BaseModel):
+    cart_ids: List[int]

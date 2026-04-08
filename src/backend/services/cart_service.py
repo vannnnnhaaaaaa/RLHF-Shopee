@@ -81,7 +81,7 @@ def get_cart_items(db: Session, customer_id: int):
     
     for cart_item, product in results:
         # Lấy ID của người bán (Chủ shop)
-        # Nếu model Product của bạn không có seller_id, hãy đổi thành 1 ID mặc định (vd: shop_id = 1)
+       
         shop_id = getattr(product, 'seller_id', 1) 
         
         # Nếu shop này chưa có trong từ điển, tạo mới một "khung" cho shop đó
@@ -102,6 +102,7 @@ def get_cart_items(db: Session, customer_id: int):
             "image": getattr(product, 'image_link', 'https://via.placeholder.com/80'),
             "price": product.price,
             "quantity": cart_item.quantity,
+            "discount_percent": getattr(product, 'discount_percent', 0),
             "stock": product.stock
         })
         

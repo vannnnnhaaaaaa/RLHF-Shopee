@@ -7,7 +7,7 @@ const OrderCard = ({ order, onUpdateSuccess }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
-
+  console.log(order)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -33,7 +33,7 @@ const OrderCard = ({ order, onUpdateSuccess }) => {
     if (new_status === 'CANCELLED') {
       const isConfirmed = window.confirm("Bạn có chắc chắn muốn hủy đơn hàng này không?");
       if (!isConfirmed) {
-        return; 
+        return;
       }
     }
 
@@ -56,12 +56,10 @@ const OrderCard = ({ order, onUpdateSuccess }) => {
       console.warn('No items available for rebuy navigation');
       return;
     }
-    
+    // Tạm thời điều hướng về sản phẩm đầu tiên để mua lại
     const productId = order.items[0].product_id;
     if (productId) {
       navigate(`/customer/product/${productId}`);
-    } else {
-      console.warn('Product ID is not available for rebuy');
     }
   };
 
@@ -71,7 +69,7 @@ const OrderCard = ({ order, onUpdateSuccess }) => {
       <div className="order-header">
         <div className="shop-info">
           <span className="badge-favorite">Yêu thích</span>
-          <span className="shop-name">Tên Shop (Đang cập nhật)</span>
+          <span className="shop-name">Mã Đơn: #{order.id}</span>
           <button className="btn-chat">
             <span className="icon">💬</span> Chat
           </button>
@@ -91,45 +89,54 @@ const OrderCard = ({ order, onUpdateSuccess }) => {
         </div>
       </div>
 
-      {/* Body */}
+
+      {/* Body: DÙNG VÒNG LẶP .MAP() ĐỂ HIỂN THỊ TẤT CẢ SẢN PHẨM */}
       <div className="order-body">
-        <div className="product-info-wrapper">
-          {/* Chỉ hiển thị 1 ảnh đại diện duy nhất */}
-          <div className="product-image-placeholder">
-            {order.items && order.items.length > 0 ? (
-              <img
-                src={order.items[0].product_image}
-                alt="Product"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            ) : "Ảnh"}
-          </div>
+        {order.items && order.items.length > 0 ? (
+          order.items.map((item, index) => (
+            <div key={index} className="order-item-row">
 
-          <div className="product-details">
-            <h3 className="product-name">
-              {order.items && order.items.length > 0 ? order.items[0].product_name : "Đang cập nhật"}
-            </h3>
-            <p className="product-variation">
-              Phân loại: {order.items && order.items.length > 0 && order.items[0].product_category ? order.items[0].product_category : "Không có"}
-            </p>
-            <p className="product-quantity">
-              x{order.items && order.items.length > 0 ? order.items[0].quantity : 1}
-            </p>
-          </div>
-        </div>
+              <div className="product-info-wrapper">
+                <div className="product-image-placeholder">
+                  <img
+                    src={item.product_image || item.image_link}
+                    alt={item.product_name}
+                  />
+                </div>
 
-        <div className="product-pricing">
-          <span className="current-price">
-            ₫{order.total_price?.toLocaleString('vi-VN')}
-          </span>
-        </div>
+                <div className="product-details">
+                  <h3 className="product-name">
+                    {item.product_name}
+                  </h3>
+                  <p className="product-variation">
+                    Phân loại: {item.product_category || "Mặc định"}
+                  </p>
+                  <p className="product-quantity">
+                    x{item.quantity}
+                  </p>
+                </div>
+              </div>
+
+              {/* GIÁ CỦA TỪNG SẢN PHẨM */}
+              <div className="product-pricing">
+                <span className="current-price" style={{ color: '#ee4d2d', fontWeight: '500' }}>
+                  {/* Dùng toLocaleString('vi-VN') để tạo dấu chấm phân cách hàng nghìn */}
+                  ₫{item.price_at_purchase ? item.price_at_purchase.toLocaleString('vi-VN') : '0'}
+                </span>
+              </div>
+
+            </div>
+          ))
+        ) : (
+          <div style={{ padding: '20px', textAlign: 'center', color: '#888' }}>Không có dữ liệu sản phẩm</div>
+        )}
       </div>
 
-      {/* Footer */}
+      {/* Footer: TỔNG TIỀN CẢ ĐƠN NẰM Ở ĐÂY CHỨ KHÔNG NẰM Ở BODY */}
       <div className="order-footer">
         <div className="total-amount-wrapper">
           <span className="total-label">Thành tiền:</span>
-          <span className="total-value">
+          <span className="total-value" style={{ color: '#ee4d2d', fontSize: '20px', fontWeight: '500' }}>
             ₫{order.total_price?.toLocaleString('vi-VN')}
           </span>
         </div>
@@ -138,8 +145,8 @@ const OrderCard = ({ order, onUpdateSuccess }) => {
           {(currentStatus === 'PENDING' || currentStatus === 'ACCEPT') && (
             <>
               <button className="btn-secondary">Liên hệ người bán</button>
-              <button 
-                className="btn-primary btn-cancel" 
+              <button
+                className="btn-primary btn-cancel"
                 onClick={() => handleUpdateStatus(order.id, 'CANCELLED')}
               >
                 Hủy đơn hàng
@@ -150,7 +157,7 @@ const OrderCard = ({ order, onUpdateSuccess }) => {
           {currentStatus === 'DELIVERING' && (
             <>
               <button className="btn-secondary">Liên hệ người bán</button>
-              <button 
+              <button
                 className="btn-primary btn-received"
                 onClick={() => handleUpdateStatus(order.id, 'COMPLETED')}
               >

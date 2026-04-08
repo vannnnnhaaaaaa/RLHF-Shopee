@@ -17,61 +17,58 @@ def get_customer_orders(status: str, current_id: int, session: Session, limit: i
         
         if normalized_status != 'ALL':
             statement_order = statement_order.where(Order.status == normalized_status)
+            
         statement_order = statement_order.order_by(Order.created_at.desc())
-        # Limit và Offset ở đây sẽ chuẩn xác là đếm số lượng Order
+        # Limit và Offset đếm chuẩn xác số lượng Order
         statement_order = statement_order.limit(limit).offset(offset)
         orders = session.exec(statement_order).all()
 
-        # Nếu không có order nào, ngưng luôn và trả về mảng rỗng
         if not orders:
             return []
 
         # ==========================================
-        # BƯỚC 2: JOIN LẤY SẢN PHẨM TỪ ORDERITEM VÀ PRODUCT
+        # BƯỚC 2: JOIN LẤY SẢN PHẨM TỪ ORDERITEM VÀ PRODUCT (Chống N+1 Query)
         # ==========================================
-        # Lấy danh sách các ID của Order vừa tìm được
         order_ids = [o.id for o in orders]
 
-        # Query JOIN giữa OrderItem và Product
         statement_items = select(OrderItem, Product).join(
             Product, OrderItem.product_id == Product.id
         ).where(
-            OrderItem.order_id.in_(order_ids) # Chỉ lấy item của những order đang hiển thị
+            OrderItem.order_id.in_(order_ids) 
         )
         
-        # Kết quả trả về là list các tuple: [(OrderItem, Product), (OrderItem, Product)...]
         item_results = session.exec(statement_items).all()
 
         # ==========================================
         # BƯỚC 3: GOM NHÓM DỮ LIỆU THÀNH JSON CHO REACT
         # ==========================================
-        # Tạo một dictionary để nhét items vào đúng order của nó
         order_dict = {
             order.id: {
-                **order.model_dump(), # Lấy toàn bộ info của Order (total_price, status...)
-                "items": []          # Tạo sẵn mảng rỗng để hứng sản phẩm
+                **order.model_dump(),
+                "items": []          
             }
             for order in orders
         }
 
-        # Lặp qua kết quả JOIN để nhét sản phẩm vào mảng items tương ứng
         for order_item, product in item_results:
             order_dict[order_item.order_id]["items"].append({
                 "id": order_item.id,
                 "product_id": product.id,
                 "product_category": product.category,
                 "product_name": product.name,
-                "product_image": product.image_link,  # Ảnh chính (primary) từ Product table
+                "product_image": product.image_link,
                 "quantity": order_item.quantity,
-                "price": order_item.price_at_purchase
+                
+                # FIX TẠI ĐÂY: Đổi tên key thành price_at_purchase để khớp 100% với Frontend 
+                # (Kèm "or 0" để lỡ data cũ chưa có giá thì không bị crash)
+                "price_at_purchase": order_item.price_at_purchase or 0
             })
 
-        # Trả về một mảng chứa các object hoàn chỉnh
         return list(order_dict.values())
         
     except Exception as e:
-        raise Exception(f"Database Error: {e}")
-
+        print(f"Lỗi truy vấn đơn hàng Customer: {e}")
+        raise HTTPException(status_code=500, detail="Lỗi hệ thống khi lấy danh sách đơn hàng.")
 
 def create_checkout_orders(order_data: CreateOrder, customer_id: int, session: Session):
     """
@@ -80,6 +77,9 @@ def create_checkout_orders(order_data: CreateOrder, customer_id: int, session: S
     try:
         calculated_product_total = 0.0
         purchased_product_ids = []
+        
+        # Tạo Dictionary để lưu lại giá bán cuối cùng (đã trừ discount) của từng sản phẩm
+        final_prices_dict = {} 
 
         # --- BƯỚC 1 & 2: KIỂM TRA TỒN KHO, TRỪ TỒN KHO, CỘNG LƯỢT BÁN VÀ TÍNH TIỀN ---
         for item in order_data.details:
@@ -94,20 +94,29 @@ def create_checkout_orders(order_data: CreateOrder, customer_id: int, session: S
                     detail=f"Sản phẩm '{product.name}' chỉ còn {product.stock} sản phẩm."
                 )
             
-            # Trừ tồn kho
+            # Trừ tồn kho & Tăng số lượng đã bán
             product.stock -= item.quantity
-            
-            # Tăng số lượng đã bán (sold_count)
             current_sold = product.sold_count if product.sold_count is not None else 0
             product.sold_count = current_sold + item.quantity
             
             session.add(product)
             
-            # Tính tiền dựa trên giá gốc trong DB
-            calculated_product_total += product.price * item.quantity
+            # FIX: Tính toán giá bán đã trừ phần trăm giảm giá (Giống API preview)
+            original_price = product.price or 0
+            discount_percent = getattr(product, 'discount_percent', 0) or 0
+            if discount_percent > 0:
+                final_price = round(original_price * (1 - discount_percent / 100))
+            else:
+                final_price = original_price
+
+            # Lưu lại mức giá chốt đơn này để dùng cho BƯỚC 4
+            final_prices_dict[item.product_id] = final_price
+
+            # Tính tiền dựa trên giá ĐÃ GIẢM
+            calculated_product_total += final_price * item.quantity
             purchased_product_ids.append(item.product_id)
 
-        # --- BƯỚC 3: TẠO ORDER ---
+        # --- BƯỚC 3: TẠO 1 ORDER CHUNG (Gánh tổng tiền) ---
         final_total_price = (
             calculated_product_total 
             + order_data.total_shipping 
@@ -131,14 +140,14 @@ def create_checkout_orders(order_data: CreateOrder, customer_id: int, session: S
         session.add(new_order)
         session.flush()
 
-        # --- BƯỚC 4: TẠO ORDER ITEM ---
+        # --- BƯỚC 4: TẠO N ORDER ITEM (Chi tiết từng sản phẩm) ---
         for item in order_data.details:
-            db_product = session.get(Product, item.product_id)
+            # FIX: KHÔNG CẦN CHỌC VÀO DB LẦN NỮA, LẤY THẲNG GIÁ TỪ DICTIONARY ĐÃ TÍNH Ở BƯỚC 1
             order_item = OrderItem(
                 order_id=new_order.id,
                 product_id=item.product_id,
                 quantity=item.quantity,
-                price_at_purchase=db_product.price 
+                price_at_purchase=final_prices_dict[item.product_id] 
             )
             session.add(order_item)
 
@@ -152,31 +161,25 @@ def create_checkout_orders(order_data: CreateOrder, customer_id: int, session: S
             for cart_item in items_to_delete:
                 session.delete(cart_item)
 
-        # --- BƯỚC 6: COMMIT ---
+        # --- BƯỚC 6: COMMIT LƯU DATABASE ---
         session.commit()
         session.refresh(new_order)
 
-        # --- BƯỚC 7: TẠO THÔNG BÁO CHO KHÁCH HÀNG ---
+        # --- BƯỚC 7: TẠO N THÔNG BÁO CHO N SẢN PHẨM ---
         try:
-            # Get image_url from first product to display in notification
-            image_url = None
-            if new_order.items and len(new_order.items) > 0:
-                product = session.get(Product, new_order.items[0].product_id)
+            for item in order_data.details:
+                product = session.get(Product, item.product_id)
                 if product:
-                    image_url = product.image_link
-            
-            # Create notification for successful order creation
-            create_notification(
-                session=session,
-                user_id=new_order.customer_id,
-                title="Đặt hàng thành công!",
-                body=f"Đơn hàng #{new_order.id} của bạn đã được tạo thành công.",
-                order_id=new_order.id,
-                image_url=image_url
-            )
-            session.commit()  # Commit the notification to ensure it's permanently saved
+                    create_notification(
+                        session=session,
+                        user_id=new_order.customer_id,
+                        title="Đặt hàng thành công!",
+                        body=f"Sản phẩm '{product.name}' đã được đưa vào đơn hàng #{new_order.id}.",
+                        order_id=new_order.id,
+                        image_url=product.image_link
+                    )
+            session.commit() 
         except Exception as noti_error:
-            # Log the error but do NOT allow it to rollback the successful order creation
             print(f"Warning: Could not create notification for order {new_order.id}: {noti_error}")
 
         return {
@@ -192,7 +195,6 @@ def create_checkout_orders(order_data: CreateOrder, customer_id: int, session: S
         session.rollback()
         print(f"Transaction Error: {str(e)}")
         raise HTTPException(status_code=500, detail="Lỗi hệ thống khi xử lý thanh toán.")
-    
 
 def update_status_logic (session : Session , customer_id : int , status : str , order_id : int) :
     try :

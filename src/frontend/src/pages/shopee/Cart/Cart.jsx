@@ -1,25 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import axios from 'axios'; // BẮT BUỘC IMPORT AXIOS
-import Navbar from '../../../components/Navbar';
-import Footer from '../../../components/Footer';
+import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import ShopGroup from '../../../components/ShopGroup';
-import { billService } from '../../../services/bill';
 import './style.scss';
 
 function Cart() {
-  const location = useLocation(); // Get location for state passed from ProductDetail
+  const location = useLocation();
+  const navigate = useNavigate(); // Dùng để chuyển hướng trang
+
   const [cartData, setCartData] = useState([]);
-  const [selectedIds, setSelectedIds] = useState([]); // Sửa lại tên biến cho chuẩn: chứa mảng ID
+  const [selectedIds, setSelectedIds] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false)
-  // 1. GỌI API KHI MỞ TRANG
+
+  // 1. TẢI DỮ LIỆU GIỎ HÀNG
   useEffect(() => {
     const fetchMyCart = async () => {
       const token = localStorage.getItem('access_token');
       if (!token) {
         alert("Vui lòng đăng nhập!");
-        window.location.href = '/login';
+        navigate('/login'); // Dùng navigate thay vì window.location.href cho chuẩn React
         return;
       }
 
@@ -29,22 +28,41 @@ function Cart() {
         });
 
         if (response.data.status === 'success') {
-          const data = response.data.data;
-          setCartData(data);
-          
-          // AUTO-SELECT: If a product ID was passed via location.state (from "Buy Now")
+          const rawData = response.data.data;
+
+          // Tiền xử lý dữ liệu: Tính toán giá gốc và giá đã giảm
+          const formattedData = rawData.map(shop => ({
+            ...shop,
+            items: shop.items.map(item => {
+              const originalPrice = item.price || 0;
+              const discountPercent = item.discount_percent || 0;
+
+              // Tính giá màu đỏ cuối cùng
+              const finalPrice = discountPercent > 0
+                ? Math.round(originalPrice * (1 - discountPercent / 100))
+                : originalPrice;
+
+              return {
+                ...item,
+                original_price: originalPrice,
+                price: finalPrice
+              };
+            })
+          }));
+
+          setCartData(formattedData);
+
+          // Xử lý Auto-Select nếu chuyển từ trang Detail sang bằng nút "Mua Ngay"
           if (location.state?.autoSelectProductId) {
-            // Find all cart items for this product across all shops
             const itemsToSelect = [];
-            data.forEach(shop => {
+            formattedData.forEach(shop => {
               shop.items.forEach(item => {
                 if (item.product_id === location.state.autoSelectProductId) {
                   itemsToSelect.push(item.cart_id);
                 }
               });
             });
-            
-            // Auto-select these items
+
             if (itemsToSelect.length > 0) {
               setSelectedIds(itemsToSelect);
             }
@@ -58,103 +76,57 @@ function Cart() {
     };
 
     fetchMyCart();
-  }, [location.state]);
+  }, [location.state, navigate]);
 
+
+  
+  // 2. CHUYỂN HƯỚNG SANG TRANG CHECKOUT 
   const handleCheckout = async () => {
-    if (selectedIds.length === 0) return;
-    setIsProcessing(true);
+    if (selectedIds.length === 0) {
+      alert("Vui lòng chọn ít nhất 1 sản phẩm để thanh toán!");
+      return;
+    }
+
+    // Phải gọi token ra vì hàm này nằm ngoài useEffect
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      alert("Vui lòng đăng nhập!");
+      return navigate('/login');
+    }
+
     try {
-      // 1. Lấy ra danh sách các item đang được tick chọn
-      const selectedItems = cartData
-        .flatMap(shop => shop.items)
-        .filter(item => selectedIds.includes(item.cart_id));
+      // BẮT BUỘC phải có chữ 'await' để đợi Backend tính toán xong trả về
+      const response = await axios.get('http://localhost:8000/customer/check-profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-      // 2. Map dữ liệu sang chuẩn CreateBillDetail của Backend
-      const billDetails = selectedItems.map(item => ({
-        product_id: item.product_id, // Đảm bảo API cart trả về cả product_id
-        quantity: item.quantity,
-        price_at_purchase: item.price
-      }));
-
-      // 3. Khởi tạo payload hóa đơn (Cập nhật cho khớp Schema)
-      const payload = {
-
-        total_price: totalAmount,
-        total_shipping: 30000, // Phí ship mặc định
-
-        payment_method: "COD",
-        payment_status: "pending", 
-
-        discount_product: 0.0,
-        discount_shipping: 0.0,
-        shopee_voucher_id: null,
-        seller_voucher_id: null,
-
-        // Mảng chi tiết sản phẩm
-        details: billDetails
-      };
-      console.log('2')
-      // 4. Gọi API tạo Bill
-      const newBill = await billService.createBill(payload);
-      console.log("Tạo đơn hàng thành công:", newBill);
-
-      // 5. Sau khi mua thành công, xóa các sản phẩm đó khỏi giỏ hàng
-      // Có thể gọi lại hàm xóa hàng loạt hoặc reset state
-      alert("Đặt hàng thành công!");
-
-      // 6. Dispatch custom event to update notifications bell in Navbar
-      window.dispatchEvent(new Event('updateNotifications'));
-
-      // 7. Xóa các sản phẩm đã mua khỏi UI
-      const newData = cartData.map(shop => ({
-        ...shop,
-        items: shop.items.filter(item => !selectedIds.includes(item.cart_id))
-      })).filter(shop => shop.items.length > 0);
-      window.dispatchEvent(new Event('cartUpdated'));
-      setCartData(newData);
-      setSelectedIds([]);
-
-    } catch (error) {
-      // Dùng console.dir để xem toàn bộ cấu trúc object thay vì dạng string
-      console.dir(error);
-
-      // Kiểm tra xem lỗi có phải do Backend trả về không (có response)
-      if (error.response) {
-        // FastAPI mặc định bọc dữ liệu lỗi trong field 'detail'
-        const errorDetail = error.response.data.detail;
-
-        console.log("Chi tiết lỗi từ Backend:", errorDetail);
-
-        // Kiểm tra đúng mã lỗi để điều hướng
-        if (errorDetail && errorDetail.code === 'MISSING_INFO') {
-          alert(errorDetail.message); // Báo: "Vui lòng cập nhật đầy đủ..."
-          window.location.href = '/customer/account';
-          return; // Dừng lại ở đây, không chạy xuống dòng alert chung chung bên dưới
-        }
+      // Kiểm tra data từ Backend trả về
+      if (response.data === true) {
+        // Thông tin đã đầy đủ -> Đá sang trang Checkout mang theo mảng ID
+        navigate('/customer/checkout', {
+          state: { selectedCartIds: selectedIds }
+        });
+      } else {
+        // Thông tin bị thiếu -> Nhắc nhở và đá sang trang Profile
+        alert("Bạn cần bổ sung đầy đủ thông tin giao hàng (Địa chỉ, Số điện thoại...) trước khi thanh toán!");
+        navigate('/customer/account');
       }
 
-      // Nếu là các lỗi khác (500, mất mạng, timeout...)
-      alert("Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại!");
-    } finally {
-      setIsProcessing(false);
+    } catch (error) {
+      console.error("Lỗi kiểm tra profile:", error);
+      alert("Có lỗi xảy ra khi kiểm tra thông tin. Vui lòng thử lại!");
     }
   };
 
-  // 4. HIỂN THỊ GIAO DIỆN
-  if (loading) return <div style={{ textAlign: 'center', marginTop: '100px' }}>Đang tải giỏ hàng...</div>;
-  // Lấy ra tất cả cart_id có trong giỏ hàng
-  const allCartIds = cartData.flatMap(shop => shop.items).map(i => i.cart_id);
+  // 3. CÁC HÀM XỬ LÝ LOGIC UI (Tính tổng, Tick chọn, Tăng giảm SL, Xóa)
 
-  // Kiểm tra xem số lượng tick chọn có bằng tổng số lượng trong giỏ không
+  const allCartIds = cartData.flatMap(shop => shop.items).map(i => i.cart_id);
   const isAllSelected = allCartIds.length > 0 && selectedIds.length === allCartIds.length;
 
-  // Tính tổng tiền những món được tick chọn
   const totalAmount = cartData.flatMap(shop => shop.items)
     .filter(item => selectedIds.includes(item.cart_id))
     .reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
-
-  // 3. CÁC HÀM XỬ LÝ SỰ KIỆN
   const handleSelectAll = () => {
     setSelectedIds(isAllSelected ? [] : allCartIds);
   };
@@ -181,7 +153,6 @@ function Cart() {
 
   const handleQuantityChange = async (shopId, cartId, type) => {
     const token = localStorage.getItem('access_token');
-    // Tìm item hiện tại để kiểm tra logic trước khi gọi API (tùy chọn)
     const currentShop = cartData.find(s => s.shop_id === shopId);
     const currentItem = currentShop?.items.find(i => i.cart_id === cartId);
 
@@ -215,7 +186,6 @@ function Cart() {
     }
   };
 
-
   const handleRemove = async (cartId) => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) return;
 
@@ -225,14 +195,12 @@ function Cart() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Xóa sản phẩm khỏi State để UI cập nhật ngay lập tức
       const newData = cartData.map(shop => ({
         ...shop,
         items: shop.items.filter(item => item.cart_id !== cartId)
       })).filter(shop => shop.items.length > 0);
       window.dispatchEvent(new Event('cartUpdated'));
       setCartData(newData);
-      // Xóa id khỏi danh sách được chọn nếu đang chọn
       setSelectedIds(selectedIds.filter(id => id !== cartId));
 
     } catch (error) {
@@ -242,13 +210,11 @@ function Cart() {
   };
 
   const handleDeleteSelected = async () => {
-    // 1. Kiểm tra nếu chưa chọn gì
     if (selectedIds.length === 0) {
       alert("Vui lòng chọn sản phẩm để xóa!");
       return;
     }
 
-    // 2. Xác nhận
     if (!window.confirm(`Bạn có chắc muốn xóa ${selectedIds.length} mục đã chọn?`)) {
       return;
     }
@@ -256,24 +222,22 @@ function Cart() {
     const token = localStorage.getItem('access_token');
 
     try {
-    
       const response = await axios.post(
         'http://localhost:8000/cart/remove-multiple',
-        selectedIds, // Gửi trực tiếp mảng [1, 2, 3]
+        selectedIds,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
 
       if (response.data.status === 'success') {
-        // 4. Cập nhật UI: Lọc bỏ các item có cart_id nằm trong selectedIds
         const newData = cartData.map(shop => ({
           ...shop,
           items: shop.items.filter(item => !selectedIds.includes(item.cart_id))
-        })).filter(shop => shop.items.length > 0); // Xóa shop nếu không còn item nào
+        })).filter(shop => shop.items.length > 0);
 
         setCartData(newData);
-        setSelectedIds([]); // Xóa sạch danh sách tick chọn
+        setSelectedIds([]);
         alert(response.data.message);
       }
     } catch (error) {
@@ -281,14 +245,15 @@ function Cart() {
       alert("Không thể xóa các mục đã chọn. Vui lòng thử lại.");
     }
   };
+
+
   // 4. HIỂN THỊ GIAO DIỆN
   if (loading) return <div style={{ textAlign: 'center', marginTop: '100px' }}>Đang tải giỏ hàng...</div>;
 
   return (
     <div className="cart-page-container">
-
-
       <div className="cart-main-content">
+
         {/* Header Bảng */}
         <div className="cart-header-row">
           <div className="col-checkbox"><input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} /></div>
@@ -299,7 +264,7 @@ function Cart() {
           <div className="col-actions">Thao Tác</div>
         </div>
 
-        {/* Gọi Component ShopGroup ra và truyền dữ liệu */}
+        {/* Danh sách Shop và Sản phẩm */}
         {cartData.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '50px', background: 'white' }}>Giỏ hàng của bạn đang trống.</div>
         ) : (
@@ -330,15 +295,18 @@ function Cart() {
                 <span className="label">Tổng cộng ({selectedIds.length} sản phẩm):</span>
                 <span className="total-price">{totalAmount.toLocaleString('vi-VN')}₫</span>
               </div>
-              <button className="btn-buy" disabled={selectedIds.length === 0 || isProcessing} onClick={handleCheckout} >
-                {isProcessing ? 'Đang xử lý...' : 'Mua Hàng'}
+              <button
+                className="btn-buy"
+                disabled={selectedIds.length === 0}
+                onClick={handleCheckout}
+              >
+                Mua Hàng
               </button>
             </div>
           </div>
         </div>
 
       </div>
-
     </div>
   );
 }

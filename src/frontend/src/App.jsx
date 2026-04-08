@@ -21,7 +21,7 @@ import Purchase from './pages/shopee/Purchase/Purchase'
 import NotificationPage from './components/NotificationPage'
 import ChatWidget from './components/ChatWidget/ChatWidget'
 import ShopeeRLHFRoutes from './pages/shope_RLHF'
-
+import Checkout from './pages/shopee/Checkout'
 function AppContent() {
   const location = useLocation();
   
@@ -53,7 +53,7 @@ function AppContent() {
             <Route path='purchase' element= {<Purchase/>} />
             <Route path='notifications' element={<NotificationPage />} /> 
           </Route>
-     
+          <Route path='checkout' element= {<Checkout />} />
           <Route path='product/:id' element={<DetailProduct />} />
           <Route path='cartitem' element={<Cart />} />
         </Route>

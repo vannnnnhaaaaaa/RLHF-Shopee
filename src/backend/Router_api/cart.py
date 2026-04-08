@@ -1,14 +1,14 @@
-from fastapi import APIRouter, Depends , HTTPException
-from sqlmodel import Session , delete 
+from fastapi import APIRouter, Depends , HTTPException 
+from sqlmodel import Session , delete , select
  
 
 # Điều chỉnh lại đường dẫn import cho khớp với project của bạn
 from src.backend.connect_database import get_session
 from src.backend.auth import get_current_customer 
 from src.backend.services.cart_service import add_item_to_cart , get_cart_items
-from src.backend.schemas import AddToCartRequest
-from src.backend.models import CartItem
+from src.backend.schemas import AddToCartRequest , CheckoutPreviewRequest
 
+from src.backend.models import Order, OrderItem, Product, Customer, CartItem
 router_cart = APIRouter(prefix="/cart")
 
 
@@ -124,3 +124,4 @@ def remove_multiple_items(
     except Exception as e:
         session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+ 

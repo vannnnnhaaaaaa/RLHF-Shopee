@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios'; // BẮT BUỘC IMPORT AXIOS
+import axios from 'axios';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import './style.scss';
@@ -18,24 +18,34 @@ function DetailProduct() {
     const fetchProductDetail = async () => {
       setLoading(true);
       try {
-        // GỌI API THẬT
         const response = await axios.get(`http://localhost:8000/product/public/${id}`);
         
         if (response.data.status === 'success') {
           const rawData = response.data.data;
           
-          // "Đắp" dữ liệu thật vào cấu trúc mà giao diện cần để tránh bị sập
+          // --- XỬ LÝ TÍNH TOÁN GIÁ CẢ Ở ĐÂY ---
+          const originalPrice = rawData.price || 0;
+          const discountPercent = rawData.discount_percent || 0;
+          
+          // Tính giá màu đỏ (Giá bán cuối cùng)
+          const finalPrice = discountPercent > 0 
+            ? Math.round(originalPrice * (1 - discountPercent / 100)) 
+            : originalPrice;
+
+          // "Đắp" dữ liệu thật vào cấu trúc
           const safeProduct = {
             ...rawData,
-            // ← NEW: Lấy danh sách ảnh từ bảng product_image (từ API)
-            // Nếu API có mảng images, lấy từ đó. Nếu không, fallback về image_link
+            // Ghi đè lại 2 cột giá cho chuẩn
+            original_price: originalPrice, // Giá xám gạch ngang
+            price: finalPrice,             // Giá đỏ (đã giảm)
+            discount_percent: discountPercent,
+            
+            // Xử lý hình ảnh
             images: rawData.images && Array.isArray(rawData.images) && rawData.images.length > 0
-              ? rawData.images.map(img => img.image_url)  // Chuyển đổi image object => url string
+              ? rawData.images.map(img => img.image_url)
               : (rawData.image_link ? [rawData.image_link] : ['https://via.placeholder.com/500?text=No+Image']),
-            // Gán giá trị mặc định nếu DB chưa có các trường này
-            original_price: rawData.price || 0,
-            discount_percent: rawData.discount_percent || 0,
-            rating: 5.0, // Tạm thời để 5 sao
+            
+            rating: 5.0, 
             sold_count: rawData.sold_count || 0,
             description: rawData.description || "Chưa có mô tả cho sản phẩm này."
           };
@@ -60,62 +70,17 @@ function DetailProduct() {
       setQuantity(quantity + 1);
     }
   };
+
   const handleAddToCart = async () => {
-    // 1. Kiểm tra xem khách hàng đã đăng nhập chưa
-    const token = localStorage.getItem('access_token'); // Giả sử bạn lưu token trong localStorage với tên này
+    const token = localStorage.getItem('access_token'); 
     
     if (!token) {
       alert("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!");
-      navigate('/login'); // Chuyển hướng khách tới trang đăng nhập
+      navigate('/login');
       return;
     }
 
     try {
-      // 2. Gọi API thêm vào giỏ hàng
-      const response = await axios.post(
-        'http://localhost:8000/cart/add', 
-        {
-          product_id: product.id,
-          quantity: quantity
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}` // Gửi chìa khóa (token) để backend nhận diện người mua
-          }
-        }
-      );
-
-      // 3. Xử lý khi thành công
-      if (response.data.status === 'success') {
-        alert(`🛒 Thêm thành công ${quantity} sản phẩm vào giỏ hàng!`);
-        window.dispatchEvent(new Event('cartUpdated'));
-      }
-      
-    } catch (error) {
-      // 4. Xử lý khi có lỗi (Kho không đủ, sản phẩm hết hạn...)
-      if (error.response && error.response.data) {
-        // Lấy đúng câu thông báo lỗi (detail) từ FastAPI mà chúng ta đã viết
-        alert(`❌ Lỗi: ${error.response.data.detail}`);
-      } else {
-        alert("❌ Có lỗi hệ thống xảy ra. Vui lòng thử lại sau.");
-        console.error("Lỗi add to cart:", error);
-      }
-    }
-  };
-
-  // NEW: Handle "Buy Now" - Add to cart and redirect to cart page
-  const handleBuyNow = async () => {
-    // 1. Check if user is authenticated
-    const token = localStorage.getItem('access_token');
-    
-    if (!token) {
-      alert("Vui lòng đăng nhập để mua sản phẩm!");
-      navigate('/customer/login');
-      return;
-    }
-
-    try {
-      // 2. Add product to cart
       const response = await axios.post(
         'http://localhost:8000/cart/add', 
         {
@@ -129,15 +94,49 @@ function DetailProduct() {
         }
       );
 
-      // 3. If successful, redirect to cart with product ID for auto-selection
+      if (response.data.status === 'success') {
+        alert(`🛒 Thêm thành công ${quantity} sản phẩm vào giỏ hàng!`);
+        window.dispatchEvent(new Event('cartUpdated'));
+      }
+    } catch (error) {
+      if (error.response && error.response.data) {
+        alert(`❌ Lỗi: ${error.response.data.detail}`);
+      } else {
+        alert("❌ Có lỗi hệ thống xảy ra. Vui lòng thử lại sau.");
+        console.error("Lỗi add to cart:", error);
+      }
+    }
+  };
+
+  const handleBuyNow = async () => {
+    const token = localStorage.getItem('access_token');
+    
+    if (!token) {
+      alert("Vui lòng đăng nhập để mua sản phẩm!");
+      navigate('/customer/login');
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        'http://localhost:8000/cart/add', 
+        {
+          product_id: product.id,
+          quantity: quantity
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
       if (response.data.status === 'success') {
         window.dispatchEvent(new Event('cartUpdated'));
-        // Navigate to cart page and pass product ID via state for auto-selection
         navigate('/customer/cartitem', {
           state: { autoSelectProductId: product.id }
         });
       }
-      
     } catch (error) {
       if (error.response && error.response.data) {
         alert(`❌ Lỗi: ${error.response.data.detail}`);
@@ -147,12 +146,11 @@ function DetailProduct() {
       }
     }
   };
+
   if (loading) {
     return (
       <div className="detail-page-container">
-  
         <div style={{ textAlign: 'center', padding: '100px 0' }}>Đang tải chi tiết sản phẩm...</div>
-     
       </div>
     );
   }
@@ -160,19 +158,15 @@ function DetailProduct() {
   if (!product) {
     return (
       <div className="detail-page-container">
- 
         <div style={{ textAlign: 'center', padding: '100px 0', color: 'red' }}>
           Sản phẩm không tồn tại hoặc đã bị gỡ!
         </div>
-
       </div>
     );
   }
 
   return (
     <div className="detail-page-container">
- 
-
       <div className="detail-main-content">
         <div className="breadcrumb">
           <span onClick={() => navigate('/')}>Trang chủ</span> {'>'} 
@@ -186,7 +180,6 @@ function DetailProduct() {
               <img src={activeImage} alt={product.name} />
             </div>
             <div className="thumbnail-list">
-              {/* Vòng lặp map bây giờ cực kỳ an toàn vì ta đã ép kiểu biến images ở trên */}
               {product.images.map((img, index) => (
                 <div 
                   key={index} 
@@ -217,10 +210,14 @@ function DetailProduct() {
             </div>
 
             <div className="price-box">
+              {/* Giá gạch ngang màu xám */}
               {product.discount_percent > 0 && (
                 <span className="original-price">₫{product.original_price.toLocaleString('vi-VN')}</span>
               )}
+              
+              {/* Giá đỏ đã được tính toán */}
               <span className="current-price">₫{product.price?.toLocaleString('vi-VN')}</span>
+              
               {product.discount_percent > 0 && (
                 <span className="discount-badge">{product.discount_percent}% GIẢM</span>
               )}
@@ -242,7 +239,7 @@ function DetailProduct() {
             </div>
 
             <div className="action-buttons">
-              <button className="btn-add-to-cart" onClick={()=>handleAddToCart()}>
+              <button className="btn-add-to-cart" onClick={() => handleAddToCart()}>
                 🛒 Thêm Vào Giỏ Hàng
               </button>
               <button className="btn-buy-now" onClick={handleBuyNow}>Mua Ngay</button>
@@ -257,7 +254,6 @@ function DetailProduct() {
           </div>
         </div>
       </div>
-    
     </div>
   );
 }

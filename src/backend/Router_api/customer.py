@@ -145,4 +145,10 @@ def update_profile (
         return {'status': 'success' }
     except Exception as e :
         raise HTTPException(status_code=500 , detail=f'Error {e}')
+
+@router_customer.get('/check-profile')
+def check_profile(current_customer: Customer = Depends(get_current_customer)):
+    if not current_customer.address_detail or not current_customer.number or not current_customer.map_id or not current_customer.name:
+        return False
     
+    return True
