@@ -248,26 +248,29 @@ def get_detail_product(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Lỗi hệ thống khi tải chi tiết sản phẩm"
         )
-
-@router_product.get("/search-by-name/{name}")
+@router_product.get("/search")
 def search_product_by_name(
-    name: str ,
+    keyword: str, 
     session: Session = Depends(get_session)
 ):
     try:
-        statement = select(Product).where(Product.name.ilike(f"%{name}%"))
-        result = session.exec(statement).first()
-        print(result)
+        statement = select(Product).where(Product.name.ilike(f"%{keyword}%")).limit(24)
+        db_products = session.exec(statement).all()
+        
+        # FIX TẠI ĐÂY: Loại bỏ cột 'embedding' (chứa Numpy Array) trước khi trả về
+        safe_results = []
+        for p in db_products:
+            # model_dump giúp biến Object thành Dict, và exclude giúp loại bỏ các cột gây lỗi hoặc quá nặng
+            safe_results.append(p.model_dump(exclude={"embedding"}))
+        
         return {
             "status": "success",
-            "data": result.id,
-          
+            "data": safe_results, # Trả về mảng đã được làm sạch an toàn
         }
     except Exception as e:
-        print(f"LỖI TÌM KIẾM: {e}") # In ra terminal để dễ debug
+        print(f"LỖI TÌM KIẾM: {e}") 
         raise HTTPException(status_code=500, detail=f"Lỗi hệ thống: {str(e)}")
-
-
+    
 @router_product.get("/seller/{product_id}")
 def get_product_detail_for_seller(
     product_id: int, 
