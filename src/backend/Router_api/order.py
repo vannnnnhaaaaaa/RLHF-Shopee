@@ -5,7 +5,7 @@ from typing import Optional
 from src.backend.connect_database import get_session
 # Lưu ý: Hãy chắc chắn bạn đã đổi tên các schema từ Bill sang Order trong file schemas.py nhé
 from src.backend.schemas import CreateOrder, ResponseOrder, StatusOrderbyCustomer , CheckoutPreviewRequest
-from src.backend.services.order_service import create_checkout_orders, get_customer_orders , update_status_logic
+from src.backend.services.order_service import create_checkout_orders, get_customer_orders , update_status_logic, get_seller_dashboard_stats
 from src.backend.services.customer_service import check_exist_info_customer
 from src.backend.services.notification_service import create_order_status_notification
 from src.backend.auth import get_current_customer, get_current_seller
@@ -170,6 +170,31 @@ def get_status_order_for_customer(
 # =====================================================================
 # 2. NHÓM API DÀNH CHO NGƯỜI BÁN (SELLER)
 # =====================================================================
+
+@router_order.get("/seller/dashboard-stats")
+def get_seller_dashboard_stats_endpoint(
+    session: Session = Depends(get_session),
+    current_seller = Depends(get_current_seller)
+):
+    """
+    API Lấy thống kê số đơn hàng theo trạng thái cho trang chủ Seller Dashboard.
+    - pending_count     : Đơn chờ xác nhận (PENDING)
+    - accepted_count   : Đơn chờ lấy hàng (ACCEPT)
+    - cancellation_request_count : Yêu cầu hủy (PROCESSING_CANCEL)
+    - out_of_stock_count       : Sản phẩm hết hàng (stock == 0)
+    - locked_products_count    : Sản phẩm bị khóa
+    """
+    try:
+        stats = get_seller_dashboard_stats(seller_id=current_seller.id, session=session)
+        return {
+            "status": "success",
+            "data": stats
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Lỗi dashboard-stats: {e}")
+        raise HTTPException(status_code=500, detail="Lỗi hệ thống khi lấy thống kê dashboard.")
 
 @router_order.get("/seller/get-orders")
 def get_orders_for_seller(

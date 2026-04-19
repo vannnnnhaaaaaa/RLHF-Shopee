@@ -1,9 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './style.scss'; // Dùng chung hoặc tạo HomeDashboard.scss riêng
+import { apiGet } from '../../services/apiClient';
+import './style.scss';
 
 const HomeDashboard = () => {
   const navigate = useNavigate();
+
+  const [stats, setStats] = useState({
+    pending_count: 0,
+    accepted_count: 0,
+    cancellation_request_count: 0,
+    out_of_stock_count: 0,
+    locked_products_count: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await apiGet('/orders/seller/dashboard-stats');
+        const data = await res.json();
+        if (data.status === 'success') {
+          setStats(data.data);
+        }
+      } catch (err) {
+        console.error('Lỗi khi lấy thống kê dashboard:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
 
   return (
     <div className="home-dashboard-page">
@@ -29,22 +56,22 @@ const HomeDashboard = () => {
         <div className="todo-grid">
           {/* Box 1: Chờ xác nhận */}
           <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/manage')}>
-            <h4 className="text-blue">12</h4>
+            <h4 className="text-blue">{loading ? '...' : stats.pending_count}</h4>
             <p>Chờ xác nhận</p>
           </div>
-          
+
           {/* Box 2: Chờ lấy hàng */}
           <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/manage')}>
-            <h4 className="text-orange">5</h4>
+            <h4 className="text-orange">{loading ? '...' : stats.accepted_count}</h4>
             <p>Chờ lấy hàng</p>
           </div>
-          
+
           {/* Box 3: Yêu cầu hủy */}
           <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/cancellations')}>
-            <h4 className="text-red">1</h4>
+            <h4 className="text-red">{loading ? '...' : stats.cancellation_request_count}</h4>
             <p>Yêu cầu hủy đơn</p>
           </div>
-          
+
           {/* Box 4: Trả hàng / Hoàn tiền */}
           <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/managereturn')}>
             <h4 className="text-teal">0</h4>
@@ -52,14 +79,14 @@ const HomeDashboard = () => {
           </div>
 
           {/* Box 5: Sản phẩm hết hàng */}
-          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/manage')}>
-            <h4 className="text-gray">3</h4>
+          <div className="todo-card" onClick={() => navigate('/seller-dashboard/products/manage')}>
+            <h4 className="text-gray">{loading ? '...' : stats.out_of_stock_count}</h4>
             <p>Sản phẩm hết hàng</p>
           </div>
-          
+
           {/* Box 6: Sản phẩm bị khóa */}
-          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/manage')}>
-            <h4 className="text-gray">0</h4>
+          <div className="todo-card" onClick={() => navigate('/seller-dashboard/products/manage')}>
+            <h4 className="text-gray">{loading ? '...' : stats.locked_products_count}</h4>
             <p>Sản phẩm bị khóa</p>
           </div>
         </div>

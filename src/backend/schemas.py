@@ -33,7 +33,7 @@ class ChatRequest(SQLModel):
 
 class ChatResponse(SQLModel):
     answer: str
-    id : int
+
 
 # --- feedback ------
 class CreateFeedback(SQLModel) :
@@ -309,3 +309,15 @@ class ResponseNotification(SQLModel):
 
 class CheckoutPreviewRequest(BaseModel):
     cart_ids: List[int]
+
+
+# --- SCHEMA CHO SELLER DASHBOARD STATS ---
+class SellerDashboardStats(SQLModel):
+    pending_count: int          # PENDING
+    accepted_count: int         # ACCEPT
+    cancellation_request_count: int   # PROCESSING_CANCEL
+    out_of_stock_count: int     # stock == 0
+    locked_products_count: int  # status == "locked"
+
+    class Config:
+        from_attributes = True
