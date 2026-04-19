@@ -2,14 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import ShopGroup from '../../../components/ShopGroup';
+import { calculateShopDiscount } from '../../../services/product';
 import './style.scss';
 
 function Cart() {
   const location = useLocation();
-  const navigate = useNavigate(); // Dùng để chuyển hướng trang
+  const navigate = useNavigate();
 
   const [cartData, setCartData] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [appliedVouchers, setAppliedVouchers] = useState({}); // { [shopId]: voucher }
   const [loading, setLoading] = useState(true);
 
   // 1. TẢI DỮ LIỆU GIỎ HÀNG
@@ -123,9 +125,19 @@ function Cart() {
   const allCartIds = cartData.flatMap(shop => shop.items).map(i => i.cart_id);
   const isAllSelected = allCartIds.length > 0 && selectedIds.length === allCartIds.length;
 
-  const totalAmount = cartData.flatMap(shop => shop.items)
+  // Tổng tiền sản phẩm đã tick
+  const productTotal = cartData.flatMap(shop => shop.items)
     .filter(item => selectedIds.includes(item.cart_id))
     .reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  // Tổng tiền giảm từ voucher (tất cả shop)
+  const totalVoucherDiscount = cartData.reduce((totalDiscount, shop) => {
+    const voucher = appliedVouchers[shop.shop_id];
+    if (!voucher) return totalDiscount;
+    return totalDiscount + calculateShopDiscount(shop.items, selectedIds, voucher);
+  }, 0);
+
+  const totalAmount = Math.max(0, productTotal - totalVoucherDiscount);
 
   const handleSelectAll = () => {
     setSelectedIds(isAllSelected ? [] : allCartIds);
@@ -209,6 +221,10 @@ function Cart() {
     }
   };
 
+  const handleApplyVoucher = (shopId, voucher) => {
+    setAppliedVouchers(prev => ({ ...prev, [shopId]: voucher }));
+  };
+
   const handleDeleteSelected = async () => {
     if (selectedIds.length === 0) {
       alert("Vui lòng chọn sản phẩm để xóa!");
@@ -277,6 +293,8 @@ function Cart() {
               onToggleItem={handleSelectItem}
               onQuantityChange={handleQuantityChange}
               onRemove={handleRemove}
+              appliedVoucher={appliedVouchers[shop.shop_id]}
+              onApplyVoucher={handleApplyVoucher}
             />
           ))
         )}

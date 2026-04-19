@@ -1,4 +1,4 @@
-import { Route, BrowserRouter, Routes, useLocation } from 'react-router-dom'
+import { Route, BrowserRouter, Routes } from 'react-router-dom'
 
 import Signup from './pages/signup'
 import LoginPage from './pages/login'
@@ -19,15 +19,10 @@ import UserAccount from './pages/shopee/Profile/UserAccount'
 import CustomerLayout from './pages/shopee/CustomerLayout/CustomerLayout'
 import Purchase from './pages/shopee/Purchase/Purchase'
 import NotificationPage from './components/NotificationPage'
-import ChatWidget from './components/ChatWidget/ChatWidget'
 import ShopeeRLHFRoutes from './pages/shope_RLHF'
 import Checkout from './pages/shopee/Checkout'
+import VoucherManagement from './pages/Seller/manage_voucher'
 function AppContent() {
-  const location = useLocation();
-  
-  // Hide chatbot on checkout and payment pages
-  const hideChatbot = location.pathname === '/checkout' || location.pathname === '/payment';
-  
   return (
     <>
       <Routes>
@@ -67,12 +62,10 @@ function AppContent() {
           <Route path="products/manage/products/edit/:id" element={<AddProduct />} />
           <Route path="orders/manage" element={<ManageOrders />} />
           <Route path="orders/managereturn" element={<ReturnManage />} />
+          <Route path="voucher/manage" element={<VoucherManagement />} />
         </Route>
 
       </Routes>
-      
-      {/* Global Chatbot - Hidden on checkout/payment pages */}
-      {!hideChatbot && <ChatWidget />}
     </>
   );
 }

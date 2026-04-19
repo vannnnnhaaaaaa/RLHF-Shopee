@@ -184,7 +184,7 @@ class Product(SQLModel, table=True):
     height: float
     create_at: datetime = Field(default_factory=datetime.now)
     status: str = Field(default="pending_inbound")
-    
+    view_count: int = Field(default=0)
     # [ĐÃ SỬA]: Thêm cascade xóa mồ côi (delete-orphan) cho SKUs
     skus: List["Product_Variants"] = Relationship(
         back_populates="product",
@@ -226,25 +226,27 @@ class Product_image(SQLModel, table=True):
     product: Optional[Product] = Relationship(back_populates="images")  
 class Voucher(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    code: str = Field(unique=True, index=True) 
-    
-    creator_type: str = Field(default="shopee") 
-    voucher_type: str = Field(default="discount") 
-    apply_to: str = Field(default="shop") 
-    
-    discount_type: str = Field(default="fixed") 
-    discount_value: float 
-    max_discount: Optional[float] = Field(default=None) 
-    min_spend: float = Field(default=0) 
-    
-    quantity: int 
-    used_count: int = Field(default=0) 
-    valid_until: datetime 
-    
+    code: str = Field(unique=True, index=True)
+
+    creator_type: str = Field(default="shopee")
+    voucher_type: str = Field(default="discount")
+    apply_to: str = Field(default="shop")
+
+    discount_type: str = Field(default="fixed")
+    discount_value: float
+    max_discount: Optional[float] = Field(default=None)
+    min_spend: float = Field(default=0)
+
+    quantity: int
+    used_count: int = Field(default=0)
+    valid_until: datetime
+    is_active: bool = Field(default=True)
     seller_id: Optional[int] = Field(default=None, foreign_key="seller.id")
     seller: Optional[Seller] = Relationship(back_populates="vouchers")
-    
+
     product_id: Optional[int] = Field(default=None, foreign_key="product.id")
+
+
 
 # ==========================================
 # NHÓM 3: GIAO DỊCH, GIỎ HÀNG & ĐÁNH GIÁ (Phụ thuộc Nhóm 2)

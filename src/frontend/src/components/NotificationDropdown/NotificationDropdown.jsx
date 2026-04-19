@@ -133,7 +133,7 @@ export const NotificationDropdown = () => {
                notifications.slice(0, 5).map(noti => (
                 <div
                   key={noti.id}
-                  className={`noti-item ${!noti.is_read ? 'unread' : ''}`}
+                  className={`noti-item ${noti.is_read ? '' : 'unread'}`}
                   onClick={() => handleNotiClick(noti)}
                 >
                   <div className="noti-img">

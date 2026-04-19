@@ -1,11 +1,48 @@
-from sqlmodel import select, Session, delete
-# Cập nhật từ Bill/BillDetail sang Order/OrderItem
+from sqlmodel import select, Session, delete, func
 from src.backend.models import Order, OrderItem, Product, CartItem
 from src.backend.schemas import CreateOrder
 from fastapi import HTTPException
-from datetime import datetime 
-from src.backend.services.notification_service import create_order_status_notification 
+from datetime import datetime
+from src.backend.services.notification_service import create_order_status_notification
 from src.backend.services.notification_service import create_notification
+
+
+def get_seller_dashboard_stats(seller_id: int, session: Session):
+    """
+    Đếm số đơn hàng theo từng trạng thái và sản phẩm cho Seller Dashboard.
+    Trả về dict gồm: pending_count, accepted_count, cancellation_request_count,
+    out_of_stock_count, locked_products_count.
+    """
+    try:
+        def count_orders(status: str) -> int:
+            stmt = (
+                select(func.count(Order.id.distinct()))
+                .join(OrderItem, Order.id == OrderItem.order_id)
+                .join(Product, OrderItem.product_id == Product.id)
+                .where(Product.seller_id == seller_id)
+                .where(Order.status == status)
+            )
+            return session.exec(stmt).one() or 0
+
+        def count_products(condition) -> int:
+            stmt = select(func.count(Product.id)).where(
+                Product.seller_id == seller_id,
+                condition
+            )
+            return session.exec(stmt).one() or 0
+
+        return {
+            "pending_count":                count_orders("PENDING"),
+            "accepted_count":               count_orders("ACCEPT"),
+            "cancellation_request_count":   count_orders("PROCESSING_CANCEL"),
+            "out_of_stock_count":           count_products(Product.stock == 0),
+            "locked_products_count":         count_products(Product.status == "locked"),
+        }
+    except Exception as e:
+        print(f"Lỗi get_seller_dashboard_stats: {e}")
+        raise HTTPException(status_code=500, detail="Lỗi hệ thống khi lấy thống kê dashboard.")
+
+
 def get_customer_orders(status: str, current_id: int, session: Session, limit: int = 7, offset: int = 0):
     try:
         normalized_status = status.upper()

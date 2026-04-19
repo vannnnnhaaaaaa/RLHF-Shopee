@@ -1,8 +1,29 @@
 .daily-discover {
   .product-grid {
     display: grid;
-    /* SỬA DÒNG NÀY: Ép cột không được phình to hơn lưới */
-    grid-template-columns: repeat(6, minmax(0, 1fr)); 
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+.trending-section {
+  margin-bottom: 24px;
+
+  .trending-header {
+    padding: 12px 0 8px;
+    border-bottom: 2px solid #ee4d2d;
+    margin-bottom: 12px;
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      color: #ee4d2d;
+    }
+  }
+
+  .trending-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 10px;
   }
 }

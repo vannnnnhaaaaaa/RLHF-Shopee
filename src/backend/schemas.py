@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel , Field
-from typing import Optional, List
+from typing import Optional, List , Literal
 from pydantic import BaseModel
 from datetime import datetime
 from enum import Enum
@@ -33,7 +33,7 @@ class ChatRequest(SQLModel):
 
 class ChatResponse(SQLModel):
     answer: str
-    id : int
+
 
 # --- feedback ------
 class CreateFeedback(SQLModel) :
@@ -309,3 +309,100 @@ class ResponseNotification(SQLModel):
 
 class CheckoutPreviewRequest(BaseModel):
     cart_ids: List[int]
+
+
+# --- SCHEMA CHO SELLER DASHBOARD STATS ---
+class SellerDashboardStats(SQLModel):
+    pending_count: int          # PENDING
+    accepted_count: int         # ACCEPT
+    cancellation_request_count: int   # PROCESSING_CANCEL
+    out_of_stock_count: int     # stock == 0
+    locked_products_count: int  # status == "locked"
+
+    class Config:
+        from_attributes = True
+
+
+
+# --- SCHEMAS CHO SELLER VOUCHER ---
+class SellerVoucherCreate(BaseModel):
+    code: str
+    
+    # [FIX TẠI ĐÂY]: Thay thế hoàn toàn regex bằng Literal
+    discount_type: Literal["percent", "fixed"] 
+    
+    discount_value: float
+    min_spend: float = 0
+    max_discount: Optional[float] = None
+    valid_from: datetime
+    valid_until: datetime
+    quantity: int
+    product_id: Optional[int] = None
+
+class SellerVoucherResponse(SQLModel):
+    id: int
+    code: str
+    discount_type: str
+    discount_value: float
+    min_order_value: float
+    max_discount_amount: Optional[float]
+    start_date: datetime
+    end_date: datetime
+    usage_limit: int
+    used_count: int
+    is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+# =============================================================================
+# SCHEMAS CHO ADMIN VOUCHER (Shopee Voucher & Product Voucher)
+# =============================================================================
+
+class ShopeeVoucherCreate(BaseModel):
+    """Request body cho API tạo Shopee Voucher (Toàn sàn)."""
+    code: str
+    discount_type: str          # 'fixed' | 'percent'
+    discount_value: float
+    max_discount: Optional[float] = None
+    min_spend: float = 0
+    quantity: int
+    valid_until: datetime
+
+
+class ProductVoucherCreate(BaseModel):
+    """Request body cho API tạo Product Voucher (Cho 1 sản phẩm cụ thể)."""
+    code: str
+    product_id: int             # Bắt buộc — sản phẩm được áp dụng
+    discount_type: str          # 'fixed' | 'percent'
+    discount_value: float
+    max_discount: Optional[float] = None
+    min_spend: float = 0
+    quantity: int
+    valid_until: datetime
+
+
+class VoucherResponse(BaseModel):
+    id: int
+    code: str
+    creator_type: str
+    voucher_type: str
+    apply_to: str
+    discount_type: str
+    discount_value: float
+    max_discount: Optional[float]
+    min_spend: float
+    quantity: int
+    used_count: int
+    
+    # [FIX TẠI ĐÂY]: Bọc Optional và gán giá trị mặc định để "cứu" các Voucher cũ
+    valid_from: Optional[datetime] = None 
+    valid_until: datetime
+    is_active: Optional[bool] = True      
+    
+    seller_id: Optional[int]
+    product_id: Optional[int]
+
+    class Config:
+        from_attributes = True

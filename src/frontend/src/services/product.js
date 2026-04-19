@@ -117,7 +117,24 @@ export const get_product_detail = async (productId) => {
   }
 };
 
-// Thêm hàm này vào src/services/product.js
+/**
+ * Ghi nhận lượt xem sản phẩm (chống spam F5 bằng sessionStorage).
+ * Chỉ gọi API 1 lần duy nhất cho mỗi lần mở tab/trang.
+ */
+export const trackProductView = async (productId) => {
+  const storageKey = `viewed_${productId}`;
+
+  if (sessionStorage.getItem(storageKey)) {
+    return; // Đã xem rồi → không gọi lại
+  }
+
+  try {
+    await axios.post(`${API_URL}/product/${productId}/view`);
+    sessionStorage.setItem(storageKey, '1');
+  } catch (error) {
+    console.warn('Không thể ghi nhận lượt xem:', error);
+  }
+};
 export const update_product = async (productId, payload) => {
   // Đã thêm biến 'tiers' vào đây
   const { formData, hasVariants, variantsList, tiers, newImages, existingImages, video } = payload;
@@ -164,4 +181,49 @@ export const update_product = async (productId, payload) => {
       const message = error.response?.data?.detail || "Lỗi khi cập nhật sản phẩm";
       throw new Error(message);
   }
+};
+
+/**
+ * Lấy 4 chỉ số tổng quan cho Seller Dashboard.
+ */
+export const getSellerOverview = async () => {
+  const token = localStorage.getItem('access_token');
+  try {
+    const response = await axios.get(`${API_URL}/seller/analytics/overview`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi getSellerOverview:', error);
+    throw error;
+  }
+};
+
+/**
+ * Tính số tiền được giảm khi áp dụng voucher cho các sản phẩm đã tick của 1 shop.
+ */
+export const calculateShopDiscount = (shopItems, selectedIds, voucher) => {
+  if (!voucher) return 0;
+
+  const selectedItems = shopItems.filter(item => selectedIds.includes(item.cart_id));
+  if (selectedItems.length === 0) return 0;
+
+  const subtotal = selectedItems.reduce(
+    (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
+    0
+  );
+
+  const minSpend = voucher.min_spend || 0;
+  if (subtotal < minSpend) return 0;
+
+  let discount = 0;
+  if (voucher.discount_type === 'fixed') {
+    discount = Math.min(voucher.discount_value || 0, subtotal);
+  } else if (voucher.discount_type === 'percent') {
+    const rawDiscount = subtotal * ((voucher.discount_value || 0) / 100);
+    const maxDiscount = voucher.max_discount || Infinity;
+    discount = Math.min(rawDiscount, maxDiscount);
+  }
+
+  return Math.floor(discount);
 };
