@@ -11,12 +11,16 @@ from src.backend.Router_api.taskresult import taskResult_router
 from src.backend.Router_api.finalresult import finalresult_router
 from src.backend.Router_api.seller import router_seller
 from src.backend.Router_api.customer import router_customer
-from src.backend.Router_api.product import router_product
 from src.backend.Router_api.cart import router_cart
 from src.backend.Router_api.map import router_map
 
 from src.backend.Router_api.order import router_order
 from src.backend.Router_api.router_notification import router_notification
+from src.backend.Router_api.router_seller_voucher import router_seller_voucher
+
+from src.backend.Router_api.router_seller_analytics import router_seller_analytics
+from src.backend.Router_api.voucher import router_public_voucher
+
 app = FastAPI(
     title="Shopee AI Backend",
     description="API Server với kiến trúc Router",
@@ -38,10 +42,13 @@ app.include_router(taskResult_router ,tags=['TaskResult'] )
 app.include_router(finalresult_router ,tags=['FinalResult'] )
 app.include_router(router_seller ,tags=['Seller'] )
 app.include_router(router_customer ,tags=['Customer'] )
-app.include_router(router_product ,tags=['Product'] )
 app.include_router(router_cart ,tags=['Cart'] )
 app.include_router(router_map ,tags=['Map'] )
 
 app.include_router(router_order ,tags=['Order'] )
 app.include_router(router_notification ,tags=['Notification'] )
+app.include_router(router_seller_voucher , tags=['Seller Voucher'])
+app.include_router(router_public_voucher , tags=['Public Voucher'])
+
+app.include_router(router_seller_analytics, tags=['Seller Analytics'])
 

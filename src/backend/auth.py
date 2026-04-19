@@ -95,18 +95,31 @@ def get_current_admin(payload: dict = Depends(decode_token), session: Session = 
 
 
 def get_current_seller(
-    current_customer = Depends(get_current_customer), # 1. Lấy thông tin Customer từ Token
-    db: Session = Depends(get_session)                # 2. Lấy kết nối Database
+    payload: dict = Depends(decode_token),
+    session: Session = Depends(get_session)
 ):
     """
-    Dependency: Kiểm tra xem Customer hiện tại đã đăng ký Shop chưa.
-    Nếu có, trả về object Seller (để lấy seller_id). Nếu chưa, chặn lại.
+    Dependency dành riêng cho Seller Dashboard.
+    - Nhận token JWT (chứa user_id + role).
+    - role phải là 'customer' VÀ customer đó phải đã đăng ký Seller.
+    - Seller có thể là 'customer' đã đăng ký shop, hoặc token có role='seller'.
     """
-    seller = db.query(Seller).filter(Seller.customer_id == current_customer.id).first()
-    
+    user_role = payload.get("role")
+
+    if user_role == "customer":
+        customer_id = payload.get("user_id")
+        seller = session.query(Seller).filter(Seller.customer_id == customer_id).first()
+    elif user_role == "seller":
+        seller = session.get(Seller, payload.get("user_id"))
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bạn không có quyền truy cập Kênh người bán."
+        )
+
     if not seller:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Bạn chưa đăng ký Kênh người bán hoặc tài khoản không có quyền truy cập."
         )
 

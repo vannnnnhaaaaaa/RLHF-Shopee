@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
+import { trackProductView } from '../../../services/product';
 import './style.scss';
 
 function DetailProduct() {
@@ -61,6 +62,8 @@ function DetailProduct() {
     };
 
     fetchProductDetail();
+    // Ghi nhận lượt xem (sessionStorage chống spam F5)
+    trackProductView(id);
   }, [id]);
 
   const handleQuantityChange = (type) => {

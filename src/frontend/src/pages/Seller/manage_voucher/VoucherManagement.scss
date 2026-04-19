@@ -1,0 +1,423 @@
+// ─── Variables ────────────────────────────────────────────────────────────────
+$primary: #ee4d2d;
+$primary-dark: #d73211;
+$border-color: #e8e8e8;
+$bg-page: #f6f6f6;
+$bg-white: #ffffff;
+$text-dark: #333;
+$text-muted: #999;
+$text-red: #ee4d2d;
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10);
+
+// ─── Page Container ───────────────────────────────────────────────────────────
+.voucher-management {
+  padding: 24px 30px;
+  background: $bg-page;
+  min-height: 100vh;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color: $text-dark;
+
+  // ── Header ──
+  .vm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    &__left {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+
+      h2 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: #222;
+      }
+    }
+
+    .vm-count {
+      font-size: 13px;
+      color: $text-muted;
+    }
+
+    .btn-create {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: $primary;
+      color: #fff;
+      border: none;
+      padding: 9px 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      span { font-size: 18px; font-weight: 300; }
+
+      &:hover { background: $primary-dark; }
+    }
+  }
+
+  // ── Table Wrapper ──
+  .vm-table-wrapper {
+    background: $bg-white;
+    border-radius: 4px;
+    box-shadow: $shadow-sm;
+    overflow: hidden;
+    overflow-x: auto;
+  }
+
+  // ── Loading / Empty / Error ──
+  .vm-loading,
+  .vm-empty,
+  .vm-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    color: $text-muted;
+    font-size: 15px;
+    gap: 12px;
+  }
+
+  .vm-error {
+    color: $text-red;
+    button {
+      padding: 6px 20px;
+      background: transparent;
+      border: 1px solid $text-red;
+      color: $text-red;
+      border-radius: 4px;
+      cursor: pointer;
+      &:hover { background: #fff0ed; }
+    }
+  }
+
+  // ── Table ──
+  .vm-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+
+    thead tr {
+      background: #fafafa;
+      border-bottom: 1px solid $border-color;
+
+      th {
+        padding: 12px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        color: $text-muted;
+        text-align: left;
+        white-space: nowrap;
+      }
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #f5f5f5;
+      transition: background 0.15s;
+
+      &:hover { background: #fafafa; }
+
+      &.row--inactive {
+        opacity: 0.55;
+      }
+
+      td {
+        padding: 14px 16px;
+        font-size: 14px;
+        vertical-align: middle;
+      }
+    }
+  }
+
+  // ── Table Cells ──
+  .voucher-code {
+    display: inline-block;
+    background: #f5f5f5;
+    border: 1px dashed #ccc;
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    letter-spacing: 0.5px;
+  }
+
+  .discount-badge {
+    display: inline-block;
+    background: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffcc80;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .min-order {
+    display: block;
+    font-size: 12px;
+    color: $text-muted;
+    margin-top: 4px;
+  }
+
+  .text-center { text-align: center; }
+
+  .text-muted { color: $text-muted; font-size: 13px; }
+  .text-red { color: $text-red; }
+  .text-bold { font-weight: 600; }
+
+  .date-range {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 13px;
+
+    .date-sep {
+      font-size: 10px;
+      color: #ccc;
+    }
+  }
+
+  .usage-count {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  // ── Toggle Switch ──
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    cursor: pointer;
+
+    input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: #ccc;
+      border-radius: 24px;
+      transition: background 0.25s;
+
+      &::before {
+        content: '';
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        left: 3px;
+        bottom: 3px;
+        background: #fff;
+        border-radius: 50%;
+        transition: transform 0.25s;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      }
+    }
+
+    input:checked + .toggle-slider {
+      background: $primary;
+
+      &::before { transform: translateX(20px); }
+    }
+  }
+
+  // ── Pagination ──
+  .vm-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+
+    .page-btn {
+      padding: 7px 16px;
+      border: 1px solid $border-color;
+      background: $bg-white;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover:not(:disabled) {
+        border-color: $primary;
+        color: $primary;
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+
+    .page-info {
+      font-size: 14px;
+      color: $text-muted;
+    }
+  }
+}
+
+// ─── Modal ───────────────────────────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.15s ease;
+
+  .modal-box {
+    background: $bg-white;
+    border-radius: 6px;
+    width: 500px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: $shadow-md;
+    animation: slideUp 0.2s ease;
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid $border-color;
+
+  h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: #222;
+  }
+
+  .btn-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    &:hover { color: #333; }
+  }
+}
+
+.modal-form {
+  padding: 24px;
+
+  .form-group {
+    margin-bottom: 16px;
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 6px;
+
+      .required { color: $text-red; }
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+      background: #fff;
+
+      &:focus { border-color: $primary; }
+      &.input-error { border-color: $text-red; }
+    }
+
+    .error-msg {
+      display: block;
+      font-size: 12px;
+      color: $text-red;
+      margin-top: 4px;
+    }
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .server-error {
+    background: #fff0ed;
+    border: 1px solid #ffccc7;
+    color: $text-red;
+    padding: 10px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 8px;
+    padding-top: 16px;
+    border-top: 1px solid $border-color;
+
+    .btn-cancel {
+      padding: 9px 20px;
+      border: 1px solid #ddd;
+      background: #fff;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      color: #555;
+      &:hover { background: #f8f8f8; }
+    }
+
+    .btn-submit {
+      padding: 9px 24px;
+      border: none;
+      background: $primary;
+      color: #fff;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &:hover:not(:disabled) { background: $primary-dark; }
+      &:disabled { opacity: 0.6; cursor: not-allowed; }
+    }
+  }
+}
+
+// ─── Animations ───────────────────────────────────────────────────────────────
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}

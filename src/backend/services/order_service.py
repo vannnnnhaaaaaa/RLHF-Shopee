@@ -1,71 +1,42 @@
-from sqlmodel import select, Session, delete
-# Cập nhật từ Bill/BillDetail sang Order/OrderItem
+from sqlmodel import select, Session, delete, func
 from src.backend.models import Order, OrderItem, Product, CartItem
 from src.backend.schemas import CreateOrder
 from fastapi import HTTPException
-from datetime import datetime 
+from datetime import datetime
 from src.backend.services.notification_service import create_order_status_notification
 from src.backend.services.notification_service import create_notification
 
 
 def get_seller_dashboard_stats(seller_id: int, session: Session):
     """
-    Đếm số đơn hàng theo từng trạng thái, và sản phẩm hết hàng / bị khóa
-    cho Seller Dashboard.
+    Đếm số đơn hàng theo từng trạng thái và sản phẩm cho Seller Dashboard.
+    Trả về dict gồm: pending_count, accepted_count, cancellation_request_count,
+    out_of_stock_count, locked_products_count.
     """
     try:
-        # Đơn PENDING: đơn chờ xác nhận
-        pending_count = session.exec(
-            select(Order.id)
-            .join(OrderItem, Order.id == OrderItem.order_id)
-            .join(Product, OrderItem.product_id == Product.id)
-            .where(Product.seller_id == seller_id)
-            .where(Order.status == "PENDING")
-        ).all()
-        pending_count = len(pending_count)
+        def count_orders(status: str) -> int:
+            stmt = (
+                select(func.count(Order.id.distinct()))
+                .join(OrderItem, Order.id == OrderItem.order_id)
+                .join(Product, OrderItem.product_id == Product.id)
+                .where(Product.seller_id == seller_id)
+                .where(Order.status == status)
+            )
+            return session.exec(stmt).one() or 0
 
-        # Đơn ACCEPT: đơn đã xác nhận, chờ lấy hàng (DELIVERING thì là "đang giao")
-        accepted_count = session.exec(
-            select(Order.id)
-            .join(OrderItem, Order.id == OrderItem.order_id)
-            .join(Product, OrderItem.product_id == Product.id)
-            .where(Product.seller_id == seller_id)
-            .where(Order.status == "ACCEPT")
-        ).all()
-        accepted_count = len(accepted_count)
-
-        # Đơn PROCESSING_CANCEL: yêu cầu hủy
-        cancellation_request_count = session.exec(
-            select(Order.id)
-            .join(OrderItem, Order.id == OrderItem.order_id)
-            .join(Product, OrderItem.product_id == Product.id)
-            .where(Product.seller_id == seller_id)
-            .where(Order.status == "PROCESSING_CANCEL")
-        ).all()
-        cancellation_request_count = len(cancellation_request_count)
-
-        # Sản phẩm hết hàng
-        out_of_stock_count = session.exec(
-            select(Product.id)
-            .where(Product.seller_id == seller_id)
-            .where(Product.stock == 0)
-        ).all()
-        out_of_stock_count = len(out_of_stock_count)
-
-        # Sản phẩm bị khóa
-        locked_products_count = session.exec(
-            select(Product.id)
-            .where(Product.seller_id == seller_id)
-            .where(Product.status == "locked")
-        ).all()
-        locked_products_count = len(locked_products_count)
+        def count_products(condition) -> int:
+            stmt = select(func.count(Product.id)).where(
+                Product.seller_id == seller_id,
+                condition
+            )
+            return session.exec(stmt).one() or 0
 
         return {
-            "pending_count": pending_count,
-            "accepted_count": accepted_count,
-            "cancellation_request_count": cancellation_request_count,
-            "out_of_stock_count": out_of_stock_count,
-            "locked_products_count": locked_products_count,
+            "pending_count":                count_orders("PENDING"),
+            "accepted_count":               count_orders("ACCEPT"),
+            "cancellation_request_count":   count_orders("PROCESSING_CANCEL"),
+            "out_of_stock_count":           count_products(Product.stock == 0),
+            "locked_products_count":         count_products(Product.status == "locked"),
         }
     except Exception as e:
         print(f"Lỗi get_seller_dashboard_stats: {e}")

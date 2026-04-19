@@ -81,8 +81,9 @@
         transition: background 0.2s;
 
         // Màu nền cam nhạt cho thông báo chưa đọc
-        &.unread { 
-          background-color: #fff5f1; 
+        &.unread {
+          background-color: #fff3e0;
+          border-left: 3px solid #ff9800;
         }
         
         &:hover { 

@@ -323,8 +323,7 @@ def get_product_detail_for_seller(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Lỗi hệ thống khi tải thông tin sản phẩm"
         )
-# 1. NHỚ IMPORT HÀM NÀY VÀO TRÊN CÙNG:
-# from src.backend.services.product_service import update_product_service
+
 
 @router_product.put("/edit/{product_id}")
 def update_product_endpoint(
@@ -333,28 +332,27 @@ def update_product_endpoint(
     name: str = Form(...), category: str = Form(...), description: str = Form(...),
     price: float = Form(...), stock: int = Form(0), has_variants: bool = Form(False),
     weight: float = Form(0.0), length: float = Form(0.0), width: float = Form(0.0), height: float = Form(0.0),
-    
+
     # --- JSON Strings ---
-    variantsList: Optional[str] = Form(None), 
-    tiersList: Optional[str] = Form(None),     # [THÊM MỚI] Hứng list Tên phân loại
-    existingImages: Optional[str] = Form(None), 
-    
+    variantsList: Optional[str] = Form(None),
+    tiersList: Optional[str] = Form(None),
+    existingImages: Optional[str] = Form(None),
+
     # --- Files ---
-    newImages: Optional[List[UploadFile]] = File(None), 
-    video: Optional[UploadFile] = File(None), 
-    
+    newImages: Optional[List[UploadFile]] = File(None),
+    video: Optional[UploadFile] = File(None),
+
     session: Session = Depends(get_session),
-    current_seller = Depends(get_current_seller) 
+    current_seller = Depends(get_current_seller)
 ):
-    # Parse JSON
     list_variants = []
     list_tiers = []
-    
+
     if has_variants:
         if variantsList:
             list_variants = json.loads(variantsList)
         if tiersList:
-            list_tiers = json.loads(tiersList) # Giải mã JSON tiers
+            list_tiers = json.loads(tiersList)
 
     list_existing_images = []
     if existingImages:
@@ -373,12 +371,12 @@ def update_product_endpoint(
             seller_id=current_seller.id,
             product_data=product_data_dict,
             list_variants=list_variants,
-            list_tiers=list_tiers, # [THÊM MỚI] Truyền xuống Service
+            list_tiers=list_tiers,
             list_existing_images=list_existing_images,
             new_images=newImages,
             video=video
         )
-        
+
         return {
             "status": "success",
             "message": "Cập nhật sản phẩm thành công",
@@ -387,6 +385,5 @@ def update_product_endpoint(
     except HTTPException:
         raise
     except Exception as e:
-        # Dòng này sẽ in nguyên nhân chính xác ra màn hình đen (Terminal) của Backend
-        print(f"Lỗi hệ thống khi update SP: {str(e)}") 
+        print(f"Lỗi hệ thống khi update SP: {str(e)}")
         raise HTTPException(status_code=500, detail="Lỗi hệ thống khi cập nhật sản phẩm")

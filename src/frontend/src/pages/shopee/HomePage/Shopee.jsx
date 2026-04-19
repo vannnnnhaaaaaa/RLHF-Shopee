@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-// [QUAN TRỌNG 1]: Import hook để lấy keyword từ thanh URL
-import { useSearchParams } from 'react-router-dom'; 
-import ProductCard from '../../../components/ProductCart/ProductCart';
-import ChatWidget from '../../../components/ChatWidget/ChatWidget';
-import { isCustomerLoggedIn } from '../../../utils/auth';
-import './style.scss'; 
+import { useSearchParams } from 'react-router-dom';
+import ProductCard from '../../../components/ProductCart';
+import './style.scss';
 
 function HomePage() {
   const [products, setProducts] = useState([]);
@@ -13,14 +10,14 @@ function HomePage() {
 
   // [QUAN TRỌNG 2]: Khởi tạo hook và trích xuất chữ "keyword"
   const [searchParams] = useSearchParams();
-  const keyword = searchParams.get('keyword'); 
+  const keyword = searchParams.get('keyword');
 
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true); // Bật loading mỗi khi bắt đầu call API mới
       try {
         let response;
-        
+
         // [QUAN TRỌNG 3]: Phân nhánh logic - Nếu có keyword thì search, không thì random
         if (keyword) {
           // Dùng encodeURIComponent để an toàn khi từ khóa có dấu cách, tiếng Việt
@@ -45,10 +42,10 @@ function HomePage() {
     };
 
     fetchProducts();
-    
+
   // [QUAN TRỌNG 4]: Phải có biến keyword ở đây!
   // Mỗi khi chữ keyword trên URL thay đổi, React sẽ tự động chạy lại cái useEffect này.
-  }, [keyword]); 
+  }, [keyword]);
 
   return (
     <div className="test-home-container">
@@ -83,8 +80,7 @@ function HomePage() {
         </div>
       </div>
 
-      {/* CHATBOT CHỈ HIỆN KHI USER LÀ CUSTOMER ĐÃ ĐĂNG NHẬP */}
-      {isCustomerLoggedIn() && <ChatWidget />}
+      {/* Chatbot được quản lý bởi CustomerLayout — KHÔNG đặt ở đây */}
     </div>
   );
 }

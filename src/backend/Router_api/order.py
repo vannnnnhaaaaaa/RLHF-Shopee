@@ -177,24 +177,15 @@ def get_seller_dashboard_stats_endpoint(
     current_seller = Depends(get_current_seller)
 ):
     """
-    API Lấy thống kê số đơn hàng theo trạng thái cho trang chủ Seller Dashboard.
-    - pending_count     : Đơn chờ xác nhận (PENDING)
-    - accepted_count   : Đơn chờ lấy hàng (ACCEPT)
-    - cancellation_request_count : Yêu cầu hủy (PROCESSING_CANCEL)
-    - out_of_stock_count       : Sản phẩm hết hàng (stock == 0)
-    - locked_products_count    : Sản phẩm bị khóa
+    Lấy thống kê tổng quan cho Seller Dashboard:
+      - pending_count              : Đơn chờ xác nhận  (PENDING)
+      - accepted_count             : Đơn chờ lấy hàng  (ACCEPT)
+      - cancellation_request_count : Yêu cầu hủy       (PROCESSING_CANCEL)
+      - out_of_stock_count         : Sản phẩm hết hàng (stock == 0)
+      - locked_products_count      : Sản phẩm bị khóa  (status == 'locked')
     """
-    try:
-        stats = get_seller_dashboard_stats(seller_id=current_seller.id, session=session)
-        return {
-            "status": "success",
-            "data": stats
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Lỗi dashboard-stats: {e}")
-        raise HTTPException(status_code=500, detail="Lỗi hệ thống khi lấy thống kê dashboard.")
+    stats = get_seller_dashboard_stats(seller_id=current_seller.id, session=session)
+    return {"status": "success", "data": stats}
 
 @router_order.get("/seller/get-orders")
 def get_orders_for_seller(

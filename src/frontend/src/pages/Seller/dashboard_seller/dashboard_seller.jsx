@@ -7,7 +7,8 @@ const SellerDashboard = () => {
   // State quản lý việc đóng/mở của các menu con (mặc định mở)
   const [openMenus, setOpenMenus] = useState({
     orders: true,
-    products: true
+    products: true,
+    marketing: true,
   });
 
   const toggleMenu = (menu) => {
@@ -91,6 +92,26 @@ const SellerDashboard = () => {
                   <li>
                     <NavLink to="/seller-dashboard/products/add" className={({isActive}) => isActive ? "active" : ""}>
                       Thêm sản phẩm
+                    </NavLink>
+                  </li>
+                </ul>
+              )}
+            </li>
+
+            {/* Nhóm Marketing */}
+            <li className="menu-group">
+              <div className="menu-group-title" onClick={() => toggleMenu('marketing')}>
+                <div className="title-left">
+                  <span className="icon">🎟️</span> Marketing
+                </div>
+                <span className="toggle-icon">{openMenus.marketing ? '▼' : '▶'}</span>
+              </div>
+
+              {openMenus.marketing && (
+                <ul className="sub-menu">
+                  <li>
+                    <NavLink to="/seller-dashboard/voucher/manage" className={({isActive}) => isActive ? "active" : ""}>
+                      Quản lý Voucher
                     </NavLink>
                   </li>
                 </ul>

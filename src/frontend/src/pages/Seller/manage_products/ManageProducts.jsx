@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getMyProducts } from '../../../services/product';
 import './style.scss';
-import { useNavigate } from 'react-router-dom';
 
 const ManageProducts = () => {
-  const [activeMainTab, setActiveMainTab] = useState('tong-quan');
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [activeMainTab, setActiveMainTab] = useState('tong-quan');
+  const initialTab = searchParams.get('tab') || 'all';
+  const [activeSubTab, setActiveSubTab] = useState(initialTab);
   // Thêm state để biết dòng nào đang mở Menu Hành Động
   const [actionMenuOpen, setActionMenuOpen] = useState(null);
 
@@ -28,8 +31,6 @@ const ManageProducts = () => {
     { label: 'Bị từ chối', value: 'rejected' },
     { label: 'Đã vô hiệu hóa', value: 'removed' }
   ];
-
-  const [activeSubTab, setActiveSubTab] = useState('all');
 
   // States quản lý dữ liệu và UI
   const [products, setProducts] = useState([]);

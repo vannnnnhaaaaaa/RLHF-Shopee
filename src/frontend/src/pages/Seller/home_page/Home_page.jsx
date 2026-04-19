@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiGet } from '../../services/apiClient';
+import { sellerOrderService } from '../../../services/order';
+import { getSellerOverview } from '../../../services/product';
 import './style.scss';
 
-const HomeDashboard = () => {
-  const navigate = useNavigate();
-
+const useDashboardStats = () => {
   const [stats, setStats] = useState({
     pending_count: 0,
     accepted_count: 0,
@@ -15,29 +14,71 @@ const HomeDashboard = () => {
   });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await apiGet('/orders/seller/dashboard-stats');
-        const data = await res.json();
-        if (data.status === 'success') {
-          setStats(data.data);
-        }
-      } catch (err) {
-        console.error('Lỗi khi lấy thống kê dashboard:', err);
-      } finally {
-        setLoading(false);
+  const fetchStats = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await sellerOrderService.getDashboardStats();
+      if (data.status === 'success') {
+        setStats(data.data);
       }
-    };
-    fetchStats();
+    } catch (err) {
+      console.error('Lỗi khi lấy thống kê dashboard:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  return { stats, loading, refetch: fetchStats };
+};
+
+const useAnalyticsStats = () => {
+  const [analytics, setAnalytics] = useState({
+    total_views: 0,
+    total_orders: 0,
+    total_revenue: 0,
+    conversion_rate: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  const fetchAnalytics = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getSellerOverview();
+      if (data.status === 'success') {
+        setAnalytics(data.data);
+      }
+    } catch (err) {
+      console.error('Lỗi khi lấy thống kê analytics:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
+
+  return { analytics, loading, refetch: fetchAnalytics };
+};
+
+const HomeDashboard = () => {
+  const navigate = useNavigate();
+  const { stats, loading, refetch } = useDashboardStats();
+  const { analytics, loading: analyticsLoading } = useAnalyticsStats();
+
+  const fmtVnd = (n) =>
+    typeof n === 'number' ? n.toLocaleString('vi-VN') + ' đ' : '—';
 
   return (
     <div className="home-dashboard-page">
       {/* --- Lời chào & Thông báo --- */}
       <div className="welcome-banner">
         <div className="welcome-text">
-          <h2>Chào buổi sáng, Shop Của Bạn! ☀️</h2>
+          <h2>Chào buổi sáng, Shop Của Bạn!</h2>
           <p>Hôm nay là một ngày tuyệt vời để bứt phá doanh thu. Hãy xem bạn có gì mới nhé.</p>
         </div>
         <div className="system-alert">
@@ -50,24 +91,26 @@ const HomeDashboard = () => {
       <div className="dashboard-section">
         <div className="section-header">
           <h3>📋 Việc cần làm</h3>
-          <span className="subtitle">Những việc bạn cần xử lý ngay để duy trì hiệu suất</span>
+          <button className="btn-refresh" onClick={refetch} disabled={loading}>
+            {loading ? 'Đang tải...' : '↻ Làm mới'}
+          </button>
         </div>
-        
+
         <div className="todo-grid">
           {/* Box 1: Chờ xác nhận */}
-          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/manage')}>
+          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/manage?tab=PENDING')}>
             <h4 className="text-blue">{loading ? '...' : stats.pending_count}</h4>
             <p>Chờ xác nhận</p>
           </div>
 
           {/* Box 2: Chờ lấy hàng */}
-          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/manage')}>
+          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/manage?tab=ACCEPT')}>
             <h4 className="text-orange">{loading ? '...' : stats.accepted_count}</h4>
             <p>Chờ lấy hàng</p>
           </div>
 
           {/* Box 3: Yêu cầu hủy */}
-          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/cancellations')}>
+          <div className="todo-card" onClick={() => navigate('/seller-dashboard/orders/manage?tab=PROCESSING_CANCEL')}>
             <h4 className="text-red">{loading ? '...' : stats.cancellation_request_count}</h4>
             <p>Yêu cầu hủy đơn</p>
           </div>
@@ -85,9 +128,15 @@ const HomeDashboard = () => {
           </div>
 
           {/* Box 6: Sản phẩm bị khóa */}
-          <div className="todo-card" onClick={() => navigate('/seller-dashboard/products/manage')}>
+          <div className="todo-card" onClick={() => navigate('/seller-dashboard/products/manage?tab=removed')}>
             <h4 className="text-gray">{loading ? '...' : stats.locked_products_count}</h4>
             <p>Sản phẩm bị khóa</p>
+          </div>
+
+          {/* Box 7: Voucher */}
+          <div className="todo-card" onClick={() => navigate('/seller-dashboard/voucher/manage')}>
+            <h4 className="text-purple">🎟️</h4>
+            <p>Quản lý Voucher</p>
           </div>
         </div>
       </div>
@@ -105,43 +154,39 @@ const HomeDashboard = () => {
         </div>
 
         <div className="stats-grid">
-          {/* Stat 1: Doanh thu */}
           <div className="stat-card">
             <div className="stat-icon bg-green">💰</div>
             <div className="stat-info">
               <p>Doanh thu</p>
-              <h3>1,250,000 đ</h3>
-              <span className="trend up">↑ 15% vs hôm qua</span>
+              <h3>{analyticsLoading ? '...' : fmtVnd(analytics.total_revenue)}</h3>
+              <span className="trend up">📈 Từ đơn thành công</span>
             </div>
           </div>
 
-          {/* Stat 2: Đơn hàng */}
           <div className="stat-card">
             <div className="stat-icon bg-blue">📦</div>
             <div className="stat-info">
               <p>Đơn hàng</p>
-              <h3>18</h3>
-              <span className="trend up">↑ 2 đơn vs hôm qua</span>
+              <h3>{analyticsLoading ? '...' : analytics.total_orders}</h3>
+              <span className="trend up">📈 Từ đơn thành công</span>
             </div>
           </div>
 
-          {/* Stat 3: Lượt truy cập */}
           <div className="stat-card">
             <div className="stat-icon bg-orange">👁️</div>
             <div className="stat-info">
               <p>Lượt truy cập</p>
-              <h3>342</h3>
-              <span className="trend down">↓ 5% vs hôm qua</span>
+              <h3>{analyticsLoading ? '...' : analytics.total_views.toLocaleString('vi-VN')}</h3>
+              <span className="trend up">👁️ Lượt xem sản phẩm</span>
             </div>
           </div>
 
-          {/* Stat 4: Tỷ lệ chuyển đổi */}
           <div className="stat-card">
             <div className="stat-icon bg-purple">⚡</div>
             <div className="stat-info">
               <p>Tỷ lệ chuyển đổi</p>
-              <h3>5.2%</h3>
-              <span className="trend up">↑ 1.1% vs hôm qua</span>
+              <h3>{analyticsLoading ? '...' : analytics.conversion_rate + '%'}</h3>
+              <span className="trend up">⚡ Đơn / Lượt xem</span>
             </div>
           </div>
         </div>
@@ -157,7 +202,6 @@ const HomeDashboard = () => {
           </div>
         </div>
       </div>
-
     </div>
   );
 };

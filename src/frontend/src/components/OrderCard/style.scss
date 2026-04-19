@@ -29,6 +29,15 @@
         font-weight: 500;
         color: #222;
       }
+
+      .order-time {
+        font-size: 13px;
+        color: #888;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-left: 4px;
+      }
     }
 
     .order-status-info {

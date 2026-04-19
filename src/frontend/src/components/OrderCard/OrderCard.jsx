@@ -3,6 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import './style.scss';
 import purchase_customer_service from '../../services/purchase';
 
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes} ${day}/${month}/${year}`;
+};
+
 const OrderCard = ({ order, onUpdateSuccess }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -70,9 +81,9 @@ const OrderCard = ({ order, onUpdateSuccess }) => {
         <div className="shop-info">
           <span className="badge-favorite">Yêu thích</span>
           <span className="shop-name">Mã Đơn: #{order.id}</span>
-          <button className="btn-chat">
-            <span className="icon">💬</span> Chat
-          </button>
+          <span className="order-time">
+            <span className="icon">🕒</span> {formatDate(order.created_at)}
+          </span>
           <button className="btn-view-shop">
             <span className="icon">🏪</span> Xem Shop
           </button>
