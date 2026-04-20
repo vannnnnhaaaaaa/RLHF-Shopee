@@ -20,6 +20,7 @@ from src.backend.Router_api.router_seller_voucher import router_seller_voucher
 
 from src.backend.Router_api.router_seller_analytics import router_seller_analytics
 from src.backend.Router_api.voucher import router_public_voucher
+from src.backend.Router_api.review import router_review
 
 app = FastAPI(
     title="Shopee AI Backend",
@@ -51,4 +52,5 @@ app.include_router(router_seller_voucher , tags=['Seller Voucher'])
 app.include_router(router_public_voucher , tags=['Public Voucher'])
 
 app.include_router(router_seller_analytics, tags=['Seller Analytics'])
+app.include_router(router_review, tags=['Reviews'])
 

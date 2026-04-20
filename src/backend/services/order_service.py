@@ -1,5 +1,5 @@
 from sqlmodel import select, Session, delete, func
-from src.backend.models import Order, OrderItem, Product, CartItem
+from src.backend.models import Order, OrderItem, Product, CartItem, Voucher
 from src.backend.schemas import CreateOrder
 from fastapi import HTTPException
 from datetime import datetime
@@ -51,12 +51,11 @@ def get_customer_orders(status: str, current_id: int, session: Session, limit: i
         # BƯỚC 1: LẤY DANH SÁCH ORDER (Có phân trang chuẩn)
         # ==========================================
         statement_order = select(Order).where(Order.customer_id == current_id)
-        
+
         if normalized_status != 'ALL':
             statement_order = statement_order.where(Order.status == normalized_status)
-            
+
         statement_order = statement_order.order_by(Order.created_at.desc())
-        # Limit và Offset đếm chuẩn xác số lượng Order
         statement_order = statement_order.limit(limit).offset(offset)
         orders = session.exec(statement_order).all()
 
@@ -71,9 +70,9 @@ def get_customer_orders(status: str, current_id: int, session: Session, limit: i
         statement_items = select(OrderItem, Product).join(
             Product, OrderItem.product_id == Product.id
         ).where(
-            OrderItem.order_id.in_(order_ids) 
+            OrderItem.order_id.in_(order_ids)
         )
-        
+
         item_results = session.exec(statement_items).all()
 
         # ==========================================
@@ -82,7 +81,7 @@ def get_customer_orders(status: str, current_id: int, session: Session, limit: i
         order_dict = {
             order.id: {
                 **order.model_dump(),
-                "items": []          
+                "items": []
             }
             for order in orders
         }
@@ -95,169 +94,206 @@ def get_customer_orders(status: str, current_id: int, session: Session, limit: i
                 "product_name": product.name,
                 "product_image": product.image_link,
                 "quantity": order_item.quantity,
-                
-                # FIX TẠI ĐÂY: Đổi tên key thành price_at_purchase để khớp 100% với Frontend 
-                # (Kèm "or 0" để lỡ data cũ chưa có giá thì không bị crash)
                 "price_at_purchase": order_item.price_at_purchase or 0
             })
 
         return list(order_dict.values())
-        
+
     except Exception as e:
         print(f"Lỗi truy vấn đơn hàng Customer: {e}")
         raise HTTPException(status_code=500, detail="Lỗi hệ thống khi lấy danh sách đơn hàng.")
 
+
+def _rollback_vouchers(session: Session, vouchers_to_update: list):
+    """Hoàn lại quantity và used_count của các voucher đã bị trừ."""
+    for vu in vouchers_to_update:
+        vu["voucher"].quantity = vu["old_quantity"]
+        vu["voucher"].used_count = vu["old_used_count"]
+        session.add(vu["voucher"])
+
+
 def create_checkout_orders(order_data: CreateOrder, customer_id: int, session: Session):
     """
-    Tạo đơn hàng mới từ dữ liệu checkout
-    """
-    try:
-        calculated_product_total = 0.0
-        purchased_product_ids = []
-        
-        # Tạo Dictionary để lưu lại giá bán cuối cùng (đã trừ discount) của từng sản phẩm
-        final_prices_dict = {} 
+    Tạo đơn hàng mới từ dữ liệu checkout.
 
-        # --- BƯỚC 1 & 2: KIỂM TRA TỒN KHO, TRỪ TỒN KHO, CỘNG LƯỢT BÁN VÀ TÍNH TIỀN ---
+    Luồng xử lý:
+    1. Validate voucher → ghi nhận trạng thái cũ → trừ used_count
+       → Nếu order thất bại: rollback voucher
+    2. Validate tồn kho (chỉ kiểm tra, chưa trừ)
+       → Nếu đủ: trừ stock & tăng sold_count
+    3. Tính tiền → tạo Order (seller_voucher_ids: int4[])
+    4. Tạo OrderItems
+    5. Xóa CartItems
+    6. Commit
+    7. Tạo thông báo
+    """
+    # === BƯỚC 0: VALIDATE VOUCHER & GHI NHẬN TRẠNG THÁI ĐỂ ROLLBACK ===
+    applied_voucher_ids = order_data.seller_voucher_ids or []
+    vouchers_to_update = []
+
+    for voucher_id in applied_voucher_ids:
+        voucher = session.get(Voucher, voucher_id)
+        if not voucher:
+            raise HTTPException(status_code=404, detail=f"Voucher ID {voucher_id} không tồn tại.")
+        if voucher.quantity is None or voucher.quantity <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Voucher '{voucher.code}' đã hết lượt sử dụng."
+            )
+        vouchers_to_update.append({
+            "voucher": voucher,
+            "old_quantity": voucher.quantity,
+            "old_used_count": voucher.used_count or 0,
+            "new_quantity": voucher.quantity - 1,
+            "new_used_count": (voucher.used_count or 0) + 1,
+        })
+
+    # Trừ voucher ngay: quantity--, used_count++
+    for vu in vouchers_to_update:
+        vu["voucher"].quantity = vu["new_quantity"]
+        vu["voucher"].used_count = vu["new_used_count"]
+        session.add(vu["voucher"])
+
+    # === BƯỚC 1: VALIDATE TỒN KHO (chỉ kiểm tra, chưa trừ) ===
+    products_to_update = []
+
+    for item in order_data.details:
+        product = session.get(Product, item.product_id)
+        if not product:
+            # Rollback voucher đã trừ
+            _rollback_vouchers(session, vouchers_to_update)
+            raise HTTPException(status_code=404, detail=f"Sản phẩm ID {item.product_id} không tồn tại.")
+
+        if product.stock < item.quantity:
+            _rollback_vouchers(session, vouchers_to_update)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Sản phẩm '{product.name}' chỉ còn {product.stock} sản phẩm, không đủ để đặt."
+            )
+
+        products_to_update.append({
+            "product": product,
+            "old_stock": product.stock,
+            "old_sold_count": product.sold_count or 0,
+            "new_stock": product.stock - item.quantity,
+            "new_sold_count": (product.sold_count or 0) + item.quantity,
+        })
+
+    # === BƯỚC 2: TRỪ TỒN KHO THỰC SỰ ===
+    for pu in products_to_update:
+        pu["product"].stock = pu["new_stock"]
+        pu["product"].sold_count = pu["new_sold_count"]
+        session.add(pu["product"])
+
+    # === BƯỚC 3: TÍNH TIỀN & TẠO ORDER ===
+    final_prices_dict = {}
+    calculated_product_total = 0.0
+
+    for item in order_data.details:
+        product = session.get(Product, item.product_id)
+        original_price = product.price or 0
+        discount_percent = getattr(product, 'discount_percent', 0) or 0
+        final_price = (
+            round(original_price * (1 - discount_percent / 100))
+            if discount_percent > 0 else original_price
+        )
+        final_prices_dict[item.product_id] = final_price
+        calculated_product_total += final_price * item.quantity
+
+    final_total_price = (
+        calculated_product_total
+        + order_data.total_shipping
+        - order_data.discount_product
+        - order_data.discount_shipping
+    )
+
+    new_order = Order(
+        customer_id=customer_id,
+        total_price=max(0, final_total_price),
+        total_shipping=order_data.total_shipping,
+        status=order_data.status,
+        payment_method=order_data.payment_method,
+        payment_status=order_data.payment_status,
+        discount_product=order_data.discount_product,
+        discount_shipping=order_data.discount_shipping,
+        shopee_voucher_id=order_data.shopee_voucher_id,
+        # seller_voucher_ids: Python list [1, 2] → SQLAlchemy ARRAY(INTEGER) → PostgreSQL int4[] {1, 2}
+        seller_voucher_ids=order_data.seller_voucher_ids or [],
+        created_at=datetime.now()
+    )
+    session.add(new_order)
+    session.flush()
+
+    # === BƯỚC 4: TẠO ORDER ITEMS ===
+    for item in order_data.details:
+        order_item = OrderItem(
+            order_id=new_order.id,
+            product_id=item.product_id,
+            quantity=item.quantity,
+            price_at_purchase=final_prices_dict[item.product_id]
+        )
+        session.add(order_item)
+
+    # === BƯỚC 5: XÓA GIỎ HÀNG ===
+    purchased_product_ids = [item.product_id for item in order_data.details]
+    if purchased_product_ids:
+        for cart_item in session.exec(select(CartItem).where(
+            CartItem.customer_id == customer_id,
+            CartItem.product_id.in_(purchased_product_ids)
+        )).all():
+            session.delete(cart_item)
+
+    # === BƯỚC 6: COMMIT ===
+    session.commit()
+    session.refresh(new_order)
+
+    # === BƯỚC 7: THÔNG BÁO ===
+    try:
         for item in order_data.details:
             product = session.get(Product, item.product_id)
-            
-            if not product:
-                raise HTTPException(status_code=404, detail=f"Sản phẩm ID {item.product_id} không tồn tại.")
-            
-            if product.stock < item.quantity:
-                raise HTTPException(
-                    status_code=400, 
-                    detail=f"Sản phẩm '{product.name}' chỉ còn {product.stock} sản phẩm."
+            if product:
+                create_notification(
+                    session=session,
+                    user_id=new_order.customer_id,
+                    title="Đặt hàng thành công!",
+                    body=f"Sản phẩm '{product.name}' đã được đưa vào đơn hàng #{new_order.id}.",
+                    order_id=new_order.id,
+                    image_url=product.image_link
                 )
-            
-            # Trừ tồn kho & Tăng số lượng đã bán
-            product.stock -= item.quantity
-            current_sold = product.sold_count if product.sold_count is not None else 0
-            product.sold_count = current_sold + item.quantity
-            
-            session.add(product)
-            
-            # FIX: Tính toán giá bán đã trừ phần trăm giảm giá (Giống API preview)
-            original_price = product.price or 0
-            discount_percent = getattr(product, 'discount_percent', 0) or 0
-            if discount_percent > 0:
-                final_price = round(original_price * (1 - discount_percent / 100))
-            else:
-                final_price = original_price
-
-            # Lưu lại mức giá chốt đơn này để dùng cho BƯỚC 4
-            final_prices_dict[item.product_id] = final_price
-
-            # Tính tiền dựa trên giá ĐÃ GIẢM
-            calculated_product_total += final_price * item.quantity
-            purchased_product_ids.append(item.product_id)
-
-        # --- BƯỚC 3: TẠO 1 ORDER CHUNG (Gánh tổng tiền) ---
-        final_total_price = (
-            calculated_product_total 
-            + order_data.total_shipping 
-            - order_data.discount_product 
-            - order_data.discount_shipping
-        )
-
-        new_order = Order(
-            customer_id=customer_id,
-            total_price=final_total_price, 
-            total_shipping=order_data.total_shipping,
-            status=order_data.status,
-            payment_method=order_data.payment_method,
-            payment_status=order_data.payment_status,
-            discount_product=order_data.discount_product,
-            discount_shipping=order_data.discount_shipping,
-            shopee_voucher_id=order_data.shopee_voucher_id,
-            seller_voucher_id=order_data.seller_voucher_id,
-            created_at=datetime.now()
-        )
-        session.add(new_order)
-        session.flush()
-
-        # --- BƯỚC 4: TẠO N ORDER ITEM (Chi tiết từng sản phẩm) ---
-        for item in order_data.details:
-            # FIX: KHÔNG CẦN CHỌC VÀO DB LẦN NỮA, LẤY THẲNG GIÁ TỪ DICTIONARY ĐÃ TÍNH Ở BƯỚC 1
-            order_item = OrderItem(
-                order_id=new_order.id,
-                product_id=item.product_id,
-                quantity=item.quantity,
-                price_at_purchase=final_prices_dict[item.product_id] 
-            )
-            session.add(order_item)
-
-        # --- BƯỚC 5: XÓA CÁC SẢN PHẨM ĐÃ MUA KHỎI GIỎ HÀNG ---
-        if purchased_product_ids:
-            statement = select(CartItem).where(
-                CartItem.customer_id == customer_id,
-                CartItem.product_id.in_(purchased_product_ids)
-            )
-            items_to_delete = session.exec(statement).all()
-            for cart_item in items_to_delete:
-                session.delete(cart_item)
-
-        # --- BƯỚC 6: COMMIT LƯU DATABASE ---
         session.commit()
-        session.refresh(new_order)
+    except Exception as noti_error:
+        print(f"Warning: Could not create notification: {noti_error}")
 
-        # --- BƯỚC 7: TẠO N THÔNG BÁO CHO N SẢN PHẨM ---
-        try:
-            for item in order_data.details:
-                product = session.get(Product, item.product_id)
-                if product:
-                    create_notification(
-                        session=session,
-                        user_id=new_order.customer_id,
-                        title="Đặt hàng thành công!",
-                        body=f"Sản phẩm '{product.name}' đã được đưa vào đơn hàng #{new_order.id}.",
-                        order_id=new_order.id,
-                        image_url=product.image_link
-                    )
-            session.commit() 
-        except Exception as noti_error:
-            print(f"Warning: Could not create notification for order {new_order.id}: {noti_error}")
+    return {
+        "status": "success",
+        "message": "Đặt hàng thành công",
+        "order_id": new_order.id
+    }
 
-        return {
-            "status": "success", 
-            "message": "Đặt hàng thành công", 
-            "order_id": new_order.id
-        }
 
-    except HTTPException as http_exc:
-        session.rollback()
-        raise http_exc
-    except Exception as e:
-        session.rollback()
-        print(f"Transaction Error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Lỗi hệ thống khi xử lý thanh toán.")
-
-def update_status_logic (session : Session , customer_id : int , status : str , order_id : int) :
-    try :
-        statement = select(Order).where(Order.id == order_id , Order.customer_id == customer_id)
+def update_status_logic(session: Session, customer_id: int, status: str, order_id: int):
+    try:
+        statement = select(Order).where(Order.id == order_id, Order.customer_id == customer_id)
         order = session.exec(statement).first()
-        if not order :
-            raise HTTPException (status_code=404 , detail='Khoong tim thay donw hang cua ban')
-        
-        allow_status = ['CANCELLED' , 'COMPLETED']
-        if status not in allow_status :
-            raise HTTPException(status_code=403 , detail='Bạn không có quyền chuyển sang trạng thái này')
-    
+        if not order:
+            raise HTTPException(status_code=404, detail='Không tìm thấy đơn hàng của bạn')
+
+        allow_status = ['CANCELLED', 'COMPLETED']
+        if status not in allow_status:
+            raise HTTPException(status_code=403, detail='Bạn không có quyền chuyển sang trạng thái này')
 
         order.status = status
         session.add(order)
         session.commit()
         session.refresh(order)
-        
-        # Create notification for specific status changes
+
         try:
             image_url = None
             if order.items and len(order.items) > 0:
                 product = session.get(Product, order.items[0].product_id)
                 if product:
                     image_url = product.image_link
-            
+
             if status == 'CANCELLED':
                 create_notification(
                     session=session,
@@ -276,9 +312,9 @@ def update_status_logic (session : Session , customer_id : int , status : str , 
                     order_id=order.id,
                     image_url=image_url
                 )
-            session.commit()  # Commit the notification
+            session.commit()
         except Exception as noti_error:
             print(f"Warning: Could not create notification for order {order.id}: {noti_error}")
-    except Exception as e :
-        
+
+    except Exception as e:
         raise e

@@ -104,9 +104,26 @@ function Cart() {
 
       // Kiểm tra data từ Backend trả về
       if (response.data === true) {
-        // Thông tin đã đầy đủ -> Đá sang trang Checkout mang theo mảng ID
+        // Lọc voucher chỉ áp dụng cho shop có sản phẩm đã chọn
+        const appliedVouchersForCheckout = {};
+        Object.entries(appliedVouchers).forEach(([shopId, voucher]) => {
+          const shop = cartData.find(s => String(s.shop_id) === String(shopId));
+          if (shop) {
+            const shopSelectedItems = shop.items.filter(item => selectedIds.includes(item.cart_id));
+            if (shopSelectedItems.length > 0) {
+              appliedVouchersForCheckout[shopId] = voucher;
+            }
+          }
+        });
+
         navigate('/customer/checkout', {
-          state: { selectedCartIds: selectedIds }
+          state: {
+            selectedCartIds: selectedIds,
+            appliedVouchers: appliedVouchersForCheckout,
+            cartItems: cartData.flatMap(shop =>
+              shop.items.filter(item => selectedIds.includes(item.cart_id))
+            )
+          }
         });
       } else {
         // Thông tin bị thiếu -> Nhắc nhở và đá sang trang Profile

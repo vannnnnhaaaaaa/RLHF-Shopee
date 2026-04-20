@@ -186,7 +186,7 @@ def get_my_products(
 
 @router_product.get(
     "/public/random", 
-    response_model=ProductListResponse # <--- "PHÉP THUẬT" NẰM Ở ĐÂY
+    response_model=ProductListResponse
 )
 def get_random_homepage_products(
     limit: int = Query(24, description="Số lượng sản phẩm"),
@@ -204,6 +204,48 @@ def get_random_homepage_products(
         # FastAPI sẽ tự xử lý nếu trả về lỗi, nhưng để đúng chuẩn với React của bạn:
         return {"status": "error", "data": []}
     
+
+@router_product.post("/{product_id}/view")
+def increment_product_view(
+    product_id: int,
+    session: Session = Depends(get_session)
+):
+    """
+    API công khai: Tăng lượt xem sản phẩm lên 1.
+    Dùng sessionStorage ở frontend để chống spam F5 (mỗi tab chỉ tính 1 lần).
+    """
+    try:
+        product = session.get(Product, product_id)
+
+        if not product:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Sản phẩm không tồn tại."
+            )
+
+        # Cộng thêm 1 lượt xem
+        product.view_count = (product.view_count or 0) + 1
+        session.add(product)
+        session.commit()
+
+        return {
+            "status": "success",
+            "message": "Đã ghi nhận lượt xem",
+            "data": {
+                "product_id": product.id,
+                "view_count": product.view_count
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        session.rollback()
+        print(f"Lỗi tăng lượt xem sản phẩm ID {product_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Lỗi hệ thống khi ghi nhận lượt xem."
+        )
 
 @router_product.get("/public/{product_id}")
 def get_detail_product(

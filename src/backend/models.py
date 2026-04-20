@@ -1,8 +1,8 @@
 from sqlmodel import SQLModel , Field  ,Column , Relationship
-from typing import Optional , List 
+from typing import Optional , List
+from sqlalchemy.dialects.postgresql import ARRAY, INTEGER, JSONB
 from pgvector.sqlalchemy import Vector
-from datetime import datetime
-from sqlalchemy.dialects.postgresql import JSONB
+from datetime import datetime, timezone
 
 
 class ChatMessage (SQLModel , table= True) :
@@ -150,6 +150,7 @@ class Customer(SQLModel, table=True):
     # Quan hệ
     orders: List["Order"] = Relationship(back_populates="customer")
     cart_items: Optional[List["CartItem"]] = Relationship(back_populates="customer")
+    reviews: List["Review"] = Relationship(back_populates="customer")
 
 
 class CustomerFavorite(SQLModel, table=True):
@@ -239,6 +240,7 @@ class Voucher(SQLModel, table=True):
 
     quantity: int
     used_count: int = Field(default=0)
+    valid_from : datetime
     valid_until: datetime
     is_active: bool = Field(default=True)
     seller_id: Optional[int] = Field(default=None, foreign_key="seller.id")
@@ -253,15 +255,18 @@ class Voucher(SQLModel, table=True):
 # ==========================================
 class Review(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    content: str 
-    rating: int = Field(ge=1, le=5) 
-    sentiment_score: float = Field(default=0.0) 
-    created_at: datetime = Field(default_factory=datetime.now)
-    
+    content: str
+    rating: int = Field(ge=1, le=5)
+    sentiment_score: float = Field(default=0.0)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
     product_id: int = Field(foreign_key="product.id")
+    order_id: int = Field(foreign_key="orders.id")
     customer_id: int = Field(foreign_key="customer.id")
-    
+
     product: Product = Relationship(back_populates="reviews")
+    order: "Order" = Relationship(back_populates="reviews")
+    customer: "Customer" = Relationship(back_populates="reviews")
 
 class CartItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -290,9 +295,14 @@ class Order(SQLModel, table=True):
     
     # LƯU MÃ VOUCHER ĐÃ ÁP DỤNG
     shopee_voucher_id: Optional[int] = Field(default=None, foreign_key="voucher.id")
-    seller_voucher_id: Optional[int] = Field(default=None, foreign_key="voucher.id")
+    # Lưu nhiều seller voucher dưới dạng mảng int4[] trong PostgreSQL
+    seller_voucher_ids: Optional[List[int]] = Field(
+        default=None,
+        sa_column=Column(ARRAY(INTEGER), nullable=True)
+    )
     
     items: List["OrderItem"] = Relationship(back_populates="order")
+    reviews: List["Review"] = Relationship(back_populates="order")
 
 class OrderItem(SQLModel, table=True):
     __tablename__ = "order_items"  # Use "order_items" as table name

@@ -4,6 +4,7 @@ import axios from 'axios';
 import Navbar from '../../../components/Navbar';
 import Footer from '../../../components/Footer';
 import { trackProductView } from '../../../services/product';
+import ReviewModal from '../../../components/ReviewModal/ReviewModal';
 import './style.scss';
 
 function DetailProduct() {
@@ -14,6 +15,16 @@ function DetailProduct() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState('');
+
+  // --- State cho đánh giá ---
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewPage, setReviewPage] = useState(1);
+  const [reviewStats, setReviewStats] = useState({ average_rating: 0, total: 0 });
+  const [reviewTotalPages, setReviewTotalPages] = useState(0);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  // Lưu orderId để gửi kèm review (truyền từ ngoài hoặc lấy từ session)
+  const [reviewOrderId, setReviewOrderId] = useState(null);
 
   useEffect(() => {
     const fetchProductDetail = async () => {
@@ -66,12 +77,95 @@ function DetailProduct() {
     trackProductView(id);
   }, [id]);
 
+  // --- Fetch đánh giá sản phẩm ---
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchReviews = async () => {
+      setReviewsLoading(true);
+      try {
+        const res = await axios.get(`http://localhost:8000/reviews/product/${id}`, {
+          params: { page: reviewPage, limit: 5 }
+        });
+        if (res.data.status === 'success') {
+          setReviews(prev => reviewPage === 1
+            ? res.data.data.reviews
+            : [...prev, ...res.data.data.reviews]
+          );
+          setReviewStats(res.data.data.stats);
+          setReviewTotalPages(res.data.data.pagination.total_pages);
+        }
+      } catch (err) {
+        console.error('Lỗi tải đánh giá:', err);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, [id, reviewPage]);
+
   const handleQuantityChange = (type) => {
     if (type === 'decrease' && quantity > 1) {
       setQuantity(quantity - 1);
     } else if (type === 'increase' && quantity < (product?.stock || 999)) {
       setQuantity(quantity + 1);
     }
+  };
+
+  // Mở modal đánh giá — tìm orderId từ danh sách orders đã hoàn thành của khách
+  const handleOpenReviewModal = async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      alert('Vui lòng đăng nhập để đánh giá.');
+      return;
+    }
+    try {
+      const res = await axios.get('http://localhost:8000/orders/customer/get-status/COMPLETED', {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { limit: 20, page: 1 }
+      });
+      const orders = res.data?.data || [];
+
+      // Tìm order chứa product hiện tại và chưa được đánh giá
+      let matchedOrder = null;
+      for (const order of orders) {
+        const hasProduct = order.items?.some(item => item.product_id === Number(id));
+        if (hasProduct) {
+          matchedOrder = order;
+          break;
+        }
+      }
+
+      if (!matchedOrder) {
+        alert('Bạn cần hoàn thành đơn hàng chứa sản phẩm này trước khi đánh giá.');
+        return;
+      }
+
+      setReviewOrderId(matchedOrder.id);
+      setShowReviewModal(true);
+    } catch (err) {
+      console.error('Lỗi tìm đơn hàng:', err);
+      alert('Không thể kiểm tra đơn hàng. Vui lòng thử lại.');
+    }
+  };
+
+  const handleReviewSubmitted = () => {
+    setReviewPage(1);
+    // Reload reviews
+    const reload = async () => {
+      try {
+        const res = await axios.get(`http://localhost:8000/reviews/product/${id}`, {
+          params: { page: 1, limit: 5 }
+        });
+        if (res.data.status === 'success') {
+          setReviews(res.data.data.reviews);
+          setReviewStats(res.data.data.stats);
+          setReviewTotalPages(res.data.data.pagination.total_pages);
+        }
+      } catch {}
+    };
+    reload();
   };
 
   const handleAddToCart = async () => {
@@ -200,8 +294,13 @@ function DetailProduct() {
             
             <div className="product-stats">
               <div className="rating">
-                <span className="number">{product.rating}</span>
-                <span className="stars">⭐⭐⭐⭐⭐</span>
+                <span className="number">{reviewStats.average_rating > 0 ? reviewStats.average_rating.toFixed(1) : 'Chưa có'}</span>
+                {reviewStats.average_rating > 0 && (
+                  <span className="stars">
+                    {renderStars(reviewStats.average_rating)}
+                  </span>
+                )}
+                {!reviewStats.average_rating && <span className="no-rating">Đánh giá</span>}
               </div>
               <div className="divider"></div>
               <div className="sold">
@@ -247,7 +346,83 @@ function DetailProduct() {
               </button>
               <button className="btn-buy-now" onClick={handleBuyNow}>Mua Ngay</button>
             </div>
+
+            <div className="review-cta">
+              <button className="btn-write-review" onClick={handleOpenReviewModal}>
+                📝 Viết Đánh Giá
+              </button>
+            </div>
           </div>
+        </div>
+
+        {/* PHẦN ĐÁNH GIÁ */}
+        <div className="product-reviews-box">
+          <div className="box-header">
+            <span>ĐÁNH GIÁ SẢN PHẨM</span>
+            {reviewStats.total > 0 && (
+              <span className="review-count-badge">{reviewStats.total} đánh giá</span>
+            )}
+          </div>
+
+          {/* Tổng quan */}
+          {reviewStats.total > 0 && (
+            <div className="reviews-overview">
+              <div className="overview-score">
+                <span className="big-score">{reviewStats.average_rating.toFixed(1)}</span>
+                <span className="over">/ 5</span>
+              </div>
+              <div className="overview-stars">
+                {renderStars(reviewStats.average_rating)}
+              </div>
+            </div>
+          )}
+
+          {/* Danh sách đánh giá */}
+          {reviewsLoading ? (
+            <div className="reviews-loading">Đang tải đánh giá...</div>
+          ) : reviews.length === 0 ? (
+            <div className="reviews-empty">
+              <p>Chưa có đánh giá nào cho sản phẩm này.</p>
+              <p>Hãy là người đầu tiên đánh giá!</p>
+            </div>
+          ) : (
+            <div className="reviews-list">
+              {reviews.map((review) => (
+                <div key={review.id} className="review-item">
+                  <div className="review-header">
+                    <div className="reviewer-info">
+                      <span className="reviewer-avatar">
+                        {review.customer_name?.charAt(0)?.toUpperCase() || '?'}
+                      </span>
+                      <span className="reviewer-name">{review.customer_name}</span>
+                    </div>
+                    <div className="review-meta">
+                      <span className="review-stars">{renderStars(review.rating)}</span>
+                      <span className="review-date">
+                        {formatDate(review.created_at)}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="review-content">{review.content}</p>
+                  {review.sentiment_score !== 0 && (
+                    <div className={`sentiment-badge sentiment-${getSentimentClass(review.sentiment_score)}`}>
+                      {review.sentiment_label}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Pagination */}
+              {reviewPage < reviewTotalPages && (
+                <button
+                  className="btn-load-more-reviews"
+                  onClick={() => setReviewPage(p => p + 1)}
+                >
+                  Xem thêm đánh giá
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="product-description-box">
@@ -257,8 +432,43 @@ function DetailProduct() {
           </div>
         </div>
       </div>
+
+      {/* MODAL ĐÁNH GIÁ */}
+      <ReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        onReviewSubmitted={handleReviewSubmitted}
+        productId={Number(id)}
+        orderId={reviewOrderId}
+      />
     </div>
   );
+}
+
+// --- Helper functions ---
+function renderStars(score) {
+  const full = Math.floor(score);
+  const half = score - full >= 0.5 ? 1 : 0;
+  const empty = 5 - full - half;
+  return (
+    <>
+      {'★'.repeat(full)}
+      {half === 1 && '½'}
+      {'☆'.repeat(empty)}
+    </>
+  );
+}
+
+function formatDate(isoString) {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function getSentimentClass(score) {
+  if (score > 0.1) return 'positive';
+  if (score < -0.1) return 'negative';
+  return 'neutral';
 }
 
 export default DetailProduct;

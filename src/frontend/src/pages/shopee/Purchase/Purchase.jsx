@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import purchase_customer_service from '../../../services/purchase'; 
+import purchase_customer_service from '../../../services/purchase';
 import OrderCard from '../../../components/OrderCard/OrderCard';
-
+import ReviewModal from '../../../components/ReviewModal/ReviewModal';
 import './style.scss';
 
 // Đã cập nhật lại danh sách TABS theo đúng luồng dữ liệu của Seller
@@ -25,6 +25,9 @@ const Purchase = () => {
   
   const [page, setPage] = useState(1);
 
+  // --- State cho modal đánh giá ---
+  const [reviewModal, setReviewModal] = useState({ isOpen: false, orderId: null, productId: null });
+
   // --- HÀM MỚI: Cập nhật trạng thái đơn hàng ngay trên giao diện ---
   const handleUpdateOrderInList = (orderId, newStatus) => {
     setOrders((prevOrders) => {
@@ -40,7 +43,22 @@ const Purchase = () => {
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
-    setPage(1); 
+    setPage(1);
+  };
+
+  // Mở modal đánh giá — lấy product_id đầu tiên trong order
+  const handleOpenReview = (order) => {
+    const firstProductId = order.items?.[0]?.product_id;
+    if (!firstProductId) {
+      alert('Không tìm thấy sản phẩm trong đơn hàng này.');
+      return;
+    }
+    setReviewModal({ isOpen: true, orderId: order.id, productId: firstProductId });
+  };
+
+  const handleReviewSubmitted = () => {
+    // Reload lại danh sách đơn hàng sau khi đánh giá
+    setPage(1);
   };
 
   useEffect(() => {
@@ -60,6 +78,7 @@ const Purchase = () => {
   }, [activeTab, page]); 
 
   return (
+    <>
     <div className="purchase-container">
       
       {/* 1. Thanh Tabs */}
@@ -95,10 +114,11 @@ const Purchase = () => {
           <div className="loading-text">Đang tải dữ liệu...</div>
         ) : orders && orders.length > 0 ? (
           orders.map((order) => (
-            <OrderCard 
-              key={order.id} 
-              order={order} 
-              onUpdateSuccess={handleUpdateOrderInList} // <-- TRUYỀN HÀM XUỐNG ĐÂY
+            <OrderCard
+              key={order.id}
+              order={order}
+              onUpdateSuccess={handleUpdateOrderInList}
+              onOpenReview={handleOpenReview}
             />
           ))
         ) : (
@@ -132,6 +152,15 @@ const Purchase = () => {
       )}
 
     </div>
+
+    <ReviewModal
+      isOpen={reviewModal.isOpen}
+      onClose={() => setReviewModal({ isOpen: false, orderId: null, productId: null })}
+      onReviewSubmitted={handleReviewSubmitted}
+      productId={reviewModal.productId}
+      orderId={reviewModal.orderId}
+    />
+    </>
   );
 };
 

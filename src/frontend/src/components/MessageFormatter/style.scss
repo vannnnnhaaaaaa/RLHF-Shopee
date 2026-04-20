@@ -4,32 +4,127 @@
     color: #333;
     font-size: 14px;
 
-    /* Class mới dành riêng cho các dòng chứa sản phẩm */
-    .clickable-text-line {
+    .chat-line {
+      margin-bottom: 8px;
+      color: #333;
+      font-size: 14px;
+
+      strong {
+        color: #ee4d2d;
+        font-weight: 600;
+      }
+
+      code {
+        background: #f5f5f5;
+        padding: 1px 5px;
+        border-radius: 4px;
+        font-size: 13px;
+        color: #c0392b;
+      }
+
+      em {
+        font-style: italic;
+        color: #555;
+      }
+    }
+
+    /* ── Product Card (clickable) ── */
+    .product-line-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff8f6;
+      border: 1px solid #f0d5d0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
       cursor: pointer;
-      margin-bottom: 10px;
-      transition: color 0.2s ease;
+      transition: all 0.2s ease;
 
-      /* Khi rê chuột vào dòng chữ này */
       &:hover {
-        color: #ee4d2d; /* Đổi cả đoạn text thành màu cam */
+        background: #fff0eb;
+        border-color: #ee4d2d;
+        box-shadow: 0 2px 8px rgba(238, 77, 45, 0.15);
+        transform: translateY(-1px);
 
-        strong {
-          text-decoration: underline; /* Gạch chân phần chữ in đậm (tên sản phẩm) */
-          color: #d73a1e; /* Cam đậm hơn một chút */
+        .product-arrow {
+          color: #ee4d2d;
+          transform: translateX(3px);
+        }
+
+        .product-name {
+          color: #e03a1d;
+        }
+      }
+
+      &:active {
+        transform: translateY(0);
+        box-shadow: none;
+      }
+    }
+
+    /* STT sản phẩm */
+    .product-index {
+      font-size: 18px;
+      font-weight: 700;
+      color: #ee4d2d;
+      min-width: 22px;
+      line-height: 1;
+    }
+
+    /* Tên + giá + badge */
+    .product-info {
+      flex: 1;
+      min-width: 0;
+
+      .product-name {
+        display: block;
+        font-weight: 600;
+        color: #222;
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 3px;
+        transition: color 0.2s ease;
+      }
+
+      .product-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      /* Giá */
+      .product-price {
+        font-size: 14px;
+        font-weight: 700;
+        color: #ee4d2d;
+      }
+
+      /* Badge đã bán */
+      .product-sold-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 12px;
+        color: #888;
+        background: #f5f5f5;
+        padding: 2px 7px;
+        border-radius: 20px;
+
+        svg {
+          opacity: 0.7;
         }
       }
     }
 
-    /* CSS mặc định cho chữ in đậm */
-    strong {
-      color: #ee4d2d;
-      font-weight: 600;
-      transition: color 0.2s ease, text-decoration 0.2s ease;
-    }
-
-    p {
-      margin: 0;
+    /* Mũi tên > */
+    .product-arrow {
+      color: #bbb;
+      flex-shrink: 0;
+      transition: color 0.2s ease, transform 0.2s ease;
     }
   }
 }

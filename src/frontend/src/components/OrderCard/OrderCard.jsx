@@ -14,7 +14,7 @@ const formatDate = (dateString) => {
   return `${hours}:${minutes} ${day}/${month}/${year}`;
 };
 
-const OrderCard = ({ order, onUpdateSuccess }) => {
+const OrderCard = ({ order, onUpdateSuccess, onOpenReview }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
@@ -179,7 +179,7 @@ const OrderCard = ({ order, onUpdateSuccess }) => {
 
           {currentStatus === 'COMPLETED' && (
             <>
-              <button className="btn-primary btn-rate">Đánh giá</button>
+              <button className="btn-primary btn-rate" onClick={() => onOpenReview && onOpenReview(order)}>Đánh giá</button>
               {order.can_return && (
                 <button className="btn-secondary">Yêu cầu Trả hàng/Hoàn tiền</button>
               )}

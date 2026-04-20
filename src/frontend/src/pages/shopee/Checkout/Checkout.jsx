@@ -11,15 +11,14 @@ function Checkout() {
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Nhận mảng cart_ids từ trang Cart truyền sang
-  const { selectedCartIds } = location.state || { selectedCartIds: [] };
+  // Nhận state từ trang Cart truyền sang (fallback để xử lý direct navigation)
+  const { selectedCartIds, appliedVouchers } = location.state || { selectedCartIds: [], appliedVouchers: {} };
 
   // 1. GỌI API PREVIEW (TÍNH TOÁN GIÁ TIỀN & PHÍ SHIP)
   useEffect(() => {
     // Nếu ai đó gõ trực tiếp URL /checkout mà không có cart_ids, đá về giỏ hàng
     if (!selectedCartIds || selectedCartIds.length === 0) {
       navigate('/customer/cartitem');
-  
       return;
     }
 
@@ -30,18 +29,17 @@ function Checkout() {
       try {
         const response = await axios.post(
           'http://localhost:8000/orders/checkout/preview',
-          { cart_ids: selectedCartIds },
+          { cart_ids: selectedCartIds, applied_vouchers: appliedVouchers || {} },
           { headers: { Authorization: `Bearer ${token}` } }
         );
         console.log(response.data)
         if (response.data.status === 'success') {
-          
           setPreviewData(response.data.data);
         }
       } catch (error) {
         console.error("Lỗi tính toán Checkout:", error);
         alert(error.response?.data?.detail || "Không thể tải thông tin thanh toán.");
-        navigate('/customer/cartitem'); // Lỗi thì quay về giỏ hàng
+        navigate('/customer/cartitem');
       } finally {
         setLoading(false);
       }
@@ -63,16 +61,22 @@ function Checkout() {
         price_at_purchase: item.price
       }));
 
-      // Tạo Payload gửi lên API /orders/checkout (API bạn đã viết trong router)
+      // Thu thập seller_voucher_id từ các shop đã áp voucher (nếu có)
+      const appliedSellerVoucherIds = previewData.checkout_data
+        .filter(shop => shop.voucher_discount && shop.voucher_discount > 0)
+        .map(shop => shop.seller_voucher_id)
+        .filter(Boolean);
+
+      // Payload gửi lên API — voucher đã được tính phía backend
       const payload = {
-        total_price: previewData.merchandise_subtotal, 
+        total_price: previewData.merchandise_subtotal,
         total_shipping: previewData.shipping_subtotal,
         payment_method: "COD",
         payment_status: "pending",
-        discount_product: 0.0,
+        discount_product: previewData.voucher_discount || 0.0,
         discount_shipping: 0.0,
         shopee_voucher_id: null,
-        seller_voucher_id: null,
+        seller_voucher_ids: appliedSellerVoucherIds,
         details: billDetails
       };
 
@@ -84,12 +88,9 @@ function Checkout() {
 
       if (response.status === 200) {
         alert("🎉 Đặt hàng thành công!");
-        navigate('/customer'); 
-        window.dispatchEvent(new Event('cartUpdated')); 
+        navigate('/customer');
+        window.dispatchEvent(new Event('cartUpdated'));
         window.dispatchEvent(new Event('updateNotifications'));
-        
-        // Mua xong thì điều hướng về trang chủ hoặc trang Lịch sử đơn hàng
-        
       }
     } catch (error) {
       console.error("Lỗi đặt hàng:", error);
@@ -116,11 +117,18 @@ function Checkout() {
           </div>
           <div className="address-content">
             <div className="user-info">
-              <span className="name">Khách Hàng Shopee</span>
-              <span className="phone">(+84) 879 392 080</span>
+              <span className="name">{previewData.customer?.name || 'Khách Hàng Shopee'}</span>
+              <span className="phone">{previewData.customer?.number ? `(+84) ${previewData.customer.number.replace(/^0/, '')}` : ''}</span>
             </div>
             <div className="address-detail">
-              D13/29, Phạm Văn Sáng, Ấp 4a, Xã Vĩnh Lộc A, Huyện Bình Chánh, TP. Hồ Chí Minh
+              {[
+                previewData.customer?.address_detail,
+                previewData.customer?.note
+              ].filter(Boolean).join(' · ')}
+            </div>
+            <div className="address-meta">
+              {previewData.customer?.map_district && <span>{previewData.customer.map_district}</span>}
+              {previewData.customer?.map_city && <span>, {previewData.customer.map_city}</span>}
             </div>
             <div className="default-badge">Mặc định</div>
             <button className="change-address-btn">THAY ĐỔI</button>
@@ -165,11 +173,21 @@ function Checkout() {
                   <div className="shipping-info">
                     <strong>Giao Hàng Tiêu Chuẩn</strong>
                     <p>Nhận hàng trong 2-3 ngày tới</p>
+                    {shop.distance_km > 0 && (
+                      <p style={{ color: '#888', fontSize: '12px' }}>
+                        📍 Cách {shop.distance_km} km
+                      </p>
+                    )}
                   </div>
                   <button className="change-btn">Thay đổi</button>
                   {/* Tiền ship lấy thẳng từ Backend trả về cho Shop này */}
                   <span className="shipping-cost">₫{shop.shipping_fee.toLocaleString('vi-VN')}</span>
                 </div>
+                {shop.voucher_discount > 0 && (
+                  <div className="voucher-discount-row" style={{ textAlign: 'right', color: '#ee4d2d', fontSize: '13px', paddingTop: '4px' }}>
+                    🎫 Giảm ₫{shop.voucher_discount.toLocaleString('vi-VN')}
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -194,6 +212,12 @@ function Checkout() {
               {/* Tiền ship tổng cộng từ Backend */}
               <span>₫{previewData.shipping_subtotal.toLocaleString('vi-VN')}</span>
             </div>
+            {previewData.voucher_discount > 0 && (
+              <div className="summary-row" style={{ color: '#ee4d2d' }}>
+                <span>Giảm voucher</span>
+                <span>-₫{previewData.voucher_discount.toLocaleString('vi-VN')}</span>
+              </div>
+            )}
             <div className="summary-row total-row">
               <span>Tổng thanh toán:</span>
               {/* Tiền khách phải trả từ Backend */}

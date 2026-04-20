@@ -20,8 +20,9 @@ def get_public_vouchers(
     """
     Lấy danh sách các voucher ĐANG CÓ HIỆU LỰC của một Shop.
     """
+    print(f"Lấy danh sách voucher của shop {shop_id}")
     try:
-        # [FIX 2]: Dùng func.now() thay cho datetime.now() của Python
+       
         stmt = (
             select(Voucher)
             .where(

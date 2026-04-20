@@ -122,7 +122,7 @@ export const get_product_detail = async (productId) => {
  * Chỉ gọi API 1 lần duy nhất cho mỗi lần mở tab/trang.
  */
 export const trackProductView = async (productId) => {
-  const storageKey = `viewed_${productId}`;
+  const storageKey = `viewed_product_${productId}`;
 
   if (sessionStorage.getItem(storageKey)) {
     return; // Đã xem rồi → không gọi lại

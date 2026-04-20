@@ -6,19 +6,29 @@ import { calculateShopDiscount } from '../../services/product';
 import './style.scss';
 
 function ShopGroup({ shop, selectedIds, onToggleShop, onToggleItem, onQuantityChange, onRemove, appliedVoucher, onApplyVoucher }) {
-  // --- Thêm State để quản lý Modal ---
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
+  const [showVoucherWarning, setShowVoucherWarning] = useState(false);
 
   const shopItemIds = shop.items.map(i => i.cart_id);
   const isShopSelected = shopItemIds.every(id => selectedIds.includes(id)) && shopItemIds.length > 0;
+  const hasSelectedItems = shopItemIds.some(id => selectedIds.includes(id));
 
   // Số tiền được giảm từ voucher (chỉ tính trên items đã tick)
   const discountAmount = calculateShopDiscount(shop.items, selectedIds, appliedVoucher);
 
-  // Hàm xử lý khi người dùng chọn 1 voucher từ Modal
   const handleApplyVoucher = (voucher) => {
     setIsVoucherModalOpen(false);
-    onApplyVoucher(shop.shop_id, voucher); // Trả voucher về Cart
+    onApplyVoucher(shop.shop_id, voucher);
+  };
+
+  // Mở modal voucher: chỉ bật khi shop có ít nhất 1 sản phẩm được chọn
+  const handleOpenVoucherModal = () => {
+    if (!hasSelectedItems) {
+      setShowVoucherWarning(true);
+      setTimeout(() => setShowVoucherWarning(false), 3000);
+      return;
+    }
+    setIsVoucherModalOpen(true);
   };
 
   return (
@@ -51,12 +61,17 @@ function ShopGroup({ shop, selectedIds, onToggleShop, onToggleItem, onQuantityCh
       </div>
 
       <div className="shop-footer">
-        {/* --- Cập nhật khu vực nhấn Voucher --- */}
+        {/* Khu vực nhấn Voucher - chỉ bật khi có ít nhất 1 sản phẩm được chọn */}
         <div
-          className="voucher-line"
-          style={{ cursor: 'pointer', color: appliedVoucher ? '#ee4d2d' : '#333' }}
-          onClick={() => setIsVoucherModalOpen(true)}
+          className={`voucher-line ${!hasSelectedItems ? 'voucher-disabled' : ''}`}
+          style={{ cursor: hasSelectedItems ? 'pointer' : 'not-allowed', color: appliedVoucher ? '#ee4d2d' : '#333', opacity: !hasSelectedItems ? 0.5 : 1 }}
+          onClick={handleOpenVoucherModal}
         >
+          {showVoucherWarning && (
+            <span style={{ color: '#ee4d2d', fontSize: '12px', marginRight: '6px' }}>
+              Vui lòng chọn sản phẩm trước!
+            </span>
+          )}
           🎫 {appliedVoucher
             ? discountAmount > 0
               ? `Đã chọn: ${appliedVoucher.code} (−${discountAmount.toLocaleString('vi-VN')}₫)`

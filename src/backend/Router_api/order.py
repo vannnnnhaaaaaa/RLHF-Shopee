@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException 
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from typing import Optional 
+from typing import Optional
 
 from src.backend.connect_database import get_session
 # Lưu ý: Hãy chắc chắn bạn đã đổi tên các schema từ Bill sang Order trong file schemas.py nhé
@@ -8,9 +8,10 @@ from src.backend.schemas import CreateOrder, ResponseOrder, StatusOrderbyCustome
 from src.backend.services.order_service import create_checkout_orders, get_customer_orders , update_status_logic, get_seller_dashboard_stats
 from src.backend.services.customer_service import check_exist_info_customer
 from src.backend.services.notification_service import create_order_status_notification
+from src.backend.services.shipping_service import calculate_shipping_fee
 from src.backend.auth import get_current_customer, get_current_seller
 # Đã đổi tên Model từ Bill -> Order, BillDetail -> OrderItem
-from src.backend.models import Order, OrderItem, Product, Customer ,CartItem
+from src.backend.models import Order, OrderItem, Product, Customer , CartItem, Map
 
 router_order = APIRouter(prefix="/orders", tags=["Orders"]) 
 
@@ -28,6 +29,35 @@ def preview_checkout_logic(
     Frontend gửi mảng cart_ids đã chọn -> Backend tính tiền hàng, tiền ship và gom nhóm theo Shop.
     """
     try:
+        # 0. Lấy thông tin Customer kèm Map (joinedload) để hiển thị địa chỉ + tính phí ship
+        customer_stmt = (
+            select(Customer)
+            .where(Customer.id == current_user.id)
+        )
+        customer_obj = session.exec(customer_stmt).first()
+        if not customer_obj:
+            raise HTTPException(status_code=404, detail="Không tìm thấy thông tin khách hàng.")
+
+        # Lấy Map tỉnh/thành
+        user_map = None
+        user_map_city = None
+        if customer_obj.map_id:
+            user_map = session.get(Map, customer_obj.map_id)
+            if user_map and user_map.parent_id:
+                user_map_city = session.get(Map, user_map.parent_id)
+
+        # Trả về thông tin địa chỉ đầy đủ, tách từng trường để frontend render linh hoạt
+        customer_address_info = {
+            "name": customer_obj.name or "Khách hàng",
+            "number": customer_obj.number or "",
+            "note": customer_obj.note or "",
+            "address_detail": customer_obj.address_detail or "",
+            "map_district": user_map.name if user_map else None,
+            "map_city": user_map_city.name if user_map_city else None,
+            "map_latitude": user_map.latitude if user_map else None,
+            "map_longitude": user_map.longitude if user_map else None,
+        }
+
         # 1. Truy vấn các CartItem khớp với danh sách ID gửi lên và phải thuộc về current_user
         statement = (
             select(CartItem, Product)
@@ -39,25 +69,37 @@ def preview_checkout_logic(
 
         if not results:
             raise HTTPException(
-                status_code=400, 
+                status_code=400,
                 detail="Không tìm thấy sản phẩm nào hợp lệ trong giỏ hàng để thanh toán."
             )
 
-        # 2. Khởi tạo biến để lưu trữ kết quả tính toán
+        # 2. Lấy seller coordinates cho mỗi shop (nếu có)
+        # Lấy danh sách seller_id từ các sản phẩm
+        from src.backend.models import Seller
+        seller_ids = list(set(getattr(p, 'seller_id', None) for _, p in results if getattr(p, 'seller_id', None) is not None))
+        seller_coords = {}
+        if seller_ids:
+            seller_stmt = select(Seller.id, Map.latitude, Map.longitude).join(
+                Map, (Seller.city == Map.name)
+            ).where(Seller.id.in_(seller_ids))
+            for row in session.exec(seller_stmt).all():
+                seller_coords[row[0]] = {"lat": row[1], "lon": row[2]}
+
+        # 3. Khởi tạo biến để lưu trữ kết quả tính toán
         shops_dict = {}
         merchandise_subtotal = 0
-        shipping_fee_per_shop = 14000  # Giả sử phí ship đồng giá 14k/Shop. (Sau này có thể viết logic tính theo km ở đây)
+        shipping_subtotal = 0
 
-        # 3. Quét qua dữ liệu để tính toán và gom nhóm
+        # 4. Quét qua dữ liệu để tính toán và gom nhóm
         for cart_item, product in results:
             shop_id = getattr(product, 'seller_id', 1)
-            
+
             # --- FIX TRỊÊT ĐỂ LỖI NoneType TẠI ĐÂY ---
             original_price = product.price or 0
             # Ép kiểu an toàn: Nếu DB trả về NULL (None), nó sẽ nhận giá trị 0
             discount_percent = getattr(product, 'discount_percent', 0) or 0
             stock_count = getattr(product, 'stock', 0) or 0
-            
+
             if discount_percent > 0:
                 final_price = round(original_price * (1 - discount_percent / 100))
             else:
@@ -69,14 +111,30 @@ def preview_checkout_logic(
 
             # Tạo khung Shop nếu chưa có
             if shop_id not in shops_dict:
+                # Tính phí ship cho shop này bằng Haversine
+                shop_lat = seller_coords.get(shop_id, {}).get("lat")
+                shop_lon = seller_coords.get(shop_id, {}).get("lon")
+                user_lat = customer_address_info["map_latitude"]
+                user_lon = customer_address_info["map_longitude"]
+
+                distance_km = 0.0
+                shop_shipping_fee = 15000  # fallback nếu không có tọa độ
+
+                if shop_lat is not None and shop_lon is not None and user_lat is not None and user_lon is not None:
+                    distance_km, shop_shipping_fee = calculate_shipping_fee(
+                        shop_lat, shop_lon, user_lat, user_lon
+                    )
+
                 shops_dict[shop_id] = {
                     "shop_id": shop_id,
                     "shop_name": f"Shop của Người bán {shop_id}",
                     "shop_badge": "Yêu thích",
-                    "shipping_fee": shipping_fee_per_shop,
+                    "distance_km": distance_km,
+                    "shipping_fee": shop_shipping_fee,
                     "items": []
                 }
-                
+                shipping_subtotal += shop_shipping_fee
+
             # Đẩy item vào Shop tương ứng
             shops_dict[shop_id]["items"].append({
                 "cart_id": cart_item.id,
@@ -85,25 +143,47 @@ def preview_checkout_logic(
                 "variant": "Mặc định",
                 "image": getattr(product, 'image_link', 'https://via.placeholder.com/80'),
                 "original_price": original_price,
-                "price": final_price, 
+                "price": final_price,
                 "discount_percent": discount_percent,
                 "quantity": cart_item.quantity,
                 "stock": stock_count
             })
 
-        # 4. Tính Tổng tiền Ship và Tổng Thanh Toán
-        checkout_data = list(shops_dict.values())
-        shipping_subtotal = len(checkout_data) * shipping_fee_per_shop
-        total_payment = merchandise_subtotal + shipping_subtotal
+        # 4b. Áp dụng voucher từ frontend (nếu có)
+        applied_vouchers = request.applied_vouchers or {}
+        total_discount = 0
+        for shop_id_str, voucher in applied_vouchers.items():
+            shop_id = int(shop_id_str)
+            if shop_id in shops_dict and shops_dict[shop_id]["items"]:
+                voucher_discount = 0
+                discount_value = voucher.get("discount_value", 0)
+                discount_type = voucher.get("discount_type", "fixed")
+                if discount_type == "percent":
+                    subtotal = sum(item["price"] * item["quantity"] for item in shops_dict[shop_id]["items"])
+                    raw = subtotal * discount_value / 100
+                    max_discount = voucher.get("max_discount")
+                    voucher_discount = int(raw) if not max_discount else min(int(raw), int(max_discount))
+                else:
+                    voucher_discount = int(discount_value)
+                total_discount += voucher_discount
+                shops_dict[shop_id]["voucher_discount"] = voucher_discount
+                # Quan trọng: lưu seller_voucher_id để frontend gửi lại khi đặt hàng
+                shops_dict[shop_id]["seller_voucher_id"] = voucher.get("id") or voucher.get("voucher_id")
 
-        # 5. Trả về format JSON cực chuẩn cho trang Checkout của React
+        # 5. Tính Tổng Thanh Toán
+        checkout_data = list(shops_dict.values())
+        final_total = merchandise_subtotal + shipping_subtotal - total_discount
+
+        # 6. Trả về format JSON cực chuẩn cho trang Checkout của React
         return {
             "status": "success",
             "message": "Tính toán giỏ hàng thành công",
             "data": {
+                "customer": customer_address_info,
                 "merchandise_subtotal": merchandise_subtotal,
                 "shipping_subtotal": shipping_subtotal,
-                "total_payment": total_payment,
+                "voucher_discount": total_discount,
+                "total_payment": max(0, final_total),
                 "checkout_data": checkout_data
             }
         }

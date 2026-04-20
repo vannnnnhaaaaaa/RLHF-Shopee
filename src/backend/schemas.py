@@ -245,7 +245,8 @@ class CreateOrder(BaseModel):
     discount_product: float = 0.0
     discount_shipping: float = 0.0
     shopee_voucher_id: Optional[int] = None
-    seller_voucher_id: Optional[int] = None
+    # Danh sách voucher của từng shop (vì mỗi shop có thể áp voucher khác nhau)
+    seller_voucher_ids: Optional[List[int]] = []
     
     # Danh sách các sản phẩm trong đơn hàng
     details: list[CreateOrderItem] 
@@ -309,6 +310,7 @@ class ResponseNotification(SQLModel):
 
 class CheckoutPreviewRequest(BaseModel):
     cart_ids: List[int]
+    applied_vouchers: Optional[dict] = {}  # { shop_id: voucher_object }
 
 
 # --- SCHEMA CHO SELLER DASHBOARD STATS ---
